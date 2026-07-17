@@ -1,0 +1,161 @@
+[
+  {
+    "term": { "en": "shell", "es": "shell" },
+    "definition": {
+      "en": "The program that reads your commands and sends them to the operating system to execute. On Linux, the default is bash.",
+      "es": "El programa que lee tus comandos y los envía al sistema operativo para ejecutarlos. En Linux, el predeterminado es bash."
+    }
+  },
+  {
+    "term": { "en": "bash", "es": "bash" },
+    "definition": {
+      "en": "Bourne Again SHell — the default command interpreter on most Linux systems. It reads what you type, runs programs, and returns their output.",
+      "es": "Bourne Again SHell — el intérprete de comandos predeterminado en la mayoría de sistemas Linux. Lee lo que escribes, ejecuta programas y devuelve su salida."
+    }
+  },
+  {
+    "term": { "en": "byte", "es": "byte" },
+    "definition": {
+      "en": "The basic unit of digital data: a group of 8 bits. One byte can hold a single character or a number from 0 to 255.",
+      "es": "La unidad básica de datos digitales: un grupo de 8 bits. Un byte puede guardar un carácter o un número del 0 al 255."
+    }
+  },
+  {
+    "term": { "en": "bit", "es": "bit" },
+    "definition": {
+      "en": "The smallest unit of information: a single 0 or 1. Eight bits make one byte.",
+      "es": "La unidad más pequeña de información: un solo 0 o 1. Ocho bits forman un byte."
+    }
+  },
+  {
+    "term": { "en": "stdout", "es": "stdout" },
+    "definition": {
+      "en": "Standard output: the default stream where a program writes its normal results; by default it appears on the terminal screen.",
+      "es": "Salida estándar: el flujo por defecto donde un programa escribe sus resultados normales; por defecto aparece en la pantalla de la terminal."
+    }
+  },
+  {
+    "term": { "en": "stdin", "es": "stdin" },
+    "definition": {
+      "en": "Standard input: the default stream a program reads input from (the keyboard, or another command's output via a pipe).",
+      "es": "Entrada estándar: el flujo por defecto desde donde un programa lee datos (el teclado, o la salida de otro comando a través de una tubería)."
+    }
+  },
+  {
+    "term": { "en": "log", "es": "log" },
+    "definition": {
+      "en": "A file where the system or an application records events (logins, errors, actions) with timestamps. Logs are a primary source of forensic evidence.",
+      "es": "Un archivo donde el sistema o una aplicación registra eventos (inicios de sesión, errores, acciones) con marcas de tiempo. Los logs son una fuente principal de evidencia forense."
+    }
+  },
+  {
+    "term": { "en": "flag", "es": "bandera" },
+    "definition": {
+      "en": "An option you add to a command to change how it behaves, usually written with a dash (e.g. -l, -a, -n).",
+      "es": "Una opción que agregas a un comando para cambiar su comportamiento, normalmente escrita con un guion (ej. -l, -a, -n)."
+    }
+  },
+  {
+    "term": { "en": "pipe (|)", "es": "tubería (|)" },
+    "definition": {
+      "en": "The | operator connects the output of one command to the input of the next, so you can chain commands without saving a file in between.",
+      "es": "El operador | conecta la salida de un comando con la entrada del siguiente, para encadenar comandos sin guardar un archivo intermedio."
+    }
+  },
+  {
+    "term": { "en": "patch", "es": "parchear" },
+    "definition": {
+      "en": "To directly modify specific bytes or code inside a file, usually a small targeted change.",
+      "es": "Modificar directamente bytes o código específicos dentro de un archivo, normalmente un cambio pequeño y puntual."
+    }
+  },
+  {
+    "term": { "en": "vim", "es": "vim" },
+    "definition": {
+      "en": "A powerful terminal text editor. Important: it is NOT read-only — it writes swap files and updates timestamps, so it is unsafe to open original evidence with it.",
+      "es": "Un editor de texto de terminal muy potente. Importante: NO es de solo lectura — escribe archivos de intercambio y actualiza marcas de tiempo, así que no es seguro abrir evidencia original con él."
+    }
+  },
+  {
+    "term": { "en": "O_RDONLY", "es": "O_RDONLY" },
+    "definition": {
+      "en": "A low-level flag the operating system uses to open a file in read-only mode: the program can read it but cannot modify its content.",
+      "es": "Una bandera de bajo nivel que el sistema operativo usa para abrir un archivo en modo de solo lectura: el programa puede leerlo pero no modificar su contenido."
+    }
+  },
+  {
+    "term": { "en": "hexadecimal", "es": "hexadecimal" },
+    "definition": {
+      "en": "A base-16 number system (digits 0-9 and a-f) used to show raw bytes compactly; each byte is two hex digits (e.g. FF = 255).",
+      "es": "Un sistema numérico en base 16 (dígitos 0-9 y a-f) usado para mostrar bytes en bruto de forma compacta; cada byte son dos dígitos hex (ej. FF = 255)."
+    }
+  },
+  {
+    "term": { "en": "ASCII", "es": "ASCII" },
+    "definition": {
+      "en": "A standard table that maps numbers (bytes) to characters, e.g. 65 = 'A'. It lets raw bytes be shown as readable text.",
+      "es": "Una tabla estándar que asocia números (bytes) con caracteres, ej. 65 = 'A'. Permite mostrar bytes en bruto como texto legible."
+    }
+  },
+  {
+    "term": { "en": "terminal", "es": "terminal" },
+    "definition": {
+      "en": "The text interface where you type commands and read their output — the main workspace of a forensic analyst.",
+      "es": "La interfaz de texto donde escribes comandos y lees su salida — el espacio de trabajo principal de un analista forense."
+    }
+  },
+  {
+    "term": { "en": "command", "es": "comando" },
+    "definition": {
+      "en": "A program you run by typing its name in the terminal, optionally followed by flags and arguments.",
+      "es": "Un programa que ejecutas escribiendo su nombre en la terminal, seguido opcionalmente de banderas y argumentos."
+    }
+  },
+  {
+    "term": { "en": "cat", "es": "cat" },
+    "kind": "command",
+    "definition": {
+      "en": "Reads and prints the full contents of a file to the screen. Safe for viewing evidence, but never use its write mode (>) on original files.",
+      "es": "Lee e imprime el contenido completo de un archivo en pantalla. Seguro para ver evidencia, pero nunca uses su modo de escritura (>) sobre archivos originales."
+    }
+  },
+  {
+    "term": { "en": "head", "es": "head" },
+    "kind": "command",
+    "definition": {
+      "en": "Shows the first N lines of a file (default: 10). Useful for a quick preview of logs without loading the entire file.",
+      "es": "Muestra las primeras N líneas de un archivo (por defecto: 10). Útil para una vista previa rápida de logs sin cargar el archivo completo."
+    }
+  },
+  {
+    "term": { "en": "tail", "es": "tail" },
+    "kind": "command",
+    "definition": {
+      "en": "Shows the last N lines of a file (default: 10). Commonly used to read the most recent entries in a log file.",
+      "es": "Muestra las últimas N líneas de un archivo (por defecto: 10). Se usa para ver las entradas más recientes en un archivo de log."
+    }
+  },
+  {
+    "term": { "en": "hexdump", "es": "hexdump" },
+    "kind": "command",
+    "definition": {
+      "en": "Displays the raw bytes of a file as hexadecimal and ASCII side by side. The -C flag gives the most readable layout.",
+      "es": "Muestra los bytes en bruto de un archivo en hexadecimal y ASCII en paralelo. La bandera -C produce el formato más legible."
+    }
+  },
+  {
+    "term": { "en": "xxd", "es": "xxd" },
+    "kind": "command",
+    "definition": {
+      "en": "Like hexdump, but can also reverse the process: convert hex back into a binary file. Essential for inspecting file headers and magic numbers.",
+      "es": "Similar a hexdump, pero puede invertir el proceso: convertir hex de vuelta a binario. Esencial para inspeccionar cabeceras de archivos y números mágicos."
+    }
+  },
+  {
+    "term": { "en": "hex dump", "es": "volcado" },
+    "definition": {
+      "en": "The representation of a file's raw bytes as hexadecimal numbers. Reveals what a file truly contains, regardless of its extension.",
+      "es": "La representación de los bytes en bruto de un archivo como números hexadecimales. Revela qué contiene realmente un archivo, sin importar su extensión."
+    }
+  }
+]

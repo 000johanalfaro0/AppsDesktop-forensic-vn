@@ -1,0 +1,16 @@
+{
+  "id": "ghost-protocol",
+  "title": { "en": "Ghost Protocol", "es": "Protocolo Fantasma" },
+  "cover": "cover.svg",
+  "filter": {
+    "blackPoint": 0.18,
+    "contrast": 1.45,
+    "blend": "screen",
+    "tint": "#1a2a3a"
+  },
+  "panels": [
+    { "file": "001.svg", "aspect": "3 / 4" },
+    { "file": "002.svg", "aspect": "3 / 4" },
+    { "file": "003.svg", "aspect": "3 / 4" }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "id": "caso02",
+  "layer": 1,
+  "order": 10.5,
+  "title": {
+    "en": "EXAM 2: The Logic Bomb (Duronio Case)",
+    "es": "EXAMEN 2: La Bomba Lógica (Caso Duronio)"
+  },
+  "subtitle": {
+    "en": "Investigate the real-world 2002 corporate sabotage at financial giant UBS PaineWebber.",
+    "es": "Investiga el sabotaje corporativo real de 2002 en el gigante financiero UBS PaineWebber."
+  },
+  "glossary": [],
+  "objectives": [
+    {
+      "id": "cron",
+      "label": {
+        "en": "Identify the scheduled cron task running the logic bomb script.",
+        "es": "Identificar la tarea cron programada que corre el script de la bomba lógica."
+      }
+    },
+    {
+      "id": "timestamp",
+      "label": {
+        "en": "Locate the UNIX trigger timestamp embedded in the script.",
+        "es": "Localizar el timestamp UNIX de detonación embebido en el script."
+      }
+    },
+    {
+      "id": "attribution",
+      "label": {
+        "en": "Search logs for user attribution and sudo command executions.",
+        "es": "Buscar en los logs atribución de usuario y ejecuciones de comandos sudo."
+      }
+    },
+    {
+      "id": "stat",
+      "label": {
+        "en": "Extract the file's modification time to prove when the sabotage was staged.",
+        "es": "Extraer la fecha de modificación del archivo para probar cuándo se preparó el sabotaje."
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The UBS PaineWebber Incident",
+        "es": "El incidente de UBS PaineWebber"
+      },
+      "body": {
+        "en": "In March 2002, the network of financial giant UBS PaineWebber suffered a massive, coordinated deletion of data across 2,000 servers, costing over $3 million. A disgruntled systems administrator, Roger Duronio, was suspected of planting a 'logic bomb'.\n\nYour task is to analyze the evidence directory. Find the cron job that triggered the disaster, extract the activation timestamp, search the system logs to identify the user who edited the cron file, and determine the exact date when the malicious script was modified on disk.",
+        "es": "En marzo de 2002, la red del gigante financiero UBS PaineWebber sufrió un borrado masivo y coordinado de datos en 2000 servidores, costando más de $3 millones. Un administrador de sistemas resentido, Roger Duronio, fue sospechoso de plantar una 'bomba lógica'.\n\nTu tarea es analizar la carpeta de evidencias. Halla la tarea cron que disparó el desastre, extrae el timestamp de activación, busca en los logs del sistema para identificar al usuario que editó el crontab y determina la fecha exacta en que se modificó el script malicioso en el disco."
+      }
+    }
+  ],
+  "commands": [],
+  "exercises": [
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Identify the full path of the script triggered by the crontab configuration 'cron_config.txt'.",
+        "es": "Identifica la ruta completa del script ejecutado por la configuración de crontab 'cron_config.txt'."
+      },
+      "accept": [
+        "/usr/local/bin/backup_verify.sh"
+      ],
+      "explanation": {
+        "en": "Inspecting 'cron_config.txt' shows: '00 * * * * root /usr/local/bin/backup_verify.sh'. This runs hourly with root privileges.",
+        "es": "Inspeccionar 'cron_config.txt' muestra: '00 * * * * root /usr/local/bin/backup_verify.sh'. Se ejecuta cada hora con privilegios de root."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Locate the UNIX trigger timestamp (TRIGGER_TIME value) inside 'backup_verify.sh'.",
+        "es": "Localiza el timestamp UNIX de detonación (valor de TRIGGER_TIME) dentro de 'backup_verify.sh'."
+      },
+      "accept": [
+        "1014962400"
+      ],
+      "explanation": {
+        "en": "Running 'grep TRIGGER_TIME backup_verify.sh' extracts '1014962400', which corresponds to March 4, 2002 12:00:00 UTC, the exact time the bomb exploded.",
+        "es": "Ejecutar 'grep TRIGGER_TIME backup_verify.sh' extrae '1014962400', que corresponde al 4 de marzo de 2002 12:00:00 UTC, el momento exacto en que explotó la bomba."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Search the system logs 'system.log' to find the username of the administrator who edited the cron file '/etc/cron.d/sync_service'.",
+        "es": "Busca en los logs del sistema 'system.log' para hallar el nombre del administrador que editó el archivo cron '/etc/cron.d/sync_service'."
+      },
+      "accept": [
+        "rduronio"
+      ],
+      "explanation": {
+        "en": "Running 'grep -i sync_service system.log' reveals: 'Feb 15 09:16:10 prod-web-01 sudo[1422]: rduronio : ... COMMAND=/usr/bin/vi /etc/cron.d/sync_service', directly attributing the setup to Roger Duronio.",
+        "es": "Ejecutar 'grep -i sync_service system.log' revela: 'Feb 15 09:16:10 prod-web-01 sudo[1422]: rduronio : ... COMMAND=/usr/bin/vi /etc/cron.d/sync_service', atribuyendo la acción directamente a Roger Duronio."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Extract the exact modification date of the script 'backup_verify.sh' (format: YYYY-MM-DD).",
+        "es": "Extrae la fecha exacta de modificación del script 'backup_verify.sh' (formato: YYYY-MM-DD)."
+      },
+      "accept": [
+        "2002-02-15"
+      ],
+      "explanation": {
+        "en": "Running 'stat backup_verify.sh' reveals a modification time (Modify) of '2002-02-15 09:30:00', proving the script was staged on disk at that time.",
+        "es": "Ejecutar 'stat backup_verify.sh' revela una fecha de modificación (Modify) de '2002-02-15 09:30:00', probando que el script fue preparado en el disco en esa fecha."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Identify background scheduled persistence mechanisms via crontabs",
+    "Inspect shell scripts for conditional execution triggers",
+    "Trace administrative commands inside security syslog streams",
+    "Determine staging timelines using filesystem modification timestamps"
+  ],
+  "mangaRevealOnComplete": 1
+}

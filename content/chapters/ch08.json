@@ -1,0 +1,531 @@
+{
+  "id": "ch08",
+  "layer": 1,
+  "order": 8,
+  "title": {
+    "en": "Finding Files Across the System",
+    "es": "Encontrar archivos en todo el sistema"
+  },
+  "subtitle": {
+    "en": "From locate's speed to find's precision by name, time, size, type and permissions — every search criterion an investigator needs.",
+    "es": "De la velocidad de locate a la precisión de find por nombre, tiempo, tamaño, tipo y permisos — cada criterio de búsqueda que un investigador necesita."
+  },
+  "glossary": [
+    {
+      "term": { "en": "find", "es": "find" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that searches a directory tree in real time for files matching criteria such as name, type, size, modification time and permissions. Slower than locate but far more versatile.",
+        "es": "Comando que busca en tiempo real en un árbol de directorios archivos que coincidan con criterios como nombre, tipo, tamaño, tiempo de modificación y permisos. Más lento que locate pero mucho más versátil."
+      }
+    },
+    {
+      "term": { "en": "locate", "es": "locate" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that searches a pre-built database of pathnames and returns results almost instantly. Only matches by name; the database is typically updated once a day via updatedb.",
+        "es": "Comando que busca en una base de datos preconstruida de rutas y devuelve resultados casi al instante. Solo busca por nombre; la base de datos se actualiza normalmente una vez al día mediante updatedb."
+      }
+    },
+    {
+      "term": { "en": "which", "es": "which" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that shows the full path of an executable program as it would be found through the PATH environment variable. Only works for external commands, not shell builtins.",
+        "es": "Comando que muestra la ruta completa de un programa ejecutable tal como se encontraría a través de la variable de entorno PATH. Solo funciona para comandos externos, no para builtins de la shell."
+      }
+    },
+    {
+      "term": { "en": "updatedb", "es": "updatedb" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that rebuilds the locate database by scanning the filesystem. Usually runs automatically via cron once a day, but can be run manually with root privileges to index recent files.",
+        "es": "Comando que reconstruye la base de datos de locate escaneando el sistema de archivos. Normalmente se ejecuta automáticamente mediante cron una vez al día, pero se puede ejecutar manualmente con privilegios de root para indexar archivos recientes."
+      }
+    },
+    {
+      "term": { "en": "xargs", "es": "xargs" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that reads items from standard input and executes another command with them as arguments. Often used after find to batch-process files without launching a subprocess per file.",
+        "es": "Comando que lee elementos de la entrada estándar y ejecuta otro comando con ellos como argumentos. Se usa a menudo después de find para procesar archivos por lotes sin lanzar un subproceso por archivo."
+      }
+    },
+    {
+      "term": { "en": "globbing", "es": "globbing" },
+      "definition": {
+        "en": "The shell mechanism that expands wildcard patterns like *.log into matching filenames before the command runs. Also called pathname expansion.",
+        "es": "El mecanismo de la shell que expande patrones comodín como *.log en los nombres de archivo coincidentes antes de que el comando se ejecute. También se llama expansión de nombres de ruta."
+      }
+    },
+    {
+      "term": { "en": "wildcard", "es": "comodín" },
+      "definition": {
+        "en": "A special character used in patterns: * matches any sequence of characters, ? matches a single character, [abc] matches one character from a set. Used heavily with find -name and locate.",
+        "es": "Un carácter especial usado en patrones: * coincide con cualquier secuencia de caracteres, ? coincide con un solo carácter, [abc] coincide con un carácter de un conjunto. Se usa intensamente con find -name y locate."
+      }
+    },
+    {
+      "term": { "en": "PATH", "es": "PATH" },
+      "definition": {
+        "en": "An environment variable containing a colon-separated list of directories where the shell looks for executable programs. which searches these directories.",
+        "es": "Una variable de entorno que contiene una lista de directorios separados por dos puntos donde la shell busca programas ejecutables. which busca en estos directorios."
+      }
+    },
+    {
+      "term": { "en": "mlocate", "es": "mlocate" },
+      "definition": {
+        "en": "A modern implementation of locate that respects file permissions — users only see files they have access to. Most Linux distributions use it by default.",
+        "es": "Una implementación moderna de locate que respeta los permisos de archivo — los usuarios solo ven los archivos a los que tienen acceso. La mayoría de las distribuciones de Linux la usan por defecto."
+      }
+    },
+    {
+      "term": { "en": "-type", "es": "-type" },
+      "definition": {
+        "en": "A find test that filters by file type: f for regular files, d for directories, l for symbolic links, b for block devices, c for character devices.",
+        "es": "Un test de find que filtra por tipo de archivo: f para archivos regulares, d para directorios, l para enlaces simbólicos, b para dispositivos de bloque, c para dispositivos de caracteres."
+      }
+    },
+    {
+      "term": { "en": "-name", "es": "-name" },
+      "definition": {
+        "en": "A find test that matches files whose base name matches a wildcard pattern. Combine with -iname for case-insensitive matching.",
+        "es": "Un test de find que coincide con archivos cuyo nombre base coincide con un patrón comodín. Combínalo con -iname para coincidencias que no distinguen mayúsculas de minúsculas."
+      }
+    },
+    {
+      "term": { "en": "-size", "es": "-size" },
+      "definition": {
+        "en": "A find test that filters by file size. Suffixes specify units: k (kilobytes), M (megabytes), G (gigabytes). Prefix + means larger than, - means smaller than.",
+        "es": "Un test de find que filtra por tamaño de archivo. Los sufijos especifican unidades: k (kilobytes), M (megabytes), G (gigabytes). El prefijo + significa mayor que, - significa menor que."
+      }
+    },
+    {
+      "term": { "en": "-mtime", "es": "-mtime" },
+      "definition": {
+        "en": "A find test that matches files by modification time, measured in 24-hour periods. -mtime -7 means modified less than 7 days ago; +7 means more than 7 days ago.",
+        "es": "Un test de find que coincide con archivos por tiempo de modificación, medido en períodos de 24 horas. -mtime -7 significa modificado hace menos de 7 días; +7 significa hace más de 7 días."
+      }
+    },
+    {
+      "term": { "en": "-perm", "es": "-perm" },
+      "definition": {
+        "en": "A find test that filters by permission mode. With a leading / (slash), any of the permission bits must match. Without /, all bits must match exactly.",
+        "es": "Un test de find que filtra por modo de permiso. Con una / inicial, cualquiera de los bits de permiso debe coincidir. Sin /, todos los bits deben coincidir exactamente."
+      }
+    },
+    {
+      "term": { "en": "-exec", "es": "-exec" },
+      "definition": {
+        "en": "A find action that runs an external command on each found file. The placeholder {} is replaced with the filename, and the command ends with ; or + for batching.",
+        "es": "Una acción de find que ejecuta un comando externo en cada archivo encontrado. El marcador {} se reemplaza con el nombre del archivo, y el comando termina con ; o + para agrupar."
+      }
+    },
+    {
+      "term": { "en": "slocate", "es": "slocate" },
+      "definition": {
+        "en": "An older implementation of locate that also respects file permissions. Largely replaced by mlocate on modern distributions.",
+        "es": "Una implementación anterior de locate que también respeta los permisos de archivo. Mayormente reemplazada por mlocate en las distribuciones modernas."
+      }
+    },
+    {
+      "term": { "en": "-user", "es": "-user" },
+      "definition": {
+        "en": "A find test that matches files owned by a given username or numeric user ID. Useful for finding all files belonging to a suspect account.",
+        "es": "Un test de find que coincide con archivos cuyo dueño es un nombre de usuario o ID numérico. Útil para encontrar todos los archivos que pertenecen a una cuenta sospechosa."
+      }
+    },
+    {
+      "term": { "en": "-ok", "es": "-ok" },
+      "definition": {
+        "en": "Like -exec, but prompts for confirmation before running the command on each file. Safer when performing destructive operations like deletion.",
+        "es": "Como -exec, pero pide confirmación antes de ejecutar el comando en cada archivo. Más seguro al realizar operaciones destructivas como eliminación."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "locate-vs-find",
+      "label": {
+        "en": "Distinguish between locate (fast, name-only, database-backed) and find (real-time, multi-criterion)",
+        "es": "Distinguir entre locate (rápido, solo nombre, respaldado por base de datos) y find (tiempo real, múltiples criterios)"
+      }
+    },
+    {
+      "id": "search-by-name",
+      "label": {
+        "en": "Search for files by name using wildcards with locate and find -name",
+        "es": "Buscar archivos por nombre usando comodines con locate y find -name"
+      }
+    },
+    {
+      "id": "filter-by-attributes",
+      "label": {
+        "en": "Filter results with -type, -size, -mtime, and -perm for targeted investigation",
+        "es": "Filtrar resultados con -type, -size, -mtime y -perm para una investigación dirigida"
+      }
+    },
+    {
+      "id": "locate-executables",
+      "label": {
+        "en": "Locate executable programs with which and understand the PATH variable",
+        "es": "Ubicar programas ejecutables con which y entender la variable PATH"
+      }
+    },
+    {
+      "id": "act-on-results",
+      "label": {
+        "en": "Automate actions on found files with -exec and xargs in a forensic workflow",
+        "es": "Automatizar acciones sobre los archivos encontrados con -exec y xargs en un flujo forense"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The problem: a system is full of files",
+        "es": "El problema: un sistema está lleno de archivos"
+      },
+      "body": {
+        "en": "A typical Linux installation holds hundreds of thousands of files. When you investigate a compromised machine, you are not browsing a tidy folder — you are searching for needles in a haystack of system files, user data, logs, cache and temporary artifacts. The graphical file manager is useless here: you need tools that can sweep the entire filesystem by name, size, time, type or permissions in seconds. This chapter covers two complementary approaches: locate for instant name-only lookups, and find for surgical real-time searches across any attribute. Mastering both is essential because they answer different questions: locate tells you whether a file exists on the system; find tells you everything about files that match your criteria.",
+        "es": "Una instalación típica de Linux contiene cientos de miles de archivos. Cuando investigas una máquina comprometida, no estás navegando por una carpeta ordenada — estás buscando agujas en un pajar de archivos del sistema, datos de usuario, logs, caché y artefactos temporales. El gestor de archivos gráfico es inútil aquí: necesitas herramientas que puedan barrer todo el sistema de archivos por nombre, tamaño, tiempo, tipo o permisos en segundos. Este capítulo cubre dos enfoques complementarios: locate para búsquedas instantáneas solo por nombre, y find para búsquedas quirúrgicas en tiempo real sobre cualquier atributo. Dominar ambos es esencial porque responden preguntas distintas: locate te dice si un archivo existe en el sistema; find te dice todo sobre los archivos que coinciden con tus criterios."
+      }
+    },
+    {
+      "heading": {
+        "en": "locate: speed through a database",
+        "es": "locate: velocidad mediante una base de datos"
+      },
+      "body": {
+        "en": "The locate command does not scan the disk — it searches a pre-built database of every pathname on the system. This makes it almost instantaneous even on huge filesystems. The database is created by the updatedb command, which typically runs as a cron job once a day. The tradeoff is immediacy: files created today may not show up until tomorrow's update. In a forensic context, where you are analyzing an acquired image, this is rarely a problem because the image is static. The real limitation is that locate only matches by name. You cannot ask locate for files modified last week or files larger than 100 MB. For those criteria you need find. Most modern distributions use mlocate, which respects file permissions: a user running locate only sees paths they would normally have read access to.",
+        "es": "El comando locate no escanea el disco — busca en una base de datos preconstruida de todas las rutas del sistema. Esto lo hace casi instantáneo incluso en sistemas de archivos enormes. La base de datos la crea el comando updatedb, que normalmente se ejecuta como una tarea cron una vez al día. La desventaja es la inmediatez: los archivos creados hoy pueden no aparecer hasta la actualización de mañana. En un contexto forense, donde estás analizando una imagen adquirida, esto rara vez es un problema porque la imagen es estática. La limitación real es que locate solo busca por nombre. No puedes pedirle a locate archivos modificados la semana pasada o archivos mayores de 100 MB. Para esos criterios necesitas find. La mayoría de las distribuciones modernas usan mlocate, que respeta los permisos de archivo: un usuario que ejecuta locate solo ve las rutas a las que normalmente tendría acceso de lectura."
+      }
+    },
+    {
+      "heading": {
+        "en": "find: real-time search with any criterion",
+        "es": "find: búsqueda en tiempo real con cualquier criterio"
+      },
+      "body": {
+        "en": "Whereas locate searches a static database, find walks the directory tree in real time and applies tests to every file it encounters. The basic syntax is find <directory> <tests> <actions>. The most common tests are -type (f for regular files, d for directories, l for symbolic links), -name (with wildcard patterns), -size (with + or - and units k/M/G), and -mtime (modification time in 24-hour periods). You can combine multiple tests and they are implicitly ANDed together unless you use -or. Each test narrows the search: find /var/log -type f -name '*.log' -size +1M returns only regular log files larger than one megabyte. Wildcards in -name must be quoted to prevent the shell from expanding them before find sees them. The -iname variant ignores case, which is invaluable when searching for files with unknown capitalization.",
+        "es": "Mientras que locate busca en una base de datos estática, find recorre el árbol de directorios en tiempo real y aplica tests a cada archivo que encuentra. La sintaxis básica es find <directorio> <tests> <acciones>. Los tests más comunes son -type (f para archivos regulares, d para directorios, l para enlaces simbólicos), -name (con patrones comodín), -size (con + o - y unidades k/M/G) y -mtime (tiempo de modificación en períodos de 24 horas). Puedes combinar varios tests y se combinan implícitamente con AND a menos que uses -or. Cada test reduce la búsqueda: find /var/log -type f -name '*.log' -size +1M devuelve solo archivos de log regulares mayores de un megabyte. Los comodines en -name deben ir entre comillas para evitar que la shell los expanda antes de que find los vea. La variante -iname ignora mayúsculas y minúsculas, algo invaluable cuando se buscan archivos con capitalización desconocida."
+      }
+    },
+    {
+      "heading": {
+        "en": "Time, permissions and ownership filters",
+        "es": "Filtros de tiempo, permisos y dueño"
+      },
+      "body": {
+        "en": "In an investigation, timestamps are often the most valuable filter. The -mtime test matches by modification time: -mtime -7 means modified within the last 7 days, +7 means modified more than 7 days ago. Use -atime for access time and -ctime for metadata change time. For finer granularity, -mmin, -amin and -cmin measure in minutes. The -perm test filters by permission mode. A leading / means 'any of these bits must be set': find / -perm /o+w finds world-writable files, which are a common sign of poor security or a compromised account. The -user and -group tests find all files owned by a specific user or group, useful when profiling a suspect's activity. These filters can be combined: find /home -type f -user bob -mtime -30 finds every regular file owned by bob modified in the last 30 days — a targeted and forensically useful query.",
+        "es": "En una investigación, las marcas de tiempo son a menudo el filtro más valioso. El test -mtime busca por tiempo de modificación: -mtime -7 significa modificado en los últimos 7 días, +7 significa modificado hace más de 7 días. Usa -atime para tiempo de acceso y -ctime para tiempo de cambio de metadatos. Para granularidad más fina, -mmin, -amin y -cmin miden en minutos. El test -perm filtra por modo de permiso. Una / inicial significa 'cualquiera de estos bits debe estar activo': find / -perm /o+w encuentra archivos escribibles por cualquier usuario, que son una señal común de mala seguridad o una cuenta comprometida. Los tests -user y -group encuentran todos los archivos pertenecientes a un usuario o grupo específico, útil para perfilar la actividad de un sospechoso. Estos filtros se pueden combinar: find /home -type f -user bob -mtime -30 encuentra todo archivo regular de bob modificado en los últimos 30 días — una consulta dirigida y forensemente útil."
+      }
+    },
+    {
+      "heading": {
+        "en": "Locating executables with which",
+        "es": "Ubicar ejecutables con which"
+      },
+      "body": {
+        "en": "Sometimes the file you need to find is not evidence but a tool: where is the tcpdump binary? Is Python installed? For answering these questions, use which. It searches every directory listed in the PATH environment variable and returns the full path of the first matching executable. This is not the same as find — which does not walk the filesystem; it only consults the PATH list. A forensic analyst uses which to verify tool availability, to record exact binary paths in documentation, or to detect tampering (if which ls returns /tmp/ls instead of /usr/bin/ls, the system has been compromised). The counterpart is the type command, which tells you whether a command is a builtin, alias, function or external program. Together, which and type let you document exactly what would execute when you type a command.",
+        "es": "A veces el archivo que necesitas encontrar no es evidencia sino una herramienta: ¿dónde está el binario de tcpdump? ¿Está instalado Python? Para responder estas preguntas usa which. Busca en cada directorio listado en la variable de entorno PATH y devuelve la ruta completa del primer ejecutable que coincide. Esto no es lo mismo que find — which no recorre el sistema de archivos; solo consulta la lista de PATH. Un analista forense usa which para verificar la disponibilidad de herramientas, para registrar rutas binarias exactas en la documentación, o para detectar manipulación (si which ls devuelve /tmp/ls en lugar de /usr/bin/ls, el sistema ha sido comprometido). La contraparte es el comando type, que te dice si un comando es un builtin, alias, función o programa externo. Juntos, which y type te permiten documentar exactamente qué se ejecutaría cuando escribes un comando."
+      }
+    },
+    {
+      "heading": {
+        "en": "From finding to doing: -exec, -ok and xargs",
+        "es": "De encontrar a actuar: -exec, -ok y xargs"
+      },
+      "body": {
+        "en": "Finding files is only half the work. In a forensic workflow you need to hash them, copy them, examine them or log their metadata. The find command has a built-in action for this: -exec. The syntax is -exec command {} \\; — the curly braces are replaced with each filename, and the semicolon marks the end of the command. Use + instead of ; to batch all filenames into a single command invocation, which is far more efficient. For potentially destructive operations, -ok is identical to -exec but prompts before each file. An alternative is to pipe find's output into xargs, which reads filenames from stdin and builds command arguments. Both approaches work, but -exec + is cleaner and avoids the pitfalls of spaces and special characters in filenames that plague xargs. In practice, the most common forensic action is hashing: find /evidence -type f -exec sha256sum {} \\; > manifest.txt produces an integrity manifest of every file in the evidence directory.",
+        "es": "Encontrar archivos es solo la mitad del trabajo. En un flujo forense necesitas hashearlos, copiarlos, examinarlos o registrar sus metadatos. El comando find tiene una acción incorporada para esto: -exec. La sintaxis es -exec comando {} \\; — las llaves se reemplazan con cada nombre de archivo, y el punto y coma marca el final del comando. Usa + en lugar de ; para agrupar todos los nombres de archivo en una sola invocación del comando, lo que es mucho más eficiente. Para operaciones potencialmente destructivas, -ok es idéntico a -exec pero pide confirmación antes de cada archivo. Una alternativa es canalizar la salida de find hacia xargs, que lee nombres de archivo de stdin y construye argumentos para un comando. Ambos enfoques funcionan, pero -exec + es más limpio y evita los problemas de espacios y caracteres especiales en nombres de archivo que afectan a xargs. En la práctica, la acción forense más común es el hashing: find /evidence -type f -exec sha256sum {} \\; > manifest.txt produce un manifiesto de integridad de cada archivo en el directorio de evidencia."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "locate -i '*.log'",
+      "intro": {
+        "en": "Search the locate database for every path ending in .log. The -i flag makes the search case-insensitive, catching .LOG, .Log, etc.",
+        "es": "Busca en la base de datos de locate toda ruta que termine en .log. El flag -i hace la búsqueda insensible a mayúsculas, capturando .LOG, .Log, etc."
+      },
+      "sampleOutput": "/var/log/syslog\n/var/log/auth.log\n/var/log/dpkg.log\n/var/log/kern.log",
+      "lineByLine": [
+        {
+          "token": "/var/log/syslog",
+          "explain": {
+            "en": "The main system log — kernel messages, hardware events, and service status. locate found it in milliseconds because it reads a database, not the disk.",
+            "es": "El log principal del sistema — mensajes del kernel, eventos de hardware y estado de servicios. locate lo encontró en milisegundos porque lee una base de datos, no el disco."
+          }
+        },
+        {
+          "token": "/var/log/auth.log",
+          "explain": {
+            "en": "Authentication log — every login attempt, sudo invocation, and authentication event is recorded here. locate searches the entire filesystem in one go.",
+            "es": "Log de autenticación — cada intento de inicio de sesión, invocación de sudo y evento de autenticación se registra aquí. locate busca en todo el sistema de archivos de una sola vez."
+          }
+        },
+        {
+          "token": "/var/log/dpkg.log",
+          "explain": {
+            "en": "Package manager log — records every installed, upgraded or removed package. A critical artifact for understanding what software was present on the system.",
+            "es": "Log del gestor de paquetes — registra cada paquete instalado, actualizado o eliminado. Un artefacto crítico para entender qué software estaba presente en el sistema."
+          }
+        }
+      ]
+    },
+    {
+      "command": "find /var/log -type f -name '*.log' -size +1M",
+      "intro": {
+        "en": "List only regular log files in /var/log larger than 1 MB. Combining -type, -name and -size in a single find eliminates irrelevant results.",
+        "es": "Lista solo los archivos de log regulares en /var/log mayores de 1 MB. Combinar -type, -name y -size en un solo find elimina resultados irrelevantes."
+      },
+      "sampleOutput": "/var/log/syslog\n/var/log/kern.log",
+      "lineByLine": [
+        {
+          "token": "/var/log/syslog",
+          "explain": {
+            "en": "This file passed all three filters: regular file (-type f), name ending in .log (-name '*.log'), and size over 1 MB (-size +1M).",
+            "es": "Este archivo pasó los tres filtros: archivo regular (-type f), nombre terminado en .log (-name '*.log') y tamaño mayor de 1 MB (-size +1M)."
+          }
+        },
+        {
+          "token": "/var/log/kern.log",
+          "explain": {
+            "en": "Kernel log — kernel messages are always worth inspecting during an investigation because driver failures or unusual hardware events may indicate tampering.",
+            "es": "Log del kernel — los mensajes del kernel siempre valen la pena inspeccionarlos durante una investigación porque fallos de drivers o eventos de hardware inusuales pueden indicar manipulación."
+          }
+        }
+      ]
+    },
+    {
+      "command": "find /home -type f -mtime -7",
+      "intro": {
+        "en": "Find every regular file under /home modified in the last 7 days. In an active investigation this reveals recent user activity at a glance.",
+        "es": "Encuentra todo archivo regular bajo /home modificado en los últimos 7 días. En una investigación activa esto revela la actividad reciente del usuario de un vistazo."
+      },
+      "sampleOutput": "/home/analyst/evidence/report.txt\n/home/analyst/.bash_history\n/home/analyst/evidence/notes.txt",
+      "lineByLine": [
+        {
+          "token": "/home/analyst/.bash_history",
+          "explain": {
+            "en": "The shell command history was modified recently. The -mtime test found it because its content changed when the analyst ran new commands during the window of interest.",
+            "es": "El historial de comandos de la shell se modificó recientemente. El test -mtime lo encontró porque su contenido cambió cuando el analista ejecutó nuevos comandos durante la ventana de interés."
+          }
+        }
+      ]
+    },
+    {
+      "command": "find / -type f -perm /o+w 2>/dev/null",
+      "intro": {
+        "en": "Search the entire system for world-writable files. The / before o+w means 'any of these bits' — files where ANY user can write. Redirecting stderr hides permission-denied errors.",
+        "es": "Busca en todo el sistema archivos escribibles por cualquier usuario. La / antes de o+w significa 'cualquiera de estos bits' — archivos donde CUALQUIER usuario puede escribir. Redirigir stderr oculta los errores de permiso denegado."
+      },
+      "sampleOutput": "/tmp/install.sh\n/home/analyst/evidence/shared_note.txt\n/var/tmp/backup.sh",
+      "lineByLine": [
+        {
+          "token": "/tmp/install.sh",
+          "explain": {
+            "en": "A shell script in /tmp that anyone can modify. Attackers often drop world-writable scripts in shared directories and wait for root to execute them (privilege escalation).",
+            "es": "Un script de shell en /tmp que cualquiera puede modificar. Los atacantes suelen colocar scripts escribibles por cualquiera en directorios compartidos y esperar a que root los ejecute (escalada de privilegios)."
+          }
+        },
+        {
+          "token": "/home/analyst/evidence/shared_note.txt",
+          "explain": {
+            "en": "A file in the evidence directory that is world-writable — any user on the system could alter it, potentially corrupting the evidence. This is a chain-of-custody concern.",
+            "es": "Un archivo en el directorio de evidencia que es escribible por cualquiera — cualquier usuario del sistema podría alterarlo, potencialmente corrompiendo la evidencia. Esto es una preocupación de cadena de custodia."
+          }
+        },
+        {
+          "token": "/var/tmp/backup.sh",
+          "explain": {
+            "en": "Another world-writable script. /var/tmp survives reboots, so an attacker could leave a persistent backdoor here.",
+            "es": "Otro script escribible por cualquiera. /var/tmp sobrevive reinicios, por lo que un atacante podría dejar una puerta trasera persistente aquí."
+          }
+        }
+      ]
+    },
+    {
+      "command": "which tcpdump",
+      "intro": {
+        "en": "Find the exact location of the tcpdump executable. Useful for scripts and for confirming whether a forensic tool is installed on the analysis machine.",
+        "es": "Encuentra la ubicación exacta del ejecutable tcpdump. Útil para scripts y para confirmar si una herramienta forense está instalada en la máquina de análisis."
+      },
+      "sampleOutput": "/usr/sbin/tcpdump",
+      "lineByLine": [
+        {
+          "token": "/usr/sbin/tcpdump",
+          "explain": {
+            "en": "The full path of the tcpdump binary. which found it by searching every directory in the PATH variable until it located a matching executable.",
+            "es": "La ruta completa del binario tcpdump. which lo encontró buscando en cada directorio de la variable PATH hasta que localizó un ejecutable coincidente."
+          }
+        }
+      ]
+    },
+    {
+      "command": "find /evidence -type f -exec sha256sum {} \\;",
+      "intro": {
+        "en": "Generate an integrity hash for every file in the evidence directory. Each file is hashed with SHA-256 by inserting its path into the sha256sum argument via {}.",
+        "es": "Genera un hash de integridad para cada archivo en el directorio de evidencia. Cada archivo se hashea con SHA-256 insertando su ruta en el argumento de sha256sum mediante {}."
+      },
+      "sampleOutput": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2  /evidence/disk.dd\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /evidence/memory.raw\nf1e2d3c4b5a69788796a5b4c3d2e1f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6  /evidence/notes.txt",
+      "lineByLine": [
+        {
+          "token": "/evidence/disk.dd",
+          "explain": {
+            "en": "A disk image file — find located it and sha256sum hashed it automatically. The full path appears in the output because -exec substitutes the path for {}.",
+            "es": "Un archivo de imagen de disco — find lo localizó y sha256sum lo hasheó automáticamente. La ruta completa aparece en la salida porque -exec sustituye la ruta por {}."
+          }
+        },
+        {
+          "token": "/evidence/memory.raw",
+          "explain": {
+            "en": "A memory dump — another forensically critical file that was hashed in the same run. The -exec action ran sha256sum once per file; capturing the output to a file creates the integrity manifest.",
+            "es": "Un volcado de memoria — otro archivo forensemente crítico que fue hasheado en la misma ejecución. La acción -exec ejecutó sha256sum una vez por archivo; capturar la salida a un archivo crea el manifiesto de integridad."
+          }
+        },
+        {
+          "token": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "explain": {
+            "en": "A 64-character SHA-256 digest. This particular value is the well-known hash of an empty file — memory.raw was zero-length at acquisition, and the hash proves it has not been altered.",
+            "es": "Un digest SHA-256 de 64 caracteres. Este valor en particular es el hash conocido de un archivo vacío — memory.raw tenía longitud cero en la adquisición, y el hash prueba que no ha sido alterado."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which locate flag makes the search case-insensitive?",
+        "es": "¿Qué flag de locate hace que la búsqueda no distinga mayúsculas de minúsculas?"
+      },
+      "accept": ["-i", "--ignore-case", "locate -i"],
+      "explanation": {
+        "en": "The -i flag tells locate to match regardless of case. Without it, locate '*.LOG' would miss a file named syslog.",
+        "es": "El flag -i le dice a locate que coincida sin importar mayúsculas/minúsculas. Sin él, locate '*.LOG' no encontraría un archivo llamado syslog."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'find / -perm /o+w 2>/dev/null' and find /etc/shadow in the results. Why is finding /etc/shadow world-writable an immediate red flag?",
+        "es": "Ejecutas 'find / -perm /o+w 2>/dev/null' y encuentras /etc/shadow en los resultados. ¿Por qué encontrar /etc/shadow escribible por cualquiera es una bandera roja inmediata?"
+      },
+      "accept": [
+        "contiene contraseñas hash",
+        "cualquiera puede modificar contraseñas",
+        "anyone could change passwords",
+        "compromete la autenticación del sistema",
+        "it contains password hashes and anyone can edit them",
+        "es una violación de seguridad crítica"
+      ],
+      "explanation": {
+        "en": "/etc/shadow stores hashed passwords. If it is world-writable, any user can overwrite it with crafted entries and gain root access — a critical compromise.",
+        "es": "/etc/shadow almacena las contraseñas hasheadas. Si es escribible por cualquiera, cualquier usuario puede sobrescribirlo con entradas manipuladas y obtener acceso root — un compromiso crítico."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Find all regular files in /home owned by the user 'victim' that were modified in the last 30 days.",
+        "es": "Encuentra todos los archivos regulares en /home cuyo dueño es el usuario 'victim' que fueron modificados en los últimos 30 días."
+      },
+      "accept": [
+        "find /home -type f -user victim -mtime -30",
+        "find /home -user victim -type f -mtime -30",
+        "find /home -type f -user victim -mtime -30d"
+      ],
+      "explanation": {
+        "en": "Combine -type f (regular files), -user victim (owned by that user), and -mtime -30 (modified in the last 30 days). Each test narrows the search.",
+        "es": "Combina -type f (archivos regulares), -user victim (pertenecientes a ese usuario) y -mtime -30 (modificados en los últimos 30 días). Cada test reduce la búsqueda."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What command shows the full filesystem path of an executable program like 'python3'?",
+        "es": "¿Qué comando muestra la ruta completa en el sistema de archivos de un programa ejecutable como 'python3'?"
+      },
+      "accept": [
+        "which",
+        "which python3",
+        "type -p python3"
+      ],
+      "explanation": {
+        "en": "which python3 searches the PATH directories and prints the first matching executable — useful for scripts and documentation of the exact binary used.",
+        "es": "which python3 busca en los directorios de PATH e imprime el primer ejecutable que coincide — útil para scripts y documentación del binario exacto usado."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You need to hash every .jpg file under /evidence using a SINGLE sha256sum invocation (not one per file). How do you modify the -exec action to achieve that?",
+        "es": "Necesitas hashear cada archivo .jpg bajo /evidence usando una SOLA invocación de sha256sum (no una por archivo). ¿Cómo modificas la acción -exec para lograrlo?"
+      },
+      "accept": [
+        "cambiar ; por +",
+        "replace ; with +",
+        "-exec sha256sum {} +",
+        "usar + en lugar de ;"
+      ],
+      "explanation": {
+        "en": "Using + instead of ; makes find batch all filenames into a single command. Instead of 'sha256sum file1; sha256sum file2', it runs 'sha256sum file1 file2' once.",
+        "es": "Usar + en lugar de ; hace que find agrupe todos los nombres de archivo en un solo comando. En lugar de 'sha256sum archivo1; sha256sum archivo2', ejecuta 'sha256sum archivo1 archivo2' una vez."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'locate secret' on a suspect's image and it returns nothing. Then you run 'find / -name secret -type f 2>/dev/null' and it finds /root/secret.txt. Why did locate miss it?",
+        "es": "Ejecutas 'locate secret' en una imagen de un sospechoso y no devuelve nada. Luego ejecutas 'find / -name secret -type f 2>/dev/null' y encuentra /root/secret.txt. ¿Por qué locate no lo encontró?"
+      },
+      "accept": [
+        "la base de datos de locate no está actualizada",
+        "locate database is outdated",
+        "mlocate respeta permisos y root/ no es accesible",
+        "mlocate respects permissions and /root is not accessible",
+        "locate no tenía permisos para indexar /root",
+        "locate uses mlocate which hides files the user cannot read"
+      ],
+      "explanation": {
+        "en": "Two reasons: first, locate's database may be stale (updated once daily). Second, mlocate respects permissions — if the image's /root is not indexed or the database was built without access to it, locate would not include it. find does a live scan and does not care about the database.",
+        "es": "Dos razones: primero, la base de datos de locate puede estar desactualizada (se actualiza una vez al día). Segundo, mlocate respeta permisos — si /root de la imagen no fue indexado o la base de datos se construyó sin acceso a él, locate no lo incluiría. find hace un escaneo en vivo y no depende de la base de datos."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Find all empty files (zero bytes) under /tmp to check for suspicious placeholder files.",
+        "es": "Encuentra todos los archivos vacíos (cero bytes) bajo /tmp para verificar si hay archivos sospechosos de relleno."
+      },
+      "accept": [
+        "find /tmp -type f -empty",
+        "find /tmp -empty -type f",
+        "find /tmp -size 0 -type f",
+        "find /tmp -type f -size 0"
+      ],
+      "explanation": {
+        "en": "The -empty test matches files with zero size and directories with no entries. Alternatively, -size 0 achieves the same effect for regular files. Empty files in /tmp can be used as lock files or markers by malware.",
+        "es": "El test -empty coincide con archivos de tamaño cero y directorios sin entradas. Alternativamente, -size 0 logra el mismo efecto para archivos regulares. Los archivos vacíos en /tmp pueden ser usados como archivos de bloqueo o marcadores por malware."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Wildcards and globbing patterns (*, ?, []) — Shotts, The Linux Command Line",
+    "locate: database search, -i flag, mlocate vs slocate — Shotts, The Linux Command Line",
+    "updatedb and the locate database cron job — Shotts, The Linux Command Line",
+    "find -type f/d/l, -name, -iname — Shotts, The Linux Command Line",
+    "find -size with +/-, k/M/G units — Shotts, The Linux Command Line",
+    "find -mtime, -atime, -ctime, -mmin — Shotts, The Linux Command Line",
+    "find -perm with octal modes and leading / — Shotts, The Linux Command Line",
+    "find -user, -group filters — Shotts, The Linux Command Line",
+    "find -exec, -ok, {} placeholder, ; vs + — Shotts, The Linux Command Line",
+    "xargs for batch execution from piped input — Shotts, The Linux Command Line",
+    "which command and PATH variable — Shotts, The Linux Command Line",
+    "find in a forensic workflow (hashing, integrity manifests) — Blum & Bresnahan, Linux Command Line and Shell Scripting Bible"
+  ],
+  "mangaRevealOnComplete": 2
+}

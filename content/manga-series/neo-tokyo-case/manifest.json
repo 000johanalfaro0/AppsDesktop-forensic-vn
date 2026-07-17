@@ -1,0 +1,16 @@
+{
+  "id": "neo-tokyo-case",
+  "title": { "en": "Neo-Tokyo Case", "es": "El Caso Neo-Tokio" },
+  "cover": "cover.svg",
+  "filter": {
+    "blackPoint": 0.12,
+    "contrast": 1.3,
+    "blend": "screen",
+    "tint": "#0a3a18"
+  },
+  "panels": [
+    { "file": "001.svg", "aspect": "3 / 4" },
+    { "file": "002.svg", "aspect": "3 / 4" },
+    { "file": "003.svg", "aspect": "3 / 4" }
+  ]
+}

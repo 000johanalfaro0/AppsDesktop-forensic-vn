@@ -1,0 +1,634 @@
+{
+  "id": "ch11",
+  "layer": 1,
+  "order": 11,
+  "title": {
+    "en": "Permissions in Depth",
+    "es": "Permisos en profundidad"
+  },
+  "subtitle": {
+    "en": "chmod octal and symbolic modes, chown, and the setuid, setgid, and sticky bits that control who does what.",
+    "es": "Modos octal y simbólico de chmod, chown, y los bits setuid, setgid y sticky que controlan quién hace qué."
+  },
+  "glossary": [
+    {
+      "term": { "en": "UID", "es": "UID" },
+      "definition": {
+        "en": "User ID — the numeric identifier the kernel assigns to each user account. Mapped to a username in /etc/passwd.",
+        "es": "User ID — el identificador numérico que el kernel asigna a cada cuenta de usuario. Se mapea a un nombre de usuario en /etc/passwd."
+      }
+    },
+    {
+      "term": { "en": "GID", "es": "GID" },
+      "definition": {
+        "en": "Group ID — the numeric identifier for a group. Each user has a primary GID and can belong to supplementary groups.",
+        "es": "Group ID — el identificador numérico de un grupo. Cada usuario tiene un GID primario y puede pertenecer a grupos suplementarios."
+      }
+    },
+    {
+      "term": { "en": "permission", "es": "permiso" },
+      "definition": {
+        "en": "A rule that determines whether a user can read, write, or execute a file or directory. Linux defines three levels: owner, group, and others.",
+        "es": "Una regla que determina si un usuario puede leer, escribir o ejecutar un archivo o directorio. Linux define tres niveles: dueño, grupo y otros."
+      }
+    },
+    {
+      "term": { "en": "octal mode", "es": "modo octal" },
+      "definition": {
+        "en": "A three-digit base-8 number that expresses permissions compactly. Each digit combines read (4), write (2), and execute (1) for one security level.",
+        "es": "Un número de tres dígitos en base 8 que expresa los permisos de forma compacta. Cada dígito combina lectura (4), escritura (2) y ejecución (1) para un nivel de seguridad."
+      }
+    },
+    {
+      "term": { "en": "symbolic mode", "es": "modo simbólico" },
+      "definition": {
+        "en": "A notation for chmod that uses letters u/g/o/a, operators +/-/=, and permissions r/w/x to change specific parts of the mode without affecting others.",
+        "es": "Una notación para chmod que usa letras u/g/o/a, operadores +/-/= y permisos r/w/x para cambiar partes específicas del modo sin afectar las demás."
+      }
+    },
+    {
+      "term": { "en": "owner", "es": "dueño" },
+      "definition": {
+        "en": "The user who owns a file or directory. The owner's permissions are the first triad in the mode string. Only the owner or root can change permissions.",
+        "es": "El usuario que posee un archivo o directorio. Los permisos del dueño son la primera tríada en la cadena de modo. Solo el dueño o root puede cambiar los permisos."
+      }
+    },
+    {
+      "term": { "en": "group", "es": "grupo" },
+      "definition": {
+        "en": "A collection of users who share the same set of permissions for a file. The group permissions form the second triad in the mode string.",
+        "es": "Un conjunto de usuarios que comparten los mismos permisos sobre un archivo. Los permisos del grupo forman la segunda tríada en la cadena de modo."
+      }
+    },
+    {
+      "term": { "en": "others", "es": "otros" },
+      "definition": {
+        "en": "Everyone else on the system who is neither the owner nor a member of the file's group. Their permissions form the third triad.",
+        "es": "Todos los demás del sistema que no son ni el dueño ni miembros del grupo del archivo. Sus permisos forman la tercera tríada."
+      }
+    },
+    {
+      "term": { "en": "setuid", "es": "setuid" },
+      "definition": {
+        "en": "A special permission bit (octal 4000) that makes an executable run with the privileges of its owner, not the user who launched it. A forensic red flag when found on unexpected files.",
+        "es": "Un bit de permiso especial (octal 4000) que hace que un ejecutable corra con los privilegios de su dueño, no del usuario que lo lanzó. Una bandera roja forense cuando aparece en archivos inesperados."
+      }
+    },
+    {
+      "term": { "en": "setgid", "es": "setgid" },
+      "definition": {
+        "en": "A special permission bit (octal 2000). On files it changes the effective group ID; on directories it causes new files to inherit the directory's group. Essential for shared forensic workspaces.",
+        "es": "Un bit de permiso especial (octal 2000). En archivos cambia el GID efectivo; en directorios hace que los archivos nuevos hereden el grupo del directorio. Esencial para espacios de trabajo forense compartidos."
+      }
+    },
+    {
+      "term": { "en": "sticky bit", "es": "sticky bit" },
+      "definition": {
+        "en": "A special permission bit (octal 1000) on directories that restricts deletion: only the file owner, directory owner, or root can remove files. Used in /tmp to prevent users from deleting each other's files.",
+        "es": "Un bit de permiso especial (octal 1000) en directorios que restringe la eliminación: solo el dueño del archivo, el dueño del directorio o root pueden borrar archivos. Se usa en /tmp para evitar que los usuarios borren archivos ajenos."
+      }
+    },
+    {
+      "term": { "en": "effective UID", "es": "UID efectivo" },
+      "definition": {
+        "en": "The user ID that the kernel uses for access control checks during a process's execution. Normally matches the real UID, but differs when a setuid binary runs.",
+        "es": "El ID de usuario que el kernel usa para verificar los permisos de acceso durante la ejecución de un proceso. Normalmente coincide con el UID real, pero difiere cuando se ejecuta un binario setuid."
+      }
+    },
+    {
+      "term": { "en": "ownership", "es": "propiedad" },
+      "definition": {
+        "en": "The association between a file and its owner user and group, stored in the inode. Every file has exactly one owner and one group.",
+        "es": "La asociación entre un archivo y su usuario y grupo dueños, almacenada en el inodo. Cada archivo tiene exactamente un dueño y un grupo."
+      }
+    },
+    {
+      "term": { "en": "umask", "es": "umask" },
+      "definition": {
+        "en": "A three-digit octal mask that subtracts permissions from newly created files and directories. A umask of 022 yields 644 for files and 755 for directories.",
+        "es": "Una máscara octal de tres dígitos que resta permisos a los archivos y directorios recién creados. Un umask de 022 produce 644 para archivos y 755 para directorios."
+      }
+    },
+    {
+      "term": { "en": "id", "es": "id" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that displays the current user's UID, GID, and supplementary group memberships.",
+        "es": "Comando que muestra el UID, GID y las membresías a grupos suplementarios del usuario actual."
+      }
+    },
+    {
+      "term": { "en": "chmod", "es": "chmod" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that changes the permission mode of a file or directory. Accepts octal (e.g. 644) or symbolic (e.g. u+x) notation.",
+        "es": "Comando que cambia el modo de permiso de un archivo o directorio. Acepta notación octal (ej. 644) o simbólica (ej. u+x)."
+      }
+    },
+    {
+      "term": { "en": "chown", "es": "chown" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that changes the owner and/or group of a file or directory. Requires superuser privileges.",
+        "es": "Comando que cambia el dueño y/o grupo de un archivo o directorio. Requiere privilegios de superusuario."
+      }
+    },
+    {
+      "term": { "en": "ls", "es": "ls" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that lists directory contents. The -l flag shows the full permission string, owner, group, size, and timestamp.",
+        "es": "Comando que lista el contenido de un directorio. El flag -l muestra la cadena completa de permisos, dueño, grupo, tamaño y marca de tiempo."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "understand-permission-model",
+      "label": {
+        "en": "Understand the Linux permission triads: owner, group, and others",
+        "es": "Entender las tríadas de permisos de Linux: dueño, grupo y otros"
+      }
+    },
+    {
+      "id": "use-octal-mode",
+      "label": {
+        "en": "Use octal notation with chmod to set precise permission values",
+        "es": "Usar la notación octal con chmod para establecer valores de permiso precisos"
+      }
+    },
+    {
+      "id": "use-symbolic-mode",
+      "label": {
+        "en": "Use symbolic notation with chmod to add and remove individual permissions",
+        "es": "Usar la notación simbólica con chmod para agregar y quitar permisos individuales"
+      }
+    },
+    {
+      "id": "change-ownership",
+      "label": {
+        "en": "Change file ownership and group with chown",
+        "es": "Cambiar la propiedad y el grupo de un archivo con chown"
+      }
+    },
+    {
+      "id": "identify-setuid",
+      "label": {
+        "en": "Identify and understand the setuid bit and its forensic significance",
+        "es": "Identificar y entender el bit setuid y su significado forense"
+      }
+    },
+    {
+      "id": "identify-setgid-sticky",
+      "label": {
+        "en": "Identify the setgid bit and sticky bit and explain how they affect directories",
+        "es": "Identificar el bit setgid y el sticky bit y explicar cómo afectan a los directorios"
+      }
+    },
+    {
+      "id": "spot-special-permissions",
+      "label": {
+        "en": "Spot all three special permission bits in an ls -la listing",
+        "es": "Detectar los tres bits de permiso especial en un listado ls -la"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The three triads: owner, group, and others",
+        "es": "Las tres tríadas: dueño, grupo y otros"
+      },
+      "body": {
+        "en": "Every file and directory in Linux carries a set of permissions stored in its inode. The first character of the permission string identifies the file type (- for regular file, d for directory, l for symlink). The next nine characters form three triads of r, w, and x: the first triad belongs to the file owner, the second to the file's group, and the third to everyone else (others or world). A dash in any position means that permission is denied. In a forensic context, this model tells you exactly what each user category could do with a piece of evidence. If a file with sensitive content is world-readable (---r--), any process on the system could have read it — and that fact alone can shift an investigation.",
+        "es": "Cada archivo y directorio en Linux lleva un conjunto de permisos almacenados en su inodo. El primer carácter de la cadena de permisos identifica el tipo de archivo (- para archivo regular, d para directorio, l para enlace simbólico). Los siguientes nueve caracteres forman tres tríadas de r, w y x: la primera tríada pertenece al dueño del archivo, la segunda al grupo del archivo y la tercera a todos los demás (otros o mundo). Un guión en cualquier posición significa que ese permiso está denegado. En un contexto forense, este modelo te dice exactamente qué podía hacer cada categoría de usuario con una pieza de evidencia. Si un archivo con contenido sensible es legible por el mundo (---r--), cualquier proceso del sistema pudo haberlo leído — y ese solo hecho puede cambiar una investigación."
+      }
+    },
+    {
+      "heading": {
+        "en": "Octal notation: how three digits encode every permission",
+        "es": "Notación octal: cómo tres dígitos codifican cualquier permiso"
+      },
+      "body": {
+        "en": "Each rwx triad can be expressed as a single octal digit by treating the three bits as a binary number. Read (r) is worth 4, write (w) is worth 2, and execute (x) is worth 1. A mode of rw- is 4+2+0 = 6; r-x is 4+0+1 = 5; rwx is 4+2+1 = 7. Three digits in a row represent owner, group, and others respectively. So chmod 644 means owner gets rw- (6), group gets r-- (4), others get r-- (4). In forensics you will see 644 and 755 most often, but a file that was intentionally locked down shows 600 (owner only) or even 000 (no one). A file with mode 000 that still has content is suspicious — someone may have changed permissions to hide it after the fact.",
+        "es": "Cada tríada rwx se puede expresar como un solo dígito octal tratando los tres bits como un número binario. Leer (r) vale 4, escribir (w) vale 2 y ejecutar (x) vale 1. Un modo rw- es 4+2+0 = 6; r-x es 4+0+1 = 5; rwx es 4+2+1 = 7. Tres dígitos seguidos representan al dueño, al grupo y a los otros respectivamente. Así que chmod 644 significa que el dueño obtiene rw- (6), el grupo obtiene r-- (4) y los otros obtienen r-- (4). En forensia verás 644 y 755 con mayor frecuencia, pero un archivo intencionalmente restringido muestra 600 (solo el dueño) o incluso 000 (nadie). Un archivo con modo 000 que aún tiene contenido es sospechoso — alguien pudo haber cambiado los permisos para ocultarlo después del hecho."
+      }
+    },
+    {
+      "heading": {
+        "en": "Symbolic notation: fine-grained changes without affecting the rest",
+        "es": "Notación simbólica: cambios precisos sin afectar el resto"
+      },
+      "body": {
+        "en": "Octal notation replaces the entire permission set at once. Symbolic notation lets you modify a single permission without touching the others. The format uses a target (u for owner, g for group, o for others, a for all), an operator (+ to add, - to remove, = to set exactly), and a permission letter (r, w, x). For example, chmod u+x adds execute for the owner only, leaving group and others unchanged. chmod go-w removes write for group and others. chmod a+r makes a file readable by everyone without changing execute bits. This granularity is critical when adjusting permissions on a compromised system: you want to lock down access without accidentally disabling a binary that must remain executable.",
+        "es": "La notación octal reemplaza el conjunto completo de permisos de una sola vez. La notación simbólica permite modificar un solo permiso sin tocar los demás. El formato usa un objetivo (u para dueño, g para grupo, o para otros, a para todos), un operador (+ para agregar, - para quitar, = para establecer exactamente) y una letra de permiso (r, w, x). Por ejemplo, chmod u+x agrega ejecución solo para el dueño, dejando grupo y otros intactos. chmod go-w quita escritura para grupo y otros. chmod a+r hace que un archivo sea legible por todos sin cambiar los bits de ejecución. Esta granularidad es crítica al ajustar permisos en un sistema comprometido: quieres restringir el acceso sin deshabilitar accidentalmente un binario que debe seguir siendo ejecutable."
+      }
+    },
+    {
+      "heading": {
+        "en": "Changing ownership with chown",
+        "es": "Cambiar la propiedad con chown"
+      },
+      "body": {
+        "en": "The chown command transfers ownership of a file or directory to another user or group. It requires superuser privileges because changing ownership bypasses normal access controls. The syntax is chown owner:group file. You can omit the group (chown owner file) to change only the user, or omit the user with a leading colon (chown :group file) to change only the group. In an investigation, ownership records are part of the timeline: if a system binary like /bin/login suddenly belongs to an unknown user instead of root, that is a strong indicator of tampering. Likewise, a file that should be owned by root that shows a different owner may have been replaced by an attacker.",
+        "es": "El comando chown transfiere la propiedad de un archivo o directorio a otro usuario o grupo. Requiere privilegios de superusuario porque cambiar la propiedad elude los controles de acceso normales. La sintaxis es chown owner:group archivo. Puedes omitir el grupo (chown owner archivo) para cambiar solo el usuario, u omitir el usuario con dos puntos al inicio (chown :group archivo) para cambiar solo el grupo. En una investigación, los registros de propiedad son parte de la línea de tiempo: si un binario del sistema como /bin/login de repente pertenece a un usuario desconocido en vez de root, eso es un fuerte indicador de manipulación. Del mismo modo, un archivo que debería ser de root pero muestra un dueño diferente puede haber sido reemplazado por un atacante."
+      }
+    },
+    {
+      "heading": {
+        "en": "The setuid bit: running with another user's privileges",
+        "es": "El bit setuid: ejecutar con los privilegios de otro usuario"
+      },
+      "body": {
+        "en": "Normally a process runs with the effective UID of the user who launched it. The setuid bit (octal 4000, symbolic s in the owner's execute position) overrides this: when a setuid executable runs, the kernel sets its effective UID to the file owner instead. The most common example is /usr/bin/passwd, which is owned by root and setuid — it needs to write to /etc/shadow, which regular users cannot access. Setuid root binaries are a prime forensic target: if an investigator finds a setuid root binary in a user's home directory or /tmp, it strongly suggests privilege escalation was planted. The number of setuid programs on a clean system should be minimal and stable; any new setuid binary is suspicious.",
+        "es": "Normalmente un proceso se ejecuta con el UID efectivo del usuario que lo lanzó. El bit setuid (octal 4000, s simbólico en la posición de ejecución del dueño) anula esto: cuando un ejecutable setuid se ejecuta, el kernel asigna su UID efectivo al dueño del archivo. El ejemplo más común es /usr/bin/passwd, que es de root y tiene setuid — necesita escribir en /etc/shadow, al que los usuarios normales no pueden acceder. Los binarios setuid root son un objetivo forense primordial: si un investigador encuentra un binario setuid root en el directorio personal de un usuario o en /tmp, sugiere fuertemente que se plantó una escalada de privilegios. La cantidad de programas setuid en un sistema limpio debe ser mínima y estable; cualquier binario setuid nuevo es sospechoso."
+      }
+    },
+    {
+      "heading": {
+        "en": "The setgid bit: shared group ownership",
+        "es": "El bit setgid: propiedad de grupo compartida"
+      },
+      "body": {
+        "en": "The setgid bit (octal 2000, symbolic s in the group's execute position) has two behaviors. On an executable file, it changes the effective GID to the file's group, like setuid but for groups. On a directory — the far more common forensic use — it causes every new file or subdirectory created inside it to inherit the directory's group instead of the creator's primary group. Combined with a umask of 002, this lets multiple users share a workspace seamlessly. In a forensic lab, setting setgid on case directories ensures that any file an analyst creates remains accessible to the whole team. If a shared directory lacks setgid, files created by different analysts may end up locked to their individual primary groups.",
+        "es": "El bit setgid (octal 2000, s simbólico en la posición de ejecución del grupo) tiene dos comportamientos. En un archivo ejecutable, cambia el GID efectivo al grupo del archivo, como setuid pero para grupos. En un directorio — el uso forense más común — hace que cada archivo o subdirectorio nuevo creado dentro de él herede el grupo del directorio en lugar del grupo primario del creador. Combinado con un umask de 002, esto permite que varios usuarios compartan un espacio de trabajo sin problemas. En un laboratorio forense, asignar setgid a los directorios de caso asegura que cualquier archivo que un analista cree siga siendo accesible para todo el equipo. Si un directorio compartido carece de setgid, los archivos creados por diferentes analistas pueden terminar bloqueados para sus grupos primarios individuales."
+      }
+    },
+    {
+      "heading": {
+        "en": "The sticky bit: protecting files in shared directories",
+        "es": "El sticky bit: proteger archivos en directorios compartidos"
+      },
+      "body": {
+        "en": "The sticky bit (octal 1000, symbolic t in the others' execute position) is a directory-only permission in modern Linux. In a directory with the sticky bit set, a user can only delete or rename their own files — even if the directory is world-writable. The classic example is /tmp, which must be writable by all users but must also prevent user A from deleting user B's temporary files. In a forensic context, malware often drops files in /tmp and relies on being able to create them there. Examining the ownership of files inside /tmp can reveal which user account the malware ran under. If /tmp lacks the sticky bit, it is a serious misconfiguration that could allow trivial destruction of evidence by any local user.",
+        "es": "El sticky bit (octal 1000, t simbólico en la posición de ejecución de otros) es un permiso exclusivo de directorios en Linux moderno. En un directorio con el sticky bit activado, un usuario solo puede borrar o renombrar sus propios archivos — incluso si el directorio es escribible por todos. El ejemplo clásico es /tmp, que debe ser escribible por todos los usuarios pero también debe evitar que el usuario A borre los archivos temporales del usuario B. En un contexto forense, el malware a menudo deja archivos en /tmp y depende de poder crearlos allí. Examinar la propiedad de los archivos dentro de /tmp puede revelar bajo qué cuenta de usuario se ejecutó el malware. Si /tmp carece del sticky bit, es una mala configuración grave que podría permitir la destrucción trivial de evidencia por cualquier usuario local."
+      }
+    },
+    {
+      "heading": {
+        "en": "Spotting special permissions in an ls -la listing",
+        "es": "Detectar permisos especiales en un listado ls -la"
+      },
+      "body": {
+        "en": "When you run ls -la, the special permission bits appear in the execute position of the relevant triad. Setuid shows as s (or S if execute is missing) in the owner's x position: -rwsr-xr-x. Setgid shows as s in the group's x position: -rwxrwsr-x. The sticky bit shows as t (or T if execute is missing) in the others' x position: drwxrwxrwt. A capital letter (S or T) means you set the special bit without the underlying execute permission, which is almost always a mistake. In a forensic acquisition, capturing a full recursive ls -la of critical directories (especially /usr/bin, /tmp, and user homes) provides a baseline. Any deviation in subsequent images — a new setuid binary, a missing sticky bit, a world-writable system file — is a finding worth documenting.",
+        "es": "Cuando ejecutas ls -la, los bits de permiso especial aparecen en la posición de ejecución de la tríada correspondiente. Setuid se muestra como s (o S si falta ejecución) en la posición x del dueño: -rwsr-xr-x. Setgid se muestra como s en la posición x del grupo: -rwxrwsr-x. El sticky bit se muestra como t (o T si falta ejecución) en la posición x de otros: drwxrwxrwt. Una letra mayúscula (S o T) significa que activaste el bit especial sin el permiso de ejecución subyacente, lo cual es casi siempre un error. En una adquisición forense, capturar un ls -la recursivo completo de los directorios críticos (especialmente /usr/bin, /tmp y los homes de usuarios) proporciona una línea de base. Cualquier desviación en imágenes posteriores — un nuevo binario setuid, un sticky bit faltante, un archivo de sistema escribible por todos — es un hallazgo que vale la pena documentar."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "id",
+      "intro": {
+        "en": "Know who you are: your numeric UID, primary GID, and every group your account belongs to. Each permission check starts from these numbers.",
+        "es": "Sepa quién es: su UID numérico, GID primario y cada grupo al que pertenece su cuenta. Cada verificación de permisos parte de estos números."
+      },
+      "sampleOutput": "uid=1000(analyst) gid=1000(analyst) groups=1000(analyst),4(adm),27(sudo)",
+      "lineByLine": [
+        {
+          "token": "uid=1000",
+          "explain": {
+            "en": "The numeric User ID. Regular user accounts start at 1000 on modern distributions (500 on older ones). Root is always UID 0.",
+            "es": "El User ID numérico. Las cuentas de usuario regulares empiezan en 1000 en distribuciones modernas (500 en las antiguas). Root siempre es UID 0."
+          }
+        },
+        {
+          "token": "gid=1000(analyst)",
+          "explain": {
+            "en": "Primary Group ID and its human-readable name. Every file you create will belong to this group by default.",
+            "es": "Group ID primario y su nombre legible. Cada archivo que crees pertenecerá a este grupo por defecto."
+          }
+        },
+        {
+          "token": "27(sudo)",
+          "explain": {
+            "en": "A supplementary group. Membership in group 27 (sudo) means this user can run commands with sudo. Group numbers vary across distributions.",
+            "es": "Un grupo suplementario. La membresía al grupo 27 (sudo) significa que este usuario puede ejecutar comandos con sudo. Los números de grupo varían entre distribuciones."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chmod 644 notes.txt",
+      "intro": {
+        "en": "Set a file to the standard read-write for owner, read-only for group and others. This is the most common permission for non-executable evidence files.",
+        "es": "Establece un archivo como lectura-escritura para el dueño, solo lectura para grupo y otros. Es el permiso más común para archivos de evidencia no ejecutables."
+      },
+      "sampleOutput": "-rw-r--r-- 1 analyst analyst 1024 Jun 28 10:15 notes.txt",
+      "lineByLine": [
+        {
+          "token": "-rw-r--r--",
+          "explain": {
+            "en": "The resulting mode from chmod 644: owner reads and writes (rw-), group reads (r--), others read (r--). The leading dash means it is a regular file.",
+            "es": "El modo resultante de chmod 644: el dueño lee y escribe (rw-), el grupo lee (r--), otros leen (r--). El guión inicial indica que es un archivo regular."
+          }
+        },
+        {
+          "token": "notes.txt",
+          "explain": {
+            "en": "The filename. The permissions shown apply to this specific file. Each file has its own independent mode stored in its inode.",
+            "es": "El nombre del archivo. Los permisos mostrados aplican a este archivo específico. Cada archivo tiene su propio modo independiente almacenado en su inodo."
+          }
+        },
+        {
+          "token": "1024",
+          "explain": {
+            "en": "File size in bytes. The size is part of the inode metadata alongside the permission bits and timestamps.",
+            "es": "Tamaño del archivo en bytes. El tamaño es parte de los metadatos del inodo junto con los bits de permiso y las marcas de tiempo."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chmod u+x scan.sh",
+      "intro": {
+        "en": "Add execute permission for the owner only, leaving group and others untouched. Symbolic notation changes one target at a time without overwriting the full mode.",
+        "es": "Agrega permiso de ejecución solo para el dueño, dejando grupo y otros intactos. La notación simbólica cambia un objetivo a la vez sin sobrescribir el modo completo."
+      },
+      "sampleOutput": "-rwxr-xr-- 1 analyst analyst 2048 Jun 28 10:20 scan.sh",
+      "lineByLine": [
+        {
+          "token": "rwxr-xr--",
+          "explain": {
+            "en": "Owner has rwx (read, write, execute), group has r-x (read, execute), others have r-- (read only). The x for owner was added by u+x without removing group's x.",
+            "es": "El dueño tiene rwx (leer, escribir, ejecutar), el grupo tiene r-x (leer, ejecutar), otros tienen r-- (solo leer). La x del dueño se agregó con u+x sin quitar la x del grupo."
+          }
+        },
+        {
+          "token": "scan.sh",
+          "explain": {
+            "en": "A shell script. The .sh extension is a convention; execute permission is what actually makes it runnable regardless of the name.",
+            "es": "Un script de shell. La extensión .sh es una convención; el permiso de ejecución es lo que realmente lo hace ejecutable, sin importar el nombre."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chown analyst:forensics case.log",
+      "intro": {
+        "en": "Transfer the file to a specific user and group in one command. The colon separates owner from group. Requires root or sudo.",
+        "es": "Transfiere el archivo a un usuario y grupo específicos en un solo comando. Los dos puntos separan al dueño del grupo. Requiere root o sudo."
+      },
+      "sampleOutput": "-rw-r--r-- 1 analyst forensics 4096 Jun 28 11:00 case.log",
+      "lineByLine": [
+        {
+          "token": "analyst",
+          "explain": {
+            "en": "The new owner of the file. After chown, the file belongs to user analyst. Only the first entry in the output shows the owner name.",
+            "es": "El nuevo dueño del archivo. Después de chown, el archivo pertenece al usuario analyst. La primera entrada en la salida muestra el nombre del dueño."
+          }
+        },
+        {
+          "token": "forensics",
+          "explain": {
+            "en": "The new group owner. After chown analyst:forensics, the group changes from whatever it was to 'forensics'. All members of this group now share the group permissions.",
+            "es": "El nuevo grupo dueño. Después de chown analyst:forensics, el grupo cambia de lo que era a 'forensics'. Todos los miembros de este grupo ahora comparten los permisos de grupo."
+          }
+        },
+        {
+          "token": "4096",
+          "explain": {
+            "en": "File size. chown only changes ownership metadata; it never touches the file's content or size. The inode's owner and group fields are updated in place.",
+            "es": "Tamaño del archivo. chown solo cambia los metadatos de propiedad; nunca toca el contenido ni el tamaño del archivo. Los campos de dueño y grupo del inodo se actualizan en el lugar."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chmod 4755 collector",
+      "intro": {
+        "en": "Set the setuid bit with octal notation. The leading 4 in the four-digit mode activates setuid while 755 sets the base permissions. The file will now run as its owner.",
+        "es": "Activa el bit setuid con notación octal. El 4 inicial en el modo de cuatro dígitos activa setuid mientras que 755 establece los permisos base. El archivo ahora se ejecutará como su dueño."
+      },
+      "sampleOutput": "-rwsr-xr-x 1 root root 14232 Jun 28 14:00 collector",
+      "lineByLine": [
+        {
+          "token": "rws",
+          "explain": {
+            "en": "The s in the owner's execute position replaces the usual x. It means setuid is active: anyone who runs 'collector' executes it with root's effective UID.",
+            "es": "La s en la posición de ejecución del dueño reemplaza la x habitual. Significa que setuid está activo: cualquiera que ejecute 'collector' lo hace con el UID efectivo de root."
+          }
+        },
+        {
+          "token": "root root",
+          "explain": {
+            "en": "Owner and group are both root. A setuid root binary grants full superuser privileges when executed. Finding this on a non-system path is a major forensic red flag.",
+            "es": "El dueño y el grupo son ambos root. Un binario setuid root otorga privilegios completos de superusuario al ejecutarse. Encontrar esto en una ruta que no es del sistema es una gran bandera roja forense."
+          }
+        },
+        {
+          "token": "14232",
+          "explain": {
+            "en": "The file size. Small setuid binaries are common because they are usually single-purpose utilities (passwd, ping, su). Unusually large ones warrant closer inspection.",
+            "es": "El tamaño del archivo. Los binarios setuid pequeños son comunes porque suelen ser utilidades de un solo propósito (passwd, ping, su). Los inusualmente grandes merecen una inspección más detallada."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chmod g+s /shared/casefiles",
+      "intro": {
+        "en": "Set the setgid bit on a directory so new files inherit its group. Essential for multi-analyst case directories.",
+        "es": "Activa el bit setgid en un directorio para que los archivos nuevos hereden su grupo. Esencial para directorios de caso con múltiples analistas."
+      },
+      "sampleOutput": "drwxrwsr-x 2 analyst forensics 4096 Jun 28 14:30 casefiles",
+      "lineByLine": [
+        {
+          "token": "rws",
+          "explain": {
+            "en": "The s in the group's execute position (rws instead of rwx) means setgid is set on this directory. Note the owner's position still shows rwx — only the group's triad changes.",
+            "es": "La s en la posición de ejecución del grupo (rws en vez de rwx) significa que setgid está activado en este directorio. Nótese que la posición del dueño aún muestra rwx — solo cambia la tríada del grupo."
+          }
+        },
+        {
+          "token": "forensics",
+          "explain": {
+            "en": "The directory's group. Because setgid is set, every new file created inside 'casefiles' will also belong to group forensics, regardless of the creator's primary group.",
+            "es": "El grupo del directorio. Como setgid está activado, cada archivo nuevo creado dentro de 'casefiles' también pertenecerá al grupo forensics, sin importar el grupo primario del creador."
+          }
+        },
+        {
+          "token": "casefiles",
+          "explain": {
+            "en": "The directory name. The 'd' at the start of the permissions confirms this is a directory. The setgid bit only affects directory contents, not the directory itself.",
+            "es": "El nombre del directorio. La 'd' al inicio de los permisos confirma que es un directorio. El bit setgid solo afecta al contenido del directorio, no al directorio mismo."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chmod +t /tmp",
+      "intro": {
+        "en": "Set the sticky bit so only file owners can delete their own files. A missing sticky bit on /tmp is a system integrity finding.",
+        "es": "Activa el sticky bit para que solo los dueños puedan borrar sus propios archivos. Un sticky bit faltante en /tmp es un hallazgo de integridad del sistema."
+      },
+      "sampleOutput": "drwxrwxrwt 2 root root 4096 Jun 28 15:00 /tmp",
+      "lineByLine": [
+        {
+          "token": "rwt",
+          "explain": {
+            "en": "The t in the others' execute position shows the sticky bit is active. The directory is world-writable (rwxrwxrw) but the sticky bit prevents users from deleting each other's files.",
+            "es": "La t en la posición de ejecución de otros muestra que el sticky bit está activo. El directorio es escribible por todos (rwxrwxrw) pero el sticky bit evita que los usuarios borren los archivos de otros."
+          }
+        },
+        {
+          "token": "/tmp",
+          "explain": {
+            "en": "The temporary directory. Every Linux system relies on /tmp being world-writable AND having the sticky bit. Without it, any user could delete evidence files another user placed there.",
+            "es": "El directorio temporal. Todo sistema Linux depende de que /tmp sea escribible por todos Y tenga el sticky bit. Sin él, cualquier usuario podría borrar archivos de evidencia que otro usuario colocó allí."
+          }
+        },
+        {
+          "token": "root root",
+          "explain": {
+            "en": "Owner and group are root. The system owns /tmp itself, but the sticky bit lets ordinary users create and manage their own files inside it safely.",
+            "es": "El dueño y el grupo son root. El sistema es dueño de /tmp, pero el sticky bit permite que los usuarios comunes creen y gestionen sus propios archivos dentro de él de forma segura."
+          }
+        }
+      ]
+    },
+    {
+      "command": "ls -la",
+      "intro": {
+        "en": "List every file with permissions, owner, group, and size. A single ls -la of a directory shows the special permission bits at a glance.",
+        "es": "Lista cada archivo con permisos, dueño, grupo y tamaño. Un solo ls -la de un directorio muestra los bits de permiso especial de un vistazo."
+      },
+      "sampleOutput": "total 48\ndrwxr-xr-x  3 analyst analyst   4096 Jun 28 15:30 .\ndrwxr-xr-x  4 analyst analyst   4096 Jun 28 10:00 ..\n-rwsr-xr-x  1 root    root     14232 Jun 28 14:00 collector\ndrwxrwsr-x  2 analyst forensics 4096 Jun 28 14:30 shared\ndrwxrwxrwt  2 root    root      4096 Jun 28 15:00 temp_uploads\n-rw-r--r--  1 analyst analyst   1024 Jun 28 10:15 notes.txt\n-rwxr-xr-x  1 analyst analyst   2048 Jun 28 10:20 scan.sh",
+      "lineByLine": [
+        {
+          "token": "-rwsr-xr-x",
+          "explain": {
+            "en": "A regular file with setuid set. The s in the owner position (instead of x) means anyone executing this runs as the owner (root). Wildly suspicious in a user directory.",
+            "es": "Un archivo regular con setuid activado. La s en la posición del dueño (en vez de x) significa que cualquiera que lo ejecute corre como el dueño (root). Muy sospechoso en un directorio de usuario."
+          }
+        },
+        {
+          "token": "drwxrwsr-x",
+          "explain": {
+            "en": "A directory with setgid set. The s in the group's execute position. New files inside 'shared' will inherit group forensics. Ideal for team workspaces.",
+            "es": "Un directorio con setgid activado. La s en la posición de ejecución del grupo. Los archivos nuevos dentro de 'shared' heredarán el grupo forensics. Ideal para espacios de trabajo en equipo."
+          }
+        },
+        {
+          "token": "drwxrwxrwt",
+          "explain": {
+            "en": "A directory with the sticky bit set. The t in the others' execute position. Everyone can write, but only file owners or root can delete. This is the expected state for /tmp-like directories.",
+            "es": "Un directorio con el sticky bit activado. La t en la posición de ejecución de otros. Todos pueden escribir, pero solo los dueños de los archivos o root pueden borrar. Este es el estado esperado para directorios tipo /tmp."
+          }
+        },
+        {
+          "token": "-rwxr-xr-x",
+          "explain": {
+            "en": "A normal executable file. Owner can read, write, execute. Group and others can read and execute. No special bits are set. This is the standard mode 755.",
+            "es": "Un archivo ejecutable normal. El dueño puede leer, escribir, ejecutar. El grupo y otros pueden leer y ejecutar. No hay bits especiales activados. Este es el modo estándar 755."
+          }
+        },
+        {
+          "token": "collector",
+          "explain": {
+            "en": "A suspicious filename for a setuid binary. In a forensic context, the name, location, and owner of every setuid file must be verified against a known-good baseline.",
+            "es": "Un nombre de archivo sospechoso para un binario setuid. En un contexto forense, el nombre, la ubicación y el dueño de cada archivo setuid deben verificarse contra una línea de base conocida."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What three-digit octal mode would you use with chmod to give the owner read, write, and execute; the group read and execute; and others no access?",
+        "es": "¿Qué modo octal de tres dígitos usarías con chmod para darle al dueño lectura, escritura y ejecución; al grupo lectura y ejecución; y a otros ningún acceso?"
+      },
+      "accept": ["750", "750 rwxr-x---", "chmod 750"],
+      "explanation": {
+        "en": "Owner: rwx = 7, group: r-x = 5, others: --- = 0. So chmod 750 produces -rwxr-x---.",
+        "es": "Dueño: rwx = 7, grupo: r-x = 5, otros: --- = 0. Así que chmod 750 produce -rwxr-x---."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command changes both the user and group ownership of a file in a single invocation?",
+        "es": "¿Qué comando cambia tanto el usuario como el grupo de un archivo en una sola invocación?"
+      },
+      "accept": ["chown", "chown user:group"],
+      "explanation": {
+        "en": "chown user:group file changes both the owner and the group. If only the group needs to change, use chown :group file.",
+        "es": "chown usuario:grupo archivo cambia tanto el dueño como el grupo. Si solo necesita cambiar el grupo, usa chown :grupo archivo."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You find a file with permissions -rwsr-xr-x owned by root in /home/user/tools. What does the 's' tell you, and why is this a significant forensic finding?",
+        "es": "Encuentras un archivo con permisos -rwsr-xr-x de root en /home/user/tools. ¿Qué te dice la 's' y por qué es un hallazgo forense significativo?"
+      },
+      "accept": ["setuid", "suid", "es setuid", "tiene setuid", "es un setuid", "is setuid", "setuid is active"],
+      "explanation": {
+        "en": "The s in the owner's execute position means the setuid bit is set. This binary runs as root no matter who launches it. Finding such a file outside standard system paths strongly suggests privilege escalation was planted.",
+        "es": "La s en la posición de ejecución del dueño significa que el bit setuid está activado. Este binario se ejecuta como root sin importar quién lo lance. Encontrar este archivo fuera de las rutas estándar del sistema sugiere fuertemente que se plantó una escalada de privilegios."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "The /tmp directory has permissions drwxrwxrwt. If an attacker removes the 't', what immediate risk does the system face?",
+        "es": "El directorio /tmp tiene permisos drwxrwxrwt. Si un atacante quita la 't', ¿qué riesgo inmediato enfrenta el sistema?"
+      },
+      "accept": ["sticky bit", "usuarios pueden borrar archivos ajenos", "any user can delete other users files", "pierde el sticky bit", "missing sticky bit", "se puede borrar evidencia", "evidence can be deleted"],
+      "explanation": {
+        "en": "Without the sticky bit (t), any user could delete or rename files in /tmp owned by others. In a forensic context, evidence placed in /tmp by an analyst or by a running process could be trivially destroyed by any local user.",
+        "es": "Sin el sticky bit (t), cualquier usuario podría borrar o renombrar archivos en /tmp de otros. En un contexto forense, la evidencia colocada en /tmp por un analista o por un proceso en ejecución podría ser destruida trivialmente por cualquier usuario local."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "A file is currently -rw-rw----. Use symbolic notation to add read permission for others without changing the existing owner and group permissions.",
+        "es": "Un archivo actualmente tiene -rw-rw----. Usa notación simbólica para agregar permiso de lectura para otros sin cambiar los permisos existentes del dueño y del grupo."
+      },
+      "accept": ["chmod o+r", "o+r", "chmod o+r filename"],
+      "explanation": {
+        "en": "chmod o+r adds read for others (o) while leaving owner (u) and group (g) permissions untouched. The result is -rw-rw-r--. Symbolic notation is ideal when you only want to add a single permission.",
+        "es": "chmod o+r agrega lectura para otros (o) mientras deja intactos los permisos del dueño (u) y del grupo (g). El resultado es -rw-rw-r--. La notación simbólica es ideal cuando solo quieres agregar un permiso."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You have a shared directory /cases/triage. What single chmod command ensures new files created inside it automatically belong to the directory's group instead of each user's primary group?",
+        "es": "Tienes un directorio compartido /cases/triage. ¿Qué comando chmod asegura que los archivos nuevos creados dentro de él pertenezcan automáticamente al grupo del directorio en vez del grupo primario de cada usuario?"
+      },
+      "accept": ["chmod g+s /cases/triage", "chmod g+s", "g+s", "chmod g+s triage"],
+      "explanation": {
+        "en": "chmod g+s sets the setgid bit on the directory. After this, every new file or subdirectory inherits the directory's group. Combine with umask 002 so group members can write each other's files.",
+        "es": "chmod g+s activa el bit setgid en el directorio. Después de esto, cada archivo o subdirectorio nuevo hereda el grupo del directorio. Combínalo con umask 002 para que los miembros del grupo puedan escribir los archivos de los demás."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What command do you run to see your numeric UID, primary GID, and all supplementary groups?",
+        "es": "¿Qué comando ejecutas para ver tu UID numérico, GID primario y todos los grupos suplementarios?"
+      },
+      "accept": ["id", "id command", "id uid", "id sin argumentos"],
+      "explanation": {
+        "en": "Running id without arguments prints the current user's UID, GID, and all group memberships. This is the first command to run before troubleshooting permission issues.",
+        "es": "Ejecutar id sin argumentos imprime el UID, GID y todas las membresías de grupo del usuario actual. Es el primer comando que se ejecuta antes de solucionar problemas de permisos."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Linux permission triads (owner, group, others) and the rwx model — Shotts, The Linux Command Line",
+    "Octal permission notation and binary-to-octal mapping — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "Symbolic notation with chmod (u/g/o/a, +/-/=) — Shotts; Blum & Bresnahan",
+    "The chmod command with octal and symbolic mode arguments — Shotts; Blum & Bresnahan",
+    "The chown command for changing file owner and group — Shotts",
+    "The id command and user identity display — Shotts",
+    "The setuid bit (octal 4000) and privilege escalation — Shotts; Blum & Bresnahan; Ward, How Linux Works",
+    "The setgid bit (octal 2000) on files and directories — Shotts; Blum & Bresnahan",
+    "The sticky bit (octal 1000) and shared directory protection — Shotts; Blum & Bresnahan",
+    "The umask command and default permission masking — Shotts; Blum & Bresnahan"
+  ],
+  "mangaRevealOnComplete": 2
+}

@@ -1,0 +1,568 @@
+{
+  "id": "ch12",
+  "layer": 1,
+  "order": 12,
+  "title": {
+    "en": "Shell Scripting for Forensic Automation",
+    "es": "Scripting de shell para automatización forense"
+  },
+  "subtitle": {
+    "en": "Write scripts with variables, conditionals, loops, and functions to automate repetitive forensic tasks.",
+    "es": "Escribe scripts con variables, condicionales, bucles y funciones para automatizar tareas forenses repetitivas."
+  },
+  "glossary": [
+    {
+      "term": { "en": "shell script", "es": "script de shell" },
+      "definition": {
+        "en": "A text file containing a series of shell commands that the shell executes as if typed manually. The standard first line is #!/bin/bash, called the shebang.",
+        "es": "Un archivo de texto que contiene una serie de comandos de shell que la shell ejecuta como si se hubieran escrito manualmente. La primera línea estándar es #!/bin/bash, llamada shebang."
+      }
+    },
+    {
+      "term": { "en": "shebang", "es": "shebang" },
+      "definition": {
+        "en": "The character sequence #! at the very start of a script, followed by the path of the interpreter (e.g. /bin/bash) that should execute it.",
+        "es": "La secuencia de caracteres #! al inicio exacto de un script, seguida de la ruta del intérprete (ej. /bin/bash) que debe ejecutarlo."
+      }
+    },
+    {
+      "term": { "en": "variable", "es": "variable" },
+      "definition": {
+        "en": "A named storage location in the shell that holds a string value. Access its content by prefixing the name with $, e.g. $USER or ${filename}.",
+        "es": "Una ubicación de almacenamiento con nombre en la shell que contiene un valor de cadena. Se accede a su contenido anteponiendo $ al nombre, ej. $USER o ${filename}."
+      }
+    },
+    {
+      "term": { "en": "parameter expansion", "es": "expansión de parámetros" },
+      "definition": {
+        "en": "The process by which the shell replaces $variable or ${variable} with its value before executing the command. Also handles default values and string manipulation.",
+        "es": "El proceso mediante el cual la shell reemplaza $variable o ${variable} con su valor antes de ejecutar el comando. También maneja valores por defecto y manipulación de cadenas."
+      }
+    },
+    {
+      "term": { "en": "conditional", "es": "condicional" },
+      "definition": {
+        "en": "A programming construct that executes different code based on whether a condition is true or false. In bash: if, then, else, elif, and fi.",
+        "es": "Una construcción de programación que ejecuta código diferente según si una condición es verdadera o falsa. En bash: if, then, else, elif y fi."
+      }
+    },
+    {
+      "term": { "en": "loop", "es": "bucle" },
+      "definition": {
+        "en": "A construct that repeats a block of code. Bash supports for loops (iterate over a list), while loops (repeat while a condition holds), and until loops (repeat until a condition holds).",
+        "es": "Una construcción que repite un bloque de código. Bash soporta bucles for (iteran sobre una lista), while (repiten mientras se cumpla una condición) y until (repiten hasta que se cumpla una condición)."
+      }
+    },
+    {
+      "term": { "en": "function", "es": "función" },
+      "definition": {
+        "en": "A reusable block of shell code defined with name() { commands; }. Functions accept arguments via $1, $2, etc. and avoid duplicating logic across a script.",
+        "es": "Un bloque reutilizable de código de shell definido con nombre() { comandos; }. Las funciones aceptan argumentos mediante $1, $2, etc. y evitan duplicar lógica en un script."
+      }
+    },
+    {
+      "term": { "en": "exit status", "es": "código de salida" },
+      "definition": {
+        "en": "A number from 0 to 255 returned by every command when it finishes. Zero means success; any non-zero value indicates an error or abnormal termination.",
+        "es": "Un número del 0 al 255 que cada comando devuelve al terminar. Cero significa éxito; cualquier valor distinto de cero indica un error o terminación anormal."
+      }
+    },
+    {
+      "term": { "en": "positional parameter", "es": "parámetro posicional" },
+      "definition": {
+        "en": "Special variables $1, $2, ... $9 that hold the arguments passed to a script or function. $0 holds the script name, $# holds the argument count.",
+        "es": "Variables especiales $1, $2, ... $9 que contienen los argumentos pasados a un script o función. $0 contiene el nombre del script, $# contiene la cantidad de argumentos."
+      }
+    },
+    {
+      "term": { "en": "here document", "es": "here document" },
+      "definition": {
+        "en": "A redirection operator (<< token) that embeds a multi-line block of text in a script and feeds it into a command's standard input, commonly used with cat to generate output.",
+        "es": "Un operador de redirección (<< token) que incrusta un bloque de texto multilínea en un script y lo envía a la entrada estándar de un comando, usado comúnmente con cat para generar salida."
+      }
+    },
+    {
+      "term": { "en": "source", "es": "source" },
+      "definition": {
+        "en": "A shell builtin (also written as .) that reads and executes commands from a file in the current shell environment, making defined variables and functions available immediately.",
+        "es": "Un builtin de la shell (también escrito como .) que lee y ejecuta comandos de un archivo en el entorno actual de la shell, haciendo que las variables y funciones definidas estén disponibles de inmediato."
+      }
+    },
+    {
+      "term": { "en": "echo", "es": "echo" },
+      "kind": "command",
+      "definition": {
+        "en": "Shell builtin that prints its arguments to standard output. The default workhorse for displaying text and variable values in scripts.",
+        "es": "Builtin de la shell que imprime sus argumentos en la salida estándar. El caballo de batalla por defecto para mostrar texto y valores de variables en scripts."
+      }
+    },
+    {
+      "term": { "en": "test", "es": "test" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that evaluates conditional expressions (file tests, string comparisons, numeric comparisons) and returns an exit status of 0 if true, 1 if false. Also written as [ ].",
+        "es": "Comando que evalúa expresiones condicionales (pruebas de archivo, comparaciones de cadenas, comparaciones numéricas) y devuelve un código de salida 0 si es verdadero, 1 si es falso. También se escribe como [ ]."
+      }
+    },
+    {
+      "term": { "en": "cat", "es": "cat" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that concatenates and prints files to standard output. When used with a here document, it outputs multi-line text directly from the script.",
+        "es": "Comando que concatena e imprime archivos en la salida estándar. Cuando se usa con un here document, genera texto multilínea directamente desde el script."
+      }
+    },
+    {
+      "term": { "en": "chmod", "es": "chmod" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that changes file mode bits. Used on scripts with 755 or 700 to set the execute permission so the kernel can run the file as a program.",
+        "es": "Comando que cambia los bits de modo de un archivo. Se usa en scripts con 755 o 700 para establecer el permiso de ejecución y que el kernel pueda ejecutar el archivo como programa."
+      }
+    },
+    {
+      "term": { "en": "for", "es": "for" },
+      "kind": "command",
+      "definition": {
+        "en": "Shell keyword that starts a for loop. Iterates over each item in a list (glob expansion, command substitution, or explicit values) and executes the loop body once per item.",
+        "es": "Palabra clave de la shell que inicia un bucle for. Itera sobre cada elemento de una lista (expansión glob, sustitución de comando o valores explícitos) y ejecuta el cuerpo del bucle una vez por elemento."
+      }
+    },
+    {
+      "term": { "en": ".", "es": "." },
+      "kind": "command",
+      "definition": {
+        "en": "Shell builtin shorthand for source. Reads and executes commands from a file in the current shell environment. The syntax is . filename.",
+        "es": "Abreviatura del builtin source de la shell. Lee y ejecuta comandos de un archivo en el entorno de la shell actual. La sintaxis es . nombre_archivo."
+      }
+    },
+    {
+      "term": { "en": "./check_type.sh", "es": "./check_type.sh" },
+      "kind": "command",
+      "definition": {
+        "en": "Example script that uses if/then/else with test to examine a file's type, readability, and emptiness. The ./ prefix forces execution from the current directory.",
+        "es": "Script de ejemplo que usa if/then/else con test para examinar el tipo, legibilidad y si está vacío un archivo. El prefijo ./ fuerza la ejecución desde el directorio actual."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "understand-scripts",
+      "label": {
+        "en": "Understand what a shell script is and how to make one executable",
+        "es": "Entender qué es un script de shell y cómo hacerlo ejecutable"
+      }
+    },
+    {
+      "id": "use-variables",
+      "label": {
+        "en": "Use variables and parameter expansion to store and reuse values",
+        "es": "Usar variables y expansión de parámetros para almacenar y reutilizar valores"
+      }
+    },
+    {
+      "id": "write-conditionals",
+      "label": {
+        "en": "Write conditionals with if, then, else, and test to branch on file properties",
+        "es": "Escribir condicionales con if, then, else y test para bifurcar según propiedades de archivos"
+      }
+    },
+    {
+      "id": "write-loops",
+      "label": {
+        "en": "Write for loops to process multiple files automatically",
+        "es": "Escribir bucles for para procesar múltiples archivos automáticamente"
+      }
+    },
+    {
+      "id": "define-functions",
+      "label": {
+        "en": "Define and call functions to avoid repeating code",
+        "es": "Definir y llamar funciones para evitar repetir código"
+      }
+    },
+    {
+      "id": "source-files",
+      "label": {
+        "en": "Source external scripts to load shared variables and functions",
+        "es": "Ejecutar scripts externos con source para cargar variables y funciones compartidas"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "Why script in forensics",
+        "es": "Por qué usar scripts en forensia"
+      },
+      "body": {
+        "en": "A single case can involve thousands of files. Running sha256sum, stat, or file on each one by hand is not just tedious — it is error-prone and impossible to document at scale. A shell script turns a repetitive manual sequence into a single command that runs the same way every time, logs its output, and can be included verbatim in your case notes. Scripts also eliminate the most common forensic failure mode: forgetting a step when you are tired. The shell is both a command-line interface and a scripting language, so every command you already know — ls, file, sha256sum, stat, chmod — becomes a building block you can combine in new ways.",
+        "es": "Un solo caso puede involucrar miles de archivos. Ejecutar sha256sum, stat o file en cada uno manualmente no solo es tedioso — es propenso a errores e imposible de documentar a escala. Un script de shell convierte una secuencia manual repetitiva en un solo comando que se ejecuta igual cada vez, registra su salida y se puede incluir textualmente en tus notas del caso. Los scripts también eliminan el modo de falla forense más común: olvidar un paso cuando estás cansado. La shell es tanto una interfaz de línea de comandos como un lenguaje de scripting, así que cada comando que ya conoces — ls, file, sha256sum, stat, chmod — se convierte en un bloque de construcción que puedes combinar de nuevas formas."
+      }
+    },
+    {
+      "heading": {
+        "en": "Anatomy of a script: shebang and executable permission",
+        "es": "Anatomía de un script: shebang y permiso de ejecución"
+      },
+      "body": {
+        "en": "Every shell script is a plain text file whose first line is #!/bin/bash. This sequence, called the shebang, tells the kernel which interpreter to use. Without it, the system does not know the file is a script. After writing the script, you must set the executable permission with chmod 755 script.sh (world-executable) or chmod 700 script.sh (owner-only). Scripts must also be readable because the interpreter reads the file as text. Two practical locations for your scripts: ~/bin for personal use (most distributions auto-add it to PATH if it exists), and /usr/local/bin for tools shared across a team. The ~/bin directory is the forensic analyst's workshop: one place to keep every custom tool you write.",
+        "es": "Todo script de shell es un archivo de texto plano cuya primera línea es #!/bin/bash. Esta secuencia, llamada shebang, le indica al kernel qué intérprete usar. Sin ella, el sistema no sabe que el archivo es un script. Después de escribir el script, debes establecer el permiso de ejecución con chmod 755 script.sh (ejecutable por todos) o chmod 700 script.sh (solo el dueño). Los scripts también deben ser legibles porque el intérprete lee el archivo como texto. Dos ubicaciones prácticas para tus scripts: ~/bin para uso personal (la mayoría de las distribuciones lo agregan automáticamente al PATH si existe), y /usr/local/bin para herramientas compartidas entre un equipo. El directorio ~/bin es el taller del analista forense: un lugar para guardar cada herramienta personalizada que escribas."
+      }
+    },
+    {
+      "heading": {
+        "en": "Variables and parameter expansion",
+        "es": "Variables y expansión de parámetros"
+      },
+      "body": {
+        "en": "A variable stores a value that you can reuse throughout a script. You assign it with NAME=value (no spaces around the =) and retrieve it with $NAME or ${NAME}. Curly braces are needed when the variable name runs into adjacent characters, like ${filename}_backup. The shell performs parameter expansion before executing the command: echo $HOME becomes echo /home/analyst. Variables are case-sensitive and can contain letters, numbers, and underscores, but must start with a letter or underscore. A common forensic pattern is storing the evidence path in a variable at the top of the script so that changing it later requires editing only one line instead of hunting through the entire file.",
+        "es": "Una variable almacena un valor que puedes reutilizar en todo un script. La asignas con NOMBRE=valor (sin espacios alrededor del =) y la recuperas con $NOMBRE o ${NOMBRE}. Las llaves son necesarias cuando el nombre de la variable se junta con caracteres adyacentes, como ${filename}_backup. La shell realiza la expansión de parámetros antes de ejecutar el comando: echo $HOME se convierte en echo /home/analyst. Las variables distinguen mayúsculas de minúsculas y pueden contener letras, números y guiones bajos, pero deben empezar con una letra o guión bajo. Un patrón forense común es almacenar la ruta de la evidencia en una variable al inicio del script para que cambiarla después requiera editar solo una línea en lugar de buscar por todo el archivo."
+      }
+    },
+    {
+      "heading": {
+        "en": "Exit status and conditionals with if",
+        "es": "Código de salida y condicionales con if"
+      },
+      "body": {
+        "en": "Every Linux command returns an exit status: 0 for success and any non-zero value for failure. The if statement checks this status. The basic structure is if command; then ...; else ...; fi. Combined with the test command (also written as [ ]), this lets you check file properties: whether a file exists (-f), is a directory (-d), is readable (-r), or is empty (-s). A forensic example: before hashing a file, check that it exists and is readable. If not, the script logs an error and skips it rather than crashing. The elif keyword adds additional conditions, and the case statement provides multi-way branching against pattern-matched values.",
+        "es": "Todo comando de Linux devuelve un código de salida: 0 para éxito y cualquier valor distinto de cero para error. La sentencia if verifica este código. La estructura básica es if comando; then ...; else ...; fi. Combinado con el comando test (también escrito como [ ]), esto permite verificar propiedades de archivos: si un archivo existe (-f), es un directorio (-d), es legible (-r) o está vacío (-s). Un ejemplo forense: antes de hashear un archivo, verifica que exista y sea legible. Si no, el script registra un error y lo salta en lugar de fallar. La palabra clave elif agrega condiciones adicionales, y la sentencia case proporciona bifurcación múltiple contra valores con patrón."
+      }
+    },
+    {
+      "heading": {
+        "en": "For loops: process every file in a directory",
+        "es": "Bucles for: procesar cada archivo de un directorio"
+      },
+      "body": {
+        "en": "The for loop iterates over a list of items, running the same block of code for each one. Its syntax is for variable in list; do commands; done. The list can be a glob pattern (*.txt /evidence/*.bin), the output of a command substitution ($(ls *.log)), or explicit values. In a forensic script, this is the core of batch processing: hash every file in a case directory, extract metadata from every image, or grep every log for an indicator. The positional parameters $1, $2, ... let you pass the target directory as an argument when invoking the script, making it reusable across cases. Inside a loop, $# gives the total argument count and $0 holds the script name.",
+        "es": "El bucle for itera sobre una lista de elementos, ejecutando el mismo bloque de código para cada uno. Su sintaxis es for variable in lista; do comandos; done. La lista puede ser un patrón glob (*.txt /evidence/*.bin), la salida de una sustitución de comando ($(ls *.log)) o valores explícitos. En un script forense, este es el núcleo del procesamiento por lotes: hashear cada archivo de un directorio de caso, extraer metadatos de cada imagen o buscar en cada log un indicador. Los parámetros posicionales $1, $2, ... permiten pasar el directorio destino como argumento al invocar el script, haciéndolo reutilizable entre casos. Dentro de un bucle, $# da la cantidad total de argumentos y $0 contiene el nombre del script."
+      }
+    },
+    {
+      "heading": {
+        "en": "Functions: write once, use everywhere",
+        "es": "Funciones: escribe una vez, usa en todas partes"
+      },
+      "body": {
+        "en": "A function is a named block of code that you define once and call by name anywhere in the script. The syntax is name() { commands; }. Functions accept arguments through the same positional parameters ($1, $2, ...) as scripts do, and they can return an exit status with return. Functions eliminate duplication: instead of writing the same validation or logging logic in every loop, you define it once and call it. For example, a function named log_message that timestamps every action and appends it to a case log file can be called at the start and end of every operation. Functions must be defined before they are called, so they typically go near the top of the script after the shebang and variable declarations.",
+        "es": "Una función es un bloque de código con nombre que defines una vez y llamas por nombre en cualquier parte del script. La sintaxis es nombre() { comandos; }. Las funciones aceptan argumentos mediante los mismos parámetros posicionales ($1, $2, ...) que los scripts, y pueden devolver un código de salida con return. Las funciones eliminan la duplicación: en lugar de escribir la misma lógica de validación o registro en cada bucle, la defines una vez y la llamas. Por ejemplo, una función llamada log_message que marca la hora de cada acción y la agrega a un archivo de log del caso se puede llamar al inicio y al final de cada operación. Las funciones deben definirse antes de usarse, así que normalmente van cerca del inicio del script después del shebang y las declaraciones de variables."
+      }
+    },
+    {
+      "heading": {
+        "en": "Sourcing and here documents",
+        "es": "Source y here documents"
+      },
+      "body": {
+        "en": "The source builtin (or its shorthand .) reads a file and executes its contents in the current shell, not a subshell. This means variables and functions defined in the sourced file remain available afterward. Forensic analysts use this to maintain a shared library of helper functions and case-wide constants (evidence paths, case numbers, investigator names) in a separate config file. The here document (<< EOF) embeds multi-line text directly in a script, feeding it to a command's standard input. When generating an HTML forensic report or a formatted case summary from inside a script, here documents keep the template readable without dozens of echo statements.",
+        "es": "El builtin source (o su abreviatura .) lee un archivo y ejecuta su contenido en la shell actual, no en una subshell. Esto significa que las variables y funciones definidas en el archivo ejecutado permanecen disponibles después. Los analistas forenses usan esto para mantener una biblioteca compartida de funciones auxiliares y constantes de todo el caso (rutas de evidencia, números de caso, nombres de investigadores) en un archivo de configuración separado. El here document (<< EOF) incrusta texto multilínea directamente en un script, enviándolo a la entrada estándar de un comando. Al generar un informe forense HTML o un resumen formateado del caso desde un script, los here documents mantienen la plantilla legible sin docenas de sentencias echo."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "cat forensic_hash.sh",
+      "intro": {
+        "en": "Inspect the contents of a forensic hashing script. Every script starts with a shebang, optional comments, and then the commands that run sequentially.",
+        "es": "Inspecciona el contenido de un script de hasheo forense. Todo script comienza con un shebang, comentarios opcionales y luego los comandos que se ejecutan secuencialmente."
+      },
+      "sampleOutput": "#!/bin/bash\n# forensic_hash.sh — hash all files in a case directory\nEVIDENCE_DIR=\"/home/analyst/case02\"\nOUTPUT_FILE=\"hashes.txt\"\nfor file in \"$EVIDENCE_DIR\"/*; do\n  sha256sum \"$file\" >> \"$OUTPUT_FILE\"\ndone\necho \"Hashes saved to $OUTPUT_FILE\"",
+      "lineByLine": [
+        {
+          "token": "#!/bin/bash",
+          "explain": {
+            "en": "The shebang. This exact two-character sequence followed by the interpreter path tells the kernel to use bash to execute the script. No spaces allowed before #.",
+            "es": "El shebang. Esta secuencia exacta de dos caracteres seguida de la ruta del intérprete le dice al kernel que use bash para ejecutar el script. No se permiten espacios antes de #."
+          }
+        },
+        {
+          "token": "# forensic_hash.sh",
+          "explain": {
+            "en": "A comment. Everything after # on a line is ignored by the shell. Comments document what the script does, its author, and usage instructions.",
+            "es": "Un comentario. Todo después de # en una línea es ignorado por la shell. Los comentarios documentan qué hace el script, su autor y las instrucciones de uso."
+          }
+        },
+        {
+          "token": "EVIDENCE_DIR=\"/home/analyst/case02\"",
+          "explain": {
+            "en": "A variable assignment storing the evidence directory path. Using a variable means changing the path later requires editing only this one line.",
+            "es": "Una asignación de variable que almacena la ruta del directorio de evidencia. Usar una variable significa que cambiar la ruta después requiere editar solo esta línea."
+          }
+        },
+        {
+          "token": "for file in \"$EVIDENCE_DIR\"/*; do",
+          "explain": {
+            "en": "A for loop that expands the glob /home/analyst/case02/* into every file path in that directory and assigns each one to the variable file inside the loop body.",
+            "es": "Un bucle for que expande el glob /home/analyst/case02/* en cada ruta de archivo de ese directorio y asigna cada una a la variable file dentro del cuerpo del bucle."
+          }
+        },
+        {
+          "token": "sha256sum \"$file\"",
+          "explain": {
+            "en": "Inside the loop, the sha256sum command runs once per file. Quoting $file prevents word-splitting if a filename contains spaces.",
+            "es": "Dentro del bucle, el comando sha256sum se ejecuta una vez por archivo. Poner $file entre comillas evita la separación por palabras si el nombre tiene espacios."
+          }
+        }
+      ]
+    },
+    {
+      "command": "chmod 755 forensic_hash.sh",
+      "intro": {
+        "en": "Make the script executable. Without this step, running ./forensic_hash.sh produces 'Permission denied'.",
+        "es": "Haz el script ejecutable. Sin este paso, ejecutar ./forensic_hash.sh produce 'Permission denied'."
+      },
+      "sampleOutput": "$ chmod 755 forensic_hash.sh\n$ ls -l forensic_hash.sh\n-rwxr-xr-x 1 analyst analyst 187 Jun 29 09:00 forensic_hash.sh",
+      "lineByLine": [
+        {
+          "token": "rwxr-xr-x",
+          "explain": {
+            "en": "The script is now executable. Owner has rwx, group and others have r-x. The x bit is what allows the kernel to treat this file as a program.",
+            "es": "El script ahora es ejecutable. El dueño tiene rwx, el grupo y otros tienen r-x. El bit x es lo que permite que el kernel trate este archivo como un programa."
+          }
+        },
+        {
+          "token": "187",
+          "explain": {
+            "en": "File size in bytes. Scripts are small text files; their size grows predictably with each line added. Unexpected size changes may indicate tampering.",
+            "es": "Tamaño del archivo en bytes. Los scripts son archivos de texto pequeños; su tamaño crece predeciblemente con cada línea agregada. Cambios inesperados de tamaño pueden indicar manipulación."
+          }
+        }
+      ]
+    },
+    {
+      "command": "echo \"Evidence path: $HOME/case02\"",
+      "intro": {
+        "en": "Demonstrate parameter expansion. The shell replaces $HOME with the current user's home directory before echo ever sees the string.",
+        "es": "Demuestra la expansión de parámetros. La shell reemplaza $HOME con el directorio home del usuario actual antes de que echo vea la cadena."
+      },
+      "sampleOutput": "Evidence path: /home/analyst/case02",
+      "lineByLine": [
+        {
+          "token": "/home/analyst/case02",
+          "explain": {
+            "en": "The expanded value of $HOME joined with the literal text /case02. Parameter expansion happens before the command runs, making variables a compile-time substitution.",
+            "es": "El valor expandido de $HOME unido con el texto literal /case02. La expansión de parámetros ocurre antes de que el comando se ejecute, haciendo que las variables sean una sustitución en tiempo de compilación."
+          }
+        }
+      ]
+    },
+    {
+      "command": "./check_type.sh evidence.bin",
+      "intro": {
+        "en": "Run a script that uses if/then/else branching to identify a file's type and print a human-readable description.",
+        "es": "Ejecuta un script que usa bifurcación if/then/else para identificar el tipo de un archivo e imprimir una descripción legible."
+      },
+      "sampleOutput": "Checking evidence.bin\nFile type: regular file\nFile is readable: yes\nFile is empty: no",
+      "lineByLine": [
+        {
+          "token": "Checking evidence.bin",
+          "explain": {
+            "en": "Output from the script showing the filename being examined. The script receives the filename as $1, the first positional parameter.",
+            "es": "Salida del script que muestra el nombre del archivo examinado. El script recibe el nombre como $1, el primer parámetro posicional."
+          }
+        },
+        {
+          "token": "regular file",
+          "explain": {
+            "en": "Result of the test -f check inside the script. The script used if [ -f \"$1\" ]; then to determine this is a regular file, not a directory or special file.",
+            "es": "Resultado de la verificación test -f dentro del script. El script usó if [ -f \"$1\" ]; then para determinar que es un archivo regular, no un directorio o archivo especial."
+          }
+        },
+        {
+          "token": "File is readable: yes",
+          "explain": {
+            "en": "Result of test -r. The script checked readability separately from existence. A file might exist but lack read permission, which would cause sha256sum to fail later.",
+            "es": "Resultado de test -r. El script verificó la legibilidad por separado de la existencia. Un archivo puede existir pero carecer de permiso de lectura, lo que causaría que sha256sum falle después."
+          }
+        }
+      ]
+    },
+    {
+      "command": "for log in /var/log/syslog*; do echo \"Found: $log\"; done",
+      "intro": {
+        "en": "A one-liner for loop that iterates over log files matching a pattern and prints each name. No script file needed — the shell accepts loops directly on the command line.",
+        "es": "Un bucle for en una línea que itera sobre archivos de log que coinciden con un patrón e imprime cada nombre. No se necesita archivo de script — la shell acepta bucles directamente en la línea de comandos."
+      },
+      "sampleOutput": "Found: /var/log/syslog\nFound: /var/log/syslog.1\nFound: /var/log/syslog.2.gz",
+      "lineByLine": [
+        {
+          "token": "Found: /var/log/syslog",
+          "explain": {
+            "en": "First iteration. The pattern /var/log/syslog* expanded to three files; $log took the value /var/log/syslog on the first pass through the loop body.",
+            "es": "Primera iteración. El patrón /var/log/syslog* se expandió a tres archivos; $log tomó el valor /var/log/syslog en la primera pasada por el cuerpo del bucle."
+          }
+        },
+        {
+          "token": "Found: /var/log/syslog.1",
+          "explain": {
+            "en": "Second iteration. The loop automatically processes each item in the expansion without any manual re-entry. This is the core benefit of automation.",
+            "es": "Segunda iteración. El bucle procesa automáticamente cada elemento de la expansión sin necesidad de volver a escribir nada. Este es el beneficio central de la automatización."
+          }
+        }
+      ]
+    },
+    {
+      "command": "cat forensic_lib.sh",
+      "intro": {
+        "en": "Display a shared library file with functions and constants meant to be sourced into other scripts rather than executed directly.",
+        "es": "Muestra un archivo de biblioteca compartida con funciones y constantes destinadas a ser ejecutadas con source en otros scripts en lugar de ejecutarse directamente."
+      },
+      "sampleOutput": "#!/bin/bash\n# forensic_lib.sh — shared functions for case analysis\nCASE_NUMBER=\"CASE-2026-042\"\nREPORT_DIR=\"/home/analyst/reports\"\nlog_message() {\n  echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $*\" >> \"$REPORT_DIR/audit.log\"\n}\nhash_file() {\n  sha256sum \"$1\" | tee -a \"$REPORT_DIR/hashes.txt\"\n}",
+      "lineByLine": [
+        {
+          "token": "CASE_NUMBER=\"CASE-2026-042\"",
+          "explain": {
+            "en": "A constant stored as a variable that all sourced scripts can reference. Changing the case number in one file updates every script that sources this library.",
+            "es": "Una constante almacenada como variable que todos los scripts que usan source pueden referenciar. Cambiar el número de caso en un archivo actualiza cada script que carga esta biblioteca."
+          }
+        },
+        {
+          "token": "log_message() {",
+          "explain": {
+            "en": "A function definition named log_message. The opening brace starts the function body. Functions must be defined before they are called in the script.",
+            "es": "Una definición de función llamada log_message. La llave de apertura inicia el cuerpo de la función. Las funciones deben definirse antes de ser llamadas en el script."
+          }
+        },
+        {
+          "token": "[$(date '+%Y-%m-%d %H:%M:%S')]",
+          "explain": {
+            "en": "Command substitution inside the function. $(date ...) runs the date command and inserts its output — a timestamp — into the log line before writing to the audit file.",
+            "es": "Sustitución de comando dentro de la función. $(date ...) ejecuta el comando date e inserta su salida — una marca de tiempo — en la línea del log antes de escribir en el archivo de auditoría."
+          }
+        },
+        {
+          "token": "hash_file() {",
+          "explain": {
+            "en": "A second function that wraps sha256sum, using $1 for the filename argument and tee to display AND save the hash simultaneously.",
+            "es": "Una segunda función que envuelve sha256sum, usando $1 para el argumento del nombre y tee para mostrar Y guardar el hash simultáneamente."
+          }
+        }
+      ]
+    },
+    {
+      "command": ". ./forensic_lib.sh && log_message \"Starting analysis\"",
+      "intro": {
+        "en": "Source the library file with the dot shorthand, then call the log_message function. The double ampersand chains commands: source must succeed before the function runs.",
+        "es": "Ejecuta el archivo de biblioteca con el atajo del punto, luego llama a la función log_message. El doble ampersand encadena comandos: source debe funcionar antes de que la función se ejecute."
+      },
+      "sampleOutput": "$ cat reports/audit.log\n[2026-06-29 09:15:00] Starting analysis",
+      "lineByLine": [
+        {
+          "token": "[2026-06-29 09:15:00]",
+          "explain": {
+            "en": "Timestamp prefix added by the log_message function. Every call to log_message records the exact moment of the action, building an auditable timeline.",
+            "es": "Prefijo de marca de tiempo agregado por la función log_message. Cada llamada a log_message registra el momento exacto de la acción, construyendo una línea de tiempo auditab."
+          }
+        },
+        {
+          "token": "Starting analysis",
+          "explain": {
+            "en": "The custom message passed to the function. Because the function uses $* (all arguments), you can pass any text and it will be appended to the log.",
+            "es": "El mensaje personalizado pasado a la función. Como la función usa $* (todos los argumentos), puedes pasar cualquier texto y se agregará al log."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What two-character sequence must appear as the very first line of every bash script to identify the interpreter?",
+        "es": "¿Qué secuencia de dos caracteres debe aparecer como la primera línea de todo script bash para identificar el intérprete?"
+      },
+      "accept": ["shebang", "#!/bin/bash", "#!", "shebang #!/bin/bash"],
+      "explanation": {
+        "en": "The shebang (#!) followed by the interpreter path (/bin/bash) tells the kernel which program to use to execute the script.",
+        "es": "El shebang (#!) seguido de la ruta del intérprete (/bin/bash) le indica al kernel qué programa usar para ejecutar el script."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command makes a script file executable for all users?",
+        "es": "¿Qué comando hace que un archivo de script sea ejecutable para todos los usuarios?"
+      },
+      "accept": ["chmod 755", "chmod 755 script.sh", "chmod a+x", "chmod +x"],
+      "explanation": {
+        "en": "chmod 755 sets rwxr-xr-x: owner can write, everyone can read and execute. The execute bit is what allows the kernel to run the script.",
+        "es": "chmod 755 establece rwxr-xr-x: el dueño puede escribir, todos pueden leer y ejecutar. El bit de ejecución es lo que permite al kernel ejecutar el script."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Write the bash conditional structure that checks whether a file exists before processing it. Use if, then, else, and fi.",
+        "es": "Escribe la estructura condicional de bash que verifica si un archivo existe antes de procesarlo. Usa if, then, else y fi."
+      },
+      "accept": ["if [ -f file ]; then", "if test -f", "if [ -f \"$1\" ]; then", "if [ -f $file ]; then", "if [ -f ]; then"],
+      "explanation": {
+        "en": "The test command with -f checks for a regular file. The full structure: if [ -f \"$1\" ]; then echo exists; else echo not found; fi. Always quote the variable.",
+        "es": "El comando test con -f verifica si es un archivo regular. La estructura completa: if [ -f \"$1\" ]; then echo existe; else echo no encontrado; fi. Siempre pon entre comillas la variable."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "A script contains: for f in /evidence/*.bin; do. What happens if the /evidence/ directory is empty?",
+        "es": "Un script contiene: for f in /evidence/*.bin; do. ¿Qué sucede si el directorio /evidence/ está vacío?"
+      },
+      "accept": ["el bucle se ejecuta una vez con el literal", "the loop runs once with the literal pattern", "itera con *.bin", "pasa el literal", "loop runs with *.bin string"],
+      "explanation": {
+        "en": "If no files match, bash passes the literal string '/evidence/*.bin' as the single item. Always guard against this with shopt -s nullglob or check that files exist first.",
+        "es": "Si ningún archivo coincide, bash pasa la cadena literal '/evidence/*.bin' como el único elemento. Siempre protégete de esto con shopt -s nullglob o verificando que existan archivos primero."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Define a bash function that accepts a filename as its argument and prints 'Processing: filename'. What is the function definition?",
+        "es": "Define una función bash que acepte un nombre de archivo como argumento e imprima 'Processing: filename'. ¿Cuál es la definición de la función?"
+      },
+      "accept": ["process() {", "function process {", "process() { echo", "process() { echo Processing: $1 }"],
+      "explanation": {
+        "en": "Functions use positional parameters: process() { echo \"Processing: $1\"; }. Call it with process evidence.bin. The $1 inside the function refers to the function's first argument.",
+        "es": "Las funciones usan parámetros posicionales: process() { echo \"Processing: $1\"; }. Se llama con process evidence.bin. El $1 dentro de la función se refiere al primer argumento de la función."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "What is the difference between running 'source config.sh' and executing './config.sh' directly?",
+        "es": "¿Cuál es la diferencia entre ejecutar 'source config.sh' y ejecutar './config.sh' directamente?"
+      },
+      "accept": ["source runs in current shell", "source no crea una subshell", "source does not create a subshell", "source mantiene las variables", "nosource crea un proceso hijo"],
+      "explanation": {
+        "en": "source runs the file in the current shell, so variables and functions persist. Executing ./config.sh launches a subshell; any variables set are lost when it exits.",
+        "es": "source ejecuta el archivo en la shell actual, así que las variables y funciones persisten. Ejecutar ./config.sh lanza una subshell; cualquier variable establecida se pierde cuando termina."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "In a bash script, which special variable holds the first command-line argument passed to the script?",
+        "es": "En un script bash, ¿qué variable especial contiene el primer argumento de línea de comandos pasado al script?"
+      },
+      "accept": ["$1", "\"$1\"", "$1 primer argumento", "$1 argument", "positional parameter 1", "parametro posicional 1"],
+      "explanation": {
+        "en": "Positional parameters $1 through $9 hold the first nine arguments. $0 is the script name, $# is the argument count, and $@ is all arguments.",
+        "es": "Los parámetros posicionales $1 a $9 contienen los primeros nueve argumentos. $0 es el nombre del script, $# es la cantidad de argumentos y $@ son todos los argumentos."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Shell scripts as text files with the shebang (#!/bin/bash) — Shotts, The Linux Command Line",
+    "Script file permissions and the PATH variable — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "Variables, parameter expansion, and variable assignment rules — Shotts",
+    "Here documents (<< EOF) for embedding multi-line text — Shotts",
+    "Exit status and the if/then/else conditional structure — Shotts",
+    "The test command ([ ]) for file attribute checks (-f, -d, -r, -s) — Shotts",
+    "For loops iterating over file lists and glob patterns — Shotts",
+    "Functions: definition, positional parameters, and reusability — Shotts; Blum & Bresnahan",
+    "The source builtin and dot (.) shorthand — Shotts",
+    "Command substitution $() and quoting best practices — Shotts"
+  ],
+  "mangaRevealOnComplete": 2
+}

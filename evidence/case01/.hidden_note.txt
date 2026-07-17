@@ -1,0 +1,2 @@
+Note left on the device. "evidence.bin" is not what its name claims.
+Check its real type. The truth is in the first bytes, not the extension.

@@ -1,0 +1,114 @@
+{
+  "id": "caso01",
+  "order": 1,
+  "afterChapter": "ch05",
+  "maxLayer": 1,
+  "title": {
+    "en": "EXIF Hunt: The Fall of w0rmer",
+    "es": "Caza EXIF: La caída de w0rmer"
+  },
+  "brief": {
+    "en": "A hacktivist crew defaced a law enforcement site and leaked sensitive database credentials. They posted a victory photo on social media. Your task is to analyze the evidence, trace the hacker's location, connect their identity, expose a masqueraded file, and match a local payload hash to known threat intelligence.",
+    "es": "Un grupo activista desfiguró un sitio web policial y filtró credenciales confidenciales de bases de datos. Publicaron una foto de victoria en redes sociales. Tu tarea es analizar las evidencias, rastrear la ubicación del hacker, conectar su identidad, exponer un archivo enmascarado y hacer coincidir el hash de un payload local con inteligencia de amenazas conocida."
+  },
+  "realCase": {
+    "name": "Higinio Ochoa III (w0rmer)",
+    "year": 2012,
+    "summary": {
+      "en": "Higinio Ochoa III (w0rmer), an associate of CabinCr3w (affiliated with Anonymous), defaced police websites. He posted a photo of his girlfriend holding a taunting sign. The photo was taken with an iPhone 4 with location services enabled, leaving GPS metadata pointing to Melbourne, Australia. The FBI used this to identify and arrest him.",
+      "es": "Higinio Ochoa III (w0rmer), miembro de CabinCr3w (afiliado a Anonymous), desfiguró sitios de policía. Publicó una foto de su novia sosteniendo un cartel burlón. La foto fue tomada con un iPhone 4 con servicios de localización activos, dejando metadatos GPS que apuntaban a Melbourne, Australia. El FBI usó esto para identificarlo y arrestarlo."
+    },
+    "sources": [
+      "https://www.fbi.gov/news/stories/hacker-sentenced",
+      "https://en.wikipedia.org/wiki/Higinio_Ochoa_III"
+    ]
+  },
+  "requiredSkills": ["ch01", "ch02", "ch03", "ch04", "ch05"],
+  "evidenceDir": "evidence/caso01/",
+  "steps": [
+    {
+      "n": 1,
+      "objective": {
+        "en": "Extract the GPS coordinates and the hacker's handle from the leaked photo 'leak.jpg'.",
+        "es": "Extrae las coordenadas GPS y el alias del hacker de la foto filtrada 'leak.jpg'."
+      },
+      "tool": "strings",
+      "evidenceFile": "leak.jpg",
+      "expectedFinding": "37.8136 S, 145.2200 E",
+      "pivot": {
+        "en": "The GPS coordinates place the photo in Melbourne, Australia. In the metadata trailer, the 'Artist' field reveals the alias 'w0rmer'. Let's search the forum member logs and handles for this alias.",
+        "es": "Las coordenadas GPS ubican la foto en Melbourne, Australia. En la cola de metadatos, el campo 'Artist' revela el alias 'w0rmer'. Busquemos este alias en los logs de miembros y perfiles del foro."
+      },
+      "hint": {
+        "en": "Try running: strings leak.jpg | grep -i gps",
+        "es": "Intenta ejecutar: strings leak.jpg | grep -i gps"
+      },
+      "mangaPanel": "p1"
+    },
+    {
+      "n": 2,
+      "objective": {
+        "en": "Search the scraper logs for 'w0rmer' to find the hacker's real name alias and registered email.",
+        "es": "Busca en los registros de raspado (scrapers) 'w0rmer' para hallar el alias del nombre real del hacker y su correo registrado."
+      },
+      "tool": "grep",
+      "evidenceFile": "members.txt",
+      "expectedFinding": "Higinio O.",
+      "pivot": {
+        "en": "Great! You linked w0rmer to 'Higinio O.' and his email. However, the evidence folder has an unknown file 'avatar.dat' that might be masquerading. Let's find its true identity.",
+        "es": "¡Excelente! Vinculaste a w0rmer con 'Higinio O.' y su correo. Sin embargo, la carpeta de evidencias tiene un archivo desconocido 'avatar.dat' que podría estar enmascarado. Hallemos su verdadera identidad."
+      },
+      "hint": {
+        "en": "Try running: grep -ri 'w0rmer' .",
+        "es": "Intenta ejecutar: grep -ri 'w0rmer' ."
+      },
+      "mangaPanel": "p2"
+    },
+    {
+      "n": 3,
+      "objective": {
+        "en": "Determine the actual file format of 'avatar.dat' to uncover its hidden nature.",
+        "es": "Determina el formato de archivo real de 'avatar.dat' para descubrir su naturaleza oculta."
+      },
+      "tool": "file",
+      "evidenceFile": "avatar.dat",
+      "expectedFinding": "PNG image data",
+      "pivot": {
+        "en": "The file 'avatar.dat' is actually a PNG image! Now let's calculate the hash of the suspicious script payload 'dropper.bin' to match it against threat intelligence.",
+        "es": "¡El archivo 'avatar.dat' es en realidad una imagen PNG! Ahora calculemos el hash del script de payload sospechoso 'dropper.bin' para compararlo con inteligencia de amenazas."
+      },
+      "hint": {
+        "en": "Try running: file avatar.dat",
+        "es": "Intenta ejecutar: file avatar.dat"
+      },
+      "mangaPanel": "p3"
+    },
+    {
+      "n": 4,
+      "objective": {
+        "en": "Calculate the SHA-256 hash of 'dropper.bin' and search for it in 'hashes.txt' to identify the threat category.",
+        "es": "Calcula el hash SHA-256 de 'dropper.bin' y búscalo en 'hashes.txt' para identificar la categoría de amenaza."
+      },
+      "tool": "sha256sum",
+      "evidenceFile": "dropper.bin",
+      "expectedFinding": "cabincr3w_uploader",
+      "pivot": {
+        "en": "The hash matches 'cabincr3w_uploader'. This confirms the attribution of the defacement toolkit to CabinCr3w and w0rmer.",
+        "es": "El hash coincide con 'cabincr3w_uploader'. Esto confirma la atribución de las herramientas de defacement a CabinCr3w y w0rmer."
+      },
+      "hint": {
+        "en": "Try running: sha256sum dropper.bin and search the hash inside hashes.txt.",
+        "es": "Intenta ejecutar: sha256sum dropper.bin y busca el hash dentro de hashes.txt."
+      },
+      "mangaPanel": "p4"
+    }
+  ],
+  "reveal": {
+    "en": "Hacker 'w0rmer' was successfully identified as Higinio Ochoa III. He was arrested by the FBI in Galveston, Texas, after the GPS coordinates in his girlfriend's photo leaked his location in Melbourne, Australia. He was sentenced to 27 months in federal prison in 2012.",
+    "es": "El hacker 'w0rmer' fue identificado con éxito como Higinio Ochoa III. Fue arrestado por el FBI en Galveston, Texas, después de que las coordenadas GPS de la foto de su novia filtraran su ubicación en Melbourne, Australia. Fue condenado a 27 meses de prisión federal en 2012."
+  },
+  "debrief": {
+    "en": "This case illustrates Locard's Exchange Principle: the hacker left traces (GPS, camera info, software name) inside the APP1 segment of his photo. Standard tools like 'strings' and 'grep' are powerful enough to extract this data without advanced toolkits.",
+    "es": "Este caso ilustra el Principio de Intercambio de Locard: el hacker dejó rastros (GPS, info de cámara, software) dentro del segmento APP1 de su foto. Las herramientas estándar como 'strings' y 'grep' son lo suficientemente potentes para extraer estos datos sin toolkits avanzados."
+  }
+}

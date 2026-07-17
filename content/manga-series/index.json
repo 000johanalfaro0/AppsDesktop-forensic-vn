@@ -1,0 +1,14 @@
+[
+  {
+    "id": "neo-tokyo-case",
+    "title": { "en": "Neo-Tokyo Case", "es": "El Caso Neo-Tokio" },
+    "cover": "cover.svg",
+    "panelCount": 3
+  },
+  {
+    "id": "ghost-protocol",
+    "title": { "en": "Ghost Protocol", "es": "Protocolo Fantasma" },
+    "cover": "cover.svg",
+    "panelCount": 3
+  }
+]

@@ -1,0 +1,4 @@
+CASE 01 - EXIF HUNT
+A defacement crew taunted police on Twitter with a photo. You have the leaked
+image and some OSINT dumps. Identify the actor and where the photo was taken.
+Tools you know: strings, file, xxd, grep, sha256sum. Do NOT modify originals.

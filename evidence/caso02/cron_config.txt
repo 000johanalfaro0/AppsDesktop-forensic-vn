@@ -1,0 +1,3 @@
+# /etc/cron.d/sync_service - hourly synchronization verification
+# Maintained by Systems Administration
+00 * * * * root /usr/local/bin/backup_verify.sh > /dev/null 2>&1

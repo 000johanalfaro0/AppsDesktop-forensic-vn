@@ -1,0 +1,450 @@
+{
+  "id": "ch06",
+  "layer": 1,
+  "order": 6,
+  "title": {
+    "en": "Transforming Text: Cut, Sort, Uniq, Tr",
+    "es": "Transformar texto: cut, sort, uniq, tr"
+  },
+  "subtitle": {
+    "en": "Extract columns, order records, count frequencies and clean characters from logs and listings.",
+    "es": "Extrae columnas, ordena registros, cuenta frecuencias y limpia caracteres en logs y listados."
+  },
+  "glossary": [
+    {
+      "term": { "en": "cut", "es": "cut" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that extracts columns or character ranges from each line of text. Uses -d to set the delimiter and -f to pick fields.",
+        "es": "Comando que extrae columnas o rangos de caracteres de cada línea de texto. Usa -d para definir el delimitador y -f para elegir los campos."
+      }
+    },
+    {
+      "term": { "en": "sort", "es": "sort" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that sorts lines of text alphabetically or numerically. With -n it sorts by numeric value, with -k by a specific field, and with -t it sets the field delimiter.",
+        "es": "Comando que ordena líneas de texto alfabética o numéricamente. Con -n ordena por valor numérico, con -k por un campo específico y con -t define el delimitador de campo."
+      }
+    },
+    {
+      "term": { "en": "uniq", "es": "uniq" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that filters adjacent repeated lines from sorted input. With -c it prefixes each line with its count; with -d it shows only duplicates.",
+        "es": "Comando que filtra líneas repetidas adyacentes en datos ordenados. Con -c antepone a cada línea su frecuencia; con -d muestra solo los duplicados."
+      }
+    },
+    {
+      "term": { "en": "tr", "es": "tr" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that translates, deletes, or squeezes characters from standard input. Used for case conversion, removing carriage returns, or collapsing repeated characters.",
+        "es": "Comando que traduce, elimina o comprime caracteres desde la entrada estándar. Se usa para cambiar mayúsculas/minúsculas, eliminar retornos de carro o colapsar caracteres repetidos."
+      }
+    },
+    {
+      "term": { "en": "delimiter", "es": "delimitador" },
+      "definition": {
+        "en": "A character that separates fields in structured text, such as the colon (:) in /etc/passwd or the comma in CSV files.",
+        "es": "Un carácter que separa campos en texto estructurado, como los dos puntos (:) en /etc/passwd o la coma en archivos CSV."
+      }
+    },
+    {
+      "term": { "en": "field", "es": "campo" },
+      "definition": {
+        "en": "A column of data within a structured line, separated by a delimiter. For example, in 'root:x:0:0:root:/root:/bin/bash' the UID (0) is the third field.",
+        "es": "Una columna de datos dentro de una línea estructurada, separada por un delimitador. Por ejemplo, en 'root:x:0:0:root:/root:/bin/bash' el UID (0) es el tercer campo."
+      }
+    },
+    {
+      "term": { "en": "transliteration", "es": "transliteración" },
+      "definition": {
+        "en": "The process of replacing characters from one set with the corresponding characters from another set, such as converting lowercase to uppercase.",
+        "es": "El proceso de reemplazar caracteres de un conjunto por los correspondientes de otro, como convertir minúsculas a mayúsculas."
+      }
+    },
+    {
+      "term": { "en": "character class", "es": "clase de caracteres" },
+      "definition": {
+        "en": "A POSIX shorthand for a group of characters, written as [:class:]. For example, [:upper:] matches all uppercase letters and [:digit:] matches digits 0-9.",
+        "es": "Una abreviatura POSIX para un grupo de caracteres, escrita como [:class:]. Por ejemplo, [:upper:] reconoce las mayúsculas y [:digit:] los dígitos del 0 al 9."
+      }
+    },
+    {
+      "term": { "en": "frequency count", "es": "conteo de frecuencia" },
+      "definition": {
+        "en": "The number of times each unique value appears in a data set. In forensics, frequency counts reveal the most active IPs, users, or error types.",
+        "es": "La cantidad de veces que cada valor único aparece en un conjunto de datos. En forense, los conteos de frecuencia revelan las IP, usuarios o tipos de error más activos."
+      }
+    },
+    {
+      "term": { "en": "deduplication", "es": "deduplicación" },
+      "definition": {
+        "en": "The removal of duplicate entries from a data set. In forensic analysis it reduces noise and highlights unique events.",
+        "es": "La eliminación de entradas duplicadas de un conjunto de datos. En el análisis forense reduce el ruido y resalta los eventos únicos."
+      }
+    },
+    {
+      "term": { "en": "squeeze", "es": "squeeze" },
+      "definition": {
+        "en": "A tr operation (-s) that replaces consecutive repeated characters with a single occurrence. Useful for collapsing multiple spaces or repeated delimiters.",
+        "es": "Una operación de tr (-s) que reemplaza caracteres repetidos consecutivos por una sola ocurrencia. Útil para colapsar espacios múltiples o delimitadores repetidos."
+      }
+    },
+    {
+      "term": { "en": "carriage return", "es": "retorno de carro" },
+      "definition": {
+        "en": "A control character (\\r, hex 0D) that moves the cursor to the start of the line. DOS/Windows text files end lines with \\r\\n instead of the Unix \\n.",
+        "es": "Un carácter de control (\\r, hex 0D) que mueve el cursor al inicio de la línea. Los archivos DOS/Windows terminan las líneas con \\r\\n en lugar de \\n (Unix)."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "extract-fields",
+      "label": {
+        "en": "Extract specific columns from structured text files using cut",
+        "es": "Extraer columnas específicas de archivos de texto estructurados usando cut"
+      }
+    },
+    {
+      "id": "sort-data",
+      "label": {
+        "en": "Sort data alphabetically, numerically and by key field using sort",
+        "es": "Ordenar datos alfabética, numérica y por campo clave usando sort"
+      }
+    },
+    {
+      "id": "count-deduplicate",
+      "label": {
+        "en": "Count frequencies and remove duplicates with sort and uniq",
+        "es": "Contar frecuencias y eliminar duplicados con sort y uniq"
+      }
+    },
+    {
+      "id": "transform-characters",
+      "label": {
+        "en": "Transform and clean character data using tr",
+        "es": "Transformar y limpiar datos de caracteres usando tr"
+      }
+    },
+    {
+      "id": "forensic-pipelines",
+      "label": {
+        "en": "Combine cut, sort, uniq and tr into forensic analysis pipelines",
+        "es": "Combinar cut, sort, uniq y tr en pipelines de análisis forense"
+      }
+    },
+    {
+      "id": "log-formatting",
+      "label": {
+        "en": "Convert raw log output into structured, analyst-ready tables",
+        "es": "Convertir logs en bruto en tablas estructuradas listas para el analista"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "Logs and listings are structured text",
+        "es": "Los logs y listados son texto estructurado"
+      },
+      "body": {
+        "en": "A forensic analyst rarely reads raw logs from start to finish. The real value lives in the structure: each line is a record, each record has fields separated by a known delimiter. A web server access log uses spaces or tabs; /etc/passwd uses colons; CSV files use commas. When you understand that delimiter pattern, you can isolate the IP address, the timestamp, the user name, or the error code with surgical precision. Commands like cut, sort, uniq and tr are the scalpel and forceps of this operation. They do not change the original file — they read, transform, and output to stdout, keeping the integrity chain intact. Their power multiplies when you connect them with pipes: the output of cut becomes the input of sort, which feeds uniq, all in a single line that an analyst can reproduce and document.",
+        "es": "Un analista forense rara vez lee logs completos de principio a fin. El valor real está en la estructura: cada línea es un registro, cada registro tiene campos separados por un delimitador conocido. Un log de servidor web usa espacios o tabuladores; /etc/passwd usa dos puntos; los archivos CSV usan comas. Cuando entiendes ese patrón de delimitador, puedes aislar la dirección IP, la marca de tiempo, el nombre de usuario o el código de error con precisión quirúrgica. Comandos como cut, sort, uniq y tr son el bisturí y las pinzas de esta operación. No modifican el archivo original — leen, transforman y envían a stdout, manteniendo intacta la cadena de integridad. Su potencia se multiplica cuando los conectas con tuberías: la salida de cut se vuelve la entrada de sort, que alimenta a uniq, todo en una sola línea que un analista puede reproducir y documentar."
+      }
+    },
+    {
+      "heading": {
+        "en": "Extracting fields with cut",
+        "es": "Extraer campos con cut"
+      },
+      "body": {
+        "en": "The cut command slices text by field (-f) using a delimiter (-d). By default cut expects tab-separated fields; use -d to specify any other character. For example, the /etc/passwd file stores user accounts as seven colon-separated fields: username, password placeholder, UID, GID, full name, home directory, and shell. Running cut -d ':' -f 1,3 /etc/passwd extracts the username and its UID, producing a clean two-column table. You can also extract by character position (-c 1-5) for fixed-width data. The --complement flag inverts the selection — it returns everything EXCEPT the specified fields. This is useful when you want to drop a sensitive column (like the password hash) while keeping the rest.",
+        "es": "El comando cut divide texto por campo (-f) usando un delimitador (-d). Por defecto cut espera campos separados por tabulador; usa -d para especificar otro carácter. Por ejemplo, el archivo /etc/passwd guarda las cuentas de usuario como siete campos separados por dos puntos: nombre de usuario, marcador de contraseña, UID, GID, nombre completo, directorio personal y shell. Ejecutar cut -d ':' -f 1,3 /etc/passwd extrae el nombre de usuario y su UID, produciendo una tabla limpia de dos columnas. También puedes extraer por posición de caracteres (-c 1-5) para datos de ancho fijo. El flag --complement invierte la selección — devuelve TODO excepto los campos especificados. Esto es útil cuando quieres descartar una columna sensible (como el hash de contraseña) mientras conservas el resto."
+      }
+    },
+    {
+      "heading": {
+        "en": "Ordering records with sort",
+        "es": "Ordenar registros con sort"
+      },
+      "body": {
+        "en": "Raw log entries arrive in chronological order, but that is rarely the order you need for analysis. The sort command reorders lines by their content. By default it uses alphabetical order, but numbers sort incorrectly without the -n flag (10 comes before 2 alphabetically). Use -n for numeric sort, -r to reverse the order, and -M to sort by three-letter month names. The real forensic power comes from field sorting: -t sets the delimiter and -k picks which field to sort on. For example, sort -t ':' -k3 -n /etc/passwd sorts user accounts by UID numerically. You can also specify subfields within a key: -k 3.7,3.10 sorts by characters 7-10 of the third field — ideal for date columns formatted as YYYY-MM-DD.",
+        "es": "Las entradas de logs llegan en orden cronológico, pero rara vez es el orden que necesitas para analizar. El comando sort reordena líneas según su contenido. Por defecto usa orden alfabético, pero los números se ordenan mal sin el flag -n (10 aparece antes que 2 alfabéticamente). Usa -n para orden numérico, -r para invertir el orden y -M para ordenar por nombres de mes de tres letras. El verdadero poder forense viene del ordenamiento por campos: -t define el delimitador y -k elige qué campo ordenar. Por ejemplo, sort -t ':' -k3 -n /etc/passwd ordena las cuentas de usuario por UID numéricamente. También puedes especificar subcampos dentro de una clave: -k 3.7,3.10 ordena por los caracteres 7 al 10 del tercer campo — ideal para columnas de fecha en formato YYYY-MM-DD."
+      }
+    },
+    {
+      "heading": {
+        "en": "Counting and deduplicating with uniq",
+        "es": "Contar y deduplicar con uniq"
+      },
+      "body": {
+        "en": "Logs are repetitive by nature — a brute-force attack produces hundreds of identical failed-login entries. The uniq command removes adjacent repeated lines, but only after sorting (uniq only sees adjacency). The canonical forensic pattern is sort file | uniq. Adding -c prepends a count of occurrences to each unique line, creating an instant frequency table. When combined with sort -rn, you get the hits sorted by frequency descending: the most common IP, the most targeted user, the most frequent error. Use -d to see only the lines that ARE duplicated (ignoring singletons) and -u for the opposite — only lines that appear exactly once. The pipeline sort ips.txt | uniq -c | sort -rn is one of the most-used command chains in forensic log analysis.",
+        "es": "Los logs son repetitivos por naturaleza — un ataque de fuerza bruta produce cientos de entradas de inicio de sesión fallido idénticas. El comando uniq elimina líneas repetidas adyacentes, pero solo después de ordenar (uniq solo detecta adyacencia). El patrón forense canónico es sort archivo | uniq. Agregar -c antepone un conteo de ocurrencias a cada línea única, creando una tabla de frecuencias instantánea. Al combinarlo con sort -rn, obtienes los resultados ordenados por frecuencia descendente: la IP más común, el usuario más atacado, el error más frecuente. Usa -d para ver solo las líneas que SÍ se repiten (ignorando las únicas) y -u para lo opuesto — solo las que aparecen exactamente una vez. El pipeline sort ips.txt | uniq -c | sort -rn es una de las cadenas de comandos más usadas en el análisis forense de logs."
+      }
+    },
+    {
+      "heading": {
+        "en": "Character transformation with tr",
+        "es": "Transformación de caracteres con tr"
+      },
+      "body": {
+        "en": "The tr command works at the character level, not the line level. It reads from stdin, translates each character from a source set to a target set, and writes to stdout. Use it to normalize case (tr '[:upper:]' '[:lower:]'), to delete specific characters (-d), or to squeeze repeated runs into single characters (-s). A common forensic use is converting DOS text files to Unix format: tr -d '\\r' < evidence.txt strips the carriage-return characters that Windows appends at the end of each line. Another is collapsing irregular whitespace in poorly formatted logs with tr -s ' '. Because tr only reads stdin and writes stdout, it fits naturally in a pipeline: a log stream can be cleaned, normalized, and then piped into cut for extraction — all without touching the original evidence.",
+        "es": "El comando tr trabaja a nivel de caracteres, no de líneas. Lee de stdin, traduce cada carácter de un conjunto origen a un conjunto destino y escribe a stdout. Se usa para normalizar mayúsculas/minúsculas (tr '[:upper:]' '[:lower:]'), eliminar caracteres específicos (-d) o comprimir series repetidas en una sola ocurrencia (-s). Un uso forense común es convertir archivos DOS a formato Unix: tr -d '\\r' < evidencia.txt elimina los retornos de carro que Windows añade al final de cada línea. Otro es colapsar espacios irregulares en logs mal formateados con tr -s ' '. Como tr solo lee de stdin y escribe a stdout, encaja naturalmente en un pipeline: un flujo de log se limpia, normaliza y luego se envía a cut para extracción — todo sin tocar la evidencia original."
+      }
+    },
+    {
+      "heading": {
+        "en": "Building forensic pipelines",
+        "es": "Construir pipelines forenses"
+      },
+      "body": {
+        "en": "The real strength of these commands is not individual but in combination. A single pipeline can transform raw log lines into a concise evidence table. Start with cut to extract relevant columns, pipe to tr to normalize case, feed into sort for ordering, pass to uniq -c for frequency, and finish with sort -rn to rank the results. Each step is a filter that transforms the data stream, and the entire pipeline is a repeatable, documentable procedure. You can save the final output to a file with > or tee it for a mid-stream checkpoint. This composability is why the Unix philosophy — small tools doing one thing well, connected by pipes — is the foundation of forensic analysis on Linux. Every pipeline you build is a reusable analysis procedure that another analyst can verify and the court can understand.",
+        "es": "La verdadera fortaleza de estos comandos no está en el uso individual sino en la combinación. Un solo pipeline puede transformar líneas de log en bruto en una tabla de evidencia concisa. Empieza con cut para extraer las columnas relevantes, pasa por tr para normalizar mayúsculas/minúsculas, alimenta a sort para ordenar, pasa a uniq -c para obtener frecuencias y termina con sort -rn para jerarquizar los resultados. Cada paso es un filtro que transforma el flujo de datos, y todo el pipeline es un procedimiento repetible y documentable. Puedes guardar el resultado final en un archivo con > o usar tee para un punto de control intermedio. Esta capacidad de composición es la razón por la que la filosofía Unix — herramientas pequeñas que hacen una cosa bien, conectadas por tuberías — es la base del análisis forense en Linux. Cada pipeline que construyes es un procedimiento de análisis reutilizable que otro analista puede verificar y el tribunal puede entender."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "cut -d ':' -f 1,3 /etc/passwd",
+      "intro": {
+        "en": "Extract usernames and their UIDs from the system's password file. The colon is the delimiter, fields 1 and 3 contain the name and numeric ID.",
+        "es": "Extrae nombres de usuario y sus UIDs del archivo de contraseñas del sistema. Los dos puntos son el delimitador, los campos 1 y 3 contienen el nombre y el ID numérico."
+      },
+      "sampleOutput": "root:0\ndaemon:1\nbin:2\nsys:3\nsync:4\ngames:5",
+      "lineByLine": [
+        {
+          "token": "root:0",
+          "explain": {
+            "en": "The first field (root) is the username and the third field (0) is the UID of the superuser. The -d ':' flag tells cut to split at colons.",
+            "es": "El primer campo (root) es el nombre de usuario y el tercer campo (0) es el UID del superusuario. El flag -d ':' le indica a cut que divida por dos puntos."
+          }
+        },
+        {
+          "token": "daemon:1",
+          "explain": {
+            "en": "System daemon accounts typically have low UIDs. Every field pair follows the pattern username:UID, making the output a clean two-column table.",
+            "es": "Las cuentas de demonio del sistema suelen tener UIDs bajos. Cada par de campos sigue el patrón usuario:UID, haciendo de la salida una tabla limpia de dos columnas."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sort -t ':' -k3 -n /etc/passwd",
+      "intro": {
+        "en": "Sort the password file by UID in ascending numeric order. The -t flag sets the colon as delimiter, -k3 targets the third field, and -n ensures numeric sorting.",
+        "es": "Ordena el archivo de contraseñas por UID en orden ascendente. El flag -t define los dos puntos como delimitador, -k3 apunta al tercer campo y -n asegura el orden numérico."
+      },
+      "sampleOutput": "root:x:0:0:root:/root:/bin/bash\nbin:x:1:1:bin:/bin:/sbin/nologin\ndaemon:x:2:2:daemon:/sbin:/sbin/nologin\nadm:x:3:4:adm:/var/adm:/sbin/nologin\nlp:x:4:7:lp:/var/spool/lpd:/sbin/nologin",
+      "lineByLine": [
+        {
+          "token": "root:x:0:0:root:/root:/bin/bash",
+          "explain": {
+            "en": "The full record for root. By sorting on the third field (0), root appears first because it has the lowest numeric UID. Without -n, sort would place root incorrectly among double-digit UIDs.",
+            "es": "El registro completo de root. Al ordenar por el tercer campo (0), root aparece primero por tener el UID numérico más bajo. Sin -n, sort colocaría a root incorrectamente entre UIDs de dos dígitos."
+          }
+        },
+        {
+          "token": "lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin",
+          "explain": {
+            "en": "The last line shown — the lp account with UID 4. The -n flag ensures UIDs like 4 are placed before 10, which alphabetic sort would get wrong.",
+            "es": "La última línea mostrada — la cuenta lp con UID 4. El flag -n asegura que UIDs como 4 se coloquen antes que 10, lo que el orden alfabético haría incorrectamente."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sort ips.txt | uniq -c | sort -rn",
+      "intro": {
+        "en": "Count how many times each IP address appears in a list, sorted by frequency from most to least common. The ips.txt file contains one IP per line, with repetitions.",
+        "es": "Cuenta cuántas veces aparece cada dirección IP en una lista, ordenado por frecuencia de mayor a menor. El archivo ips.txt contiene una IP por línea, con repeticiones."
+      },
+      "sampleOutput": "   3 192.168.1.10\n   2 192.168.1.20\n   1 192.168.1.30\n   1 192.168.1.40",
+      "lineByLine": [
+        {
+          "token": "   3 192.168.1.10",
+          "explain": {
+            "en": "uniq -c prefixes a count (3) before the line. sort -rn then orders by that count in descending order, placing the most frequent IP first.",
+            "es": "uniq -c antepone un conteo (3) antes de la línea. sort -rn luego ordena por ese conteo en orden descendente, colocando la IP más frecuente primero."
+          }
+        },
+        {
+          "token": "   1 192.168.1.40",
+          "explain": {
+            "en": "IPs that appear only once appear at the bottom. The padding (four spaces before 1, three before 3) comes from uniq aligning the count column.",
+            "es": "Las IP que aparecen solo una vez quedan al final. El espaciado (cuatro espacios antes del 1, tres antes del 3) viene del alineado de la columna de conteo de uniq."
+          }
+        }
+      ]
+    },
+    {
+      "command": "uniq -d ips.txt",
+      "intro": {
+        "en": "Show only the IP addresses that appear more than once. The -d flag suppresses singletons and prints duplicates once each.",
+        "es": "Muestra solo las direcciones IP que aparecen más de una vez. El flag -d suprime las líneas únicas e imprime cada duplicado una vez."
+      },
+      "sampleOutput": "192.168.1.10\n192.168.1.20",
+      "lineByLine": [
+        {
+          "token": "192.168.1.10",
+          "explain": {
+            "en": "This IP appeared multiple times in ips.txt. uniq -d filters out unique lines entirely, leaving only those with duplicates. Note: ips.txt must be sorted first for uniq to detect repeats correctly.",
+            "es": "Esta IP apareció varias veces en ips.txt. uniq -d filtra por completo las líneas únicas, dejando solo las que tienen duplicados. Nota: ips.txt debe estar ordenado primero para que uniq detecte las repeticiones correctamente."
+          }
+        }
+      ]
+    },
+    {
+      "command": "tr '[:upper:]' '[:lower:]' < log.txt",
+      "intro": {
+        "en": "Normalize a file's text to lowercase. This is a common first step before comparing or sorting log entries, as it prevents mismatches caused by inconsistent casing.",
+        "es": "Normaliza el texto de un archivo a minúsculas. Es un paso inicial común antes de comparar u ordenar entradas de log, ya que evita discrepancias por mayúsculas/minúsculas inconsistentes."
+      },
+      "sampleOutput": "forensic analysis",
+      "lineByLine": [
+        {
+          "token": "forensic analysis",
+          "explain": {
+            "en": "Every uppercase character in the input was replaced by its lowercase equivalent. Characters without an uppercase form (spaces, digits, punctuation) pass through unchanged.",
+            "es": "Cada carácter mayúscula de la entrada fue reemplazado por su equivalente en minúscula. Los caracteres sin forma mayúscula (espacios, dígitos, puntuación) pasan sin cambios."
+          }
+        }
+      ]
+    },
+    {
+      "command": "tr -d '\\r' < dos.txt",
+      "intro": {
+        "en": "Strip carriage-return characters from a DOS/Windows text file. The file dos.txt was created on Windows and contains \\r\\n at line endings; this command removes the \\r so the file becomes Unix-compatible.",
+        "es": "Elimina los retornos de carro de un archivo de texto DOS/Windows. El archivo dos.txt fue creado en Windows y contiene \\r\\n al final de cada línea; este comando remueve el \\r para que el archivo sea compatible con Unix."
+      },
+      "sampleOutput": "Timestamp: 2026-06-30\nUser: alice\nEvent: LOGIN_FAILED",
+      "lineByLine": [
+        {
+          "token": "Timestamp: 2026-06-30",
+          "explain": {
+            "en": "The first line of the file after stripping \\r. If the \\r remained, tools like grep or cut would see the carriage return as part of the line, causing unexpected matches.",
+            "es": "La primera línea del archivo después de eliminar \\r. Si el \\r se conservara, herramientas como grep o cut verían el retorno de carro como parte de la línea, causando coincidencias inesperadas."
+          }
+        },
+        {
+          "token": "User: alice",
+          "explain": {
+            "en": "The tr -d '\\r' operation removes every occurrence of the carriage-return character from the stream. The -d flag means 'delete', not 'translate'.",
+            "es": "La operación tr -d '\\r' elimina cada ocurrencia del carácter de retorno de carro del flujo. El flag -d significa 'delete' (eliminar), no 'translate' (traducir)."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which flag in the cut command changes the field delimiter from the default tab to a colon?",
+        "es": "¿Qué flag del comando cut cambia el delimitador de campo del tabulador por defecto a dos puntos?"
+      },
+      "accept": ["-d", "-d ':'", "-d ':' flag", "cut -d"],
+      "explanation": {
+        "en": "The -d flag sets the delimiter character. By default, cut splits on tab; -d ':' tells it to split on colons instead.",
+        "es": "El flag -d define el carácter delimitador. Por defecto cut divide por tabulador; -d ':' le indica que divida por dos puntos."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which flag in sort performs a true numeric sort instead of alphabetical?",
+        "es": "¿Qué flag de sort realiza un ordenamiento numérico real en lugar de alfabético?"
+      },
+      "accept": ["-n", "--numeric-sort", "-n flag", "numeric sort"],
+      "explanation": {
+        "en": "The -n flag treats values as numbers rather than text. Without it, sort places 10 before 2 because '1' < '2' alphabetically.",
+        "es": "El flag -n trata los valores como números en lugar de texto. Sin él, sort coloca 10 antes que 2 porque '1' < '2' alfabéticamente."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'sort log.txt | uniq -c | sort -rn' and get output. What does the last command (sort -rn) do to the counts produced by uniq -c?",
+        "es": "Ejecutas 'sort log.txt | uniq -c | sort -rn' y obtienes salida. ¿Qué hace el último comando (sort -rn) con los conteos producidos por uniq -c?"
+      },
+      "accept": [
+        "ordena los conteos de mayor a menor",
+        "sorts counts descending",
+        "orders by frequency descending",
+        "sort -rn ordena descendente",
+        "reverse numeric sort",
+        "descending order by count"
+      ],
+      "explanation": {
+        "en": "sort -rn performs a numeric sort in reverse (descending) order, ranking the most frequent value first. It reads the count column that uniq -c prepended.",
+        "es": "sort -rn realiza un ordenamiento numérico en orden inverso (descendente), colocando el valor más frecuente primero. Lee la columna de conteo que uniq -c antepuso."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Write a tr command that converts every uppercase letter in a file to lowercase and writes the result to the terminal.",
+        "es": "Escribe un comando tr que convierta cada letra mayúscula de un archivo a minúscula y escriba el resultado en la terminal."
+      },
+      "accept": [
+        "tr '[:upper:]' '[:lower:]' < archivo",
+        "tr '[:upper:]' '[:lower:]'",
+        "cat archivo | tr '[:upper:]' '[:lower:]'",
+        "tr A-Z a-z",
+        "tr 'A-Z' 'a-z'"
+      ],
+      "explanation": {
+        "en": "tr maps each character in the first set to the corresponding character in the second set. [:upper:] and [:lower:] POSIX classes cover all letters regardless of locale.",
+        "es": "tr asigna cada carácter del primer conjunto al correspondiente del segundo. Las clases POSIX [:upper:] y [:lower:] cubren todas las letras sin importar la configuración regional."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "What is the difference between running just 'uniq ips.txt' and running 'sort ips.txt | uniq' on the same file?",
+        "es": "¿Cuál es la diferencia entre ejecutar solo 'uniq ips.txt' y ejecutar 'sort ips.txt | uniq' sobre el mismo archivo?"
+      },
+      "accept": [
+        "uniq solo elimina adyacentes repetidos, sort ordena primero",
+        "sort necesario para que uniq funcione correctamente",
+        "sin sort solo elimina lineas repetidas consecutivas",
+        "sort first then uniq removes all duplicates",
+        "uniq only removes adjacent duplicates",
+        "uniq necesita datos ordenados para eliminar todos los duplicados"
+      ],
+      "explanation": {
+        "en": "uniq only detects and removes adjacent duplicate lines. Without sort, duplicates that are not consecutive will remain. The pipeline sort | uniq guarantees every duplicate is caught.",
+        "es": "uniq solo detecta y elimina líneas duplicadas adyacentes. Sin sort, los duplicados que no son consecutivos permanecen. El pipeline sort | uniq garantiza que todo duplicado sea capturado."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "A DOS text file called 'report.txt' has \\r\\n line endings. Write a single command to convert it to Unix format (\\n only) and save the result as 'report_unix.txt'.",
+        "es": "Un archivo DOS llamado 'report.txt' tiene terminaciones \\r\\n. Escribe un solo comando para convertirlo a formato Unix (solo \\n) y guardar el resultado como 'report_unix.txt'."
+      },
+      "accept": [
+        "tr -d '\\r' < report.txt > report_unix.txt",
+        "tr -d '\\r' < report.txt > report_unix.txt",
+        "cat report.txt | tr -d '\\r' > report_unix.txt",
+        "sed -i 's/\\r$//' report.txt",
+        "dos2unix report.txt report_unix.txt"
+      ],
+      "explanation": {
+        "en": "tr -d '\\r' deletes all carriage-return characters. The < redirects the file into stdin and > saves the cleaned output. The dos2unix tool also works but may not be installed everywhere.",
+        "es": "tr -d '\\r' elimina todos los caracteres de retorno de carro. El < redirige el archivo al stdin y > guarda la salida limpia. La herramienta dos2unix también funciona pero puede no estar instalada en todos los sistemas."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Field extraction with cut (-d, -f, -c, --complement) — Shotts, The Linux Command Line",
+    "Sorting text: default, -n numeric, -k key, -t delimiter, -r reverse, -M month — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "uniq: deduplication, frequency counting (-c), duplicates-only (-d), unique-only (-u) — Shotts, The Linux Command Line",
+    "tr: transliteration, case conversion with POSIX classes, deletion (-d), squeeze (-s), carriage-return removal — Shotts, The Linux Command Line",
+    "Pipelines for combined text processing (sort | uniq -c | sort -rn pattern) — Shotts; Janssens, Data Science at the Command Line",
+    "Text as structured records: delimiters, fields, and the Unix filter philosophy — Shotts; Janssens, Data Science at the Command Line"
+  ],
+  "mangaRevealOnComplete": 2
+}

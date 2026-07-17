@@ -1,0 +1,470 @@
+{
+  "id": "ch05",
+  "layer": 1,
+  "order": 5,
+  "title": {
+    "en": "Streams, Redirection and Not Contaminating Evidence",
+    "es": "Flujos, redirección y no contaminar la evidencia"
+  },
+  "subtitle": {
+    "en": "stdin, stdout, stderr, pipes and redirection — chaining tools into an analysis pipeline without ever writing over the original.",
+    "es": "stdin, stdout, stderr, pipes y redirección — encadenar herramientas en una tubería de análisis sin escribir jamás sobre el original."
+  },
+  "glossary": [
+    {
+      "term": { "en": "stderr", "es": "stderr" },
+      "definition": {
+        "en": "Standard error: the separate output channel (file descriptor 2) where programs send error and diagnostic messages, kept apart from normal results.",
+        "es": "Salida de error estándar: el canal de salida separado (descriptor de archivo 2) donde los programas envían mensajes de error y diagnóstico, aparte de los resultados normales."
+      }
+    },
+    {
+      "term": { "en": "file descriptor", "es": "descriptor de archivo" },
+      "definition": {
+        "en": "A small integer the kernel uses to refer to an open stream: 0 = stdin, 1 = stdout, 2 = stderr. Redirection works by reassigning these numbers.",
+        "es": "Un entero pequeño que el kernel usa para referirse a un flujo abierto: 0 = stdin, 1 = stdout, 2 = stderr. La redirección funciona reasignando estos números."
+      }
+    },
+    {
+      "term": { "en": "redirection", "es": "redirección" },
+      "definition": {
+        "en": "Sending a stream somewhere other than the terminal: '>' writes stdout to a file (overwriting it), '<' feeds a file into stdin, '2>' captures stderr.",
+        "es": "Enviar un flujo a otro lugar que no sea la terminal: '>' escribe stdout en un archivo (sobrescribiéndolo), '<' alimenta un archivo a stdin, '2>' captura stderr."
+      }
+    },
+    {
+      "term": { "en": "append redirection", "es": "redirección de adición" },
+      "definition": {
+        "en": "'>>' adds output to the END of a file instead of overwriting it. Safer than '>' because it never destroys existing content.",
+        "es": "'>>' agrega la salida al FINAL de un archivo en lugar de sobrescribirlo. Más seguro que '>' porque nunca destruye el contenido existente."
+      }
+    },
+    {
+      "term": { "en": "pipeline", "es": "tubería (pipeline)" },
+      "definition": {
+        "en": "Several commands joined with '|' so each one's stdout becomes the next one's stdin, building a chain of transformations without temporary files.",
+        "es": "Varios comandos unidos con '|' para que la stdout de cada uno se vuelva la stdin del siguiente, construyendo una cadena de transformaciones sin archivos temporales."
+      }
+    },
+    {
+      "term": { "en": "/dev/null", "es": "/dev/null" },
+      "definition": {
+        "en": "A special file that discards everything written to it. Redirecting noise (often stderr) to /dev/null silences it without creating a file.",
+        "es": "Un archivo especial que descarta todo lo que se le escribe. Redirigir ruido (a menudo stderr) a /dev/null lo silencia sin crear un archivo."
+      }
+    },
+    {
+      "term": { "en": "grep", "es": "grep" },
+      "kind": "command",
+      "definition": {
+        "en": "Searches input for lines matching a pattern and prints them. In pipelines it filters another command's output.",
+        "es": "Busca en la entrada líneas que coinciden con un patrón y las imprime. En tuberías filtra la salida de otro comando."
+      }
+    },
+    {
+      "term": { "en": "cat", "es": "cat" },
+      "kind": "command",
+      "definition": {
+        "en": "Prints a file's contents; often used to start a pipeline by feeding a file's text into the next command. Read-only.",
+        "es": "Imprime el contenido de un archivo; suele usarse para iniciar una tubería alimentando el texto de un archivo al siguiente comando. De solo lectura."
+      }
+    },
+    {
+      "term": { "en": "sort", "es": "sort" },
+      "kind": "command",
+      "definition": {
+        "en": "Orders input lines; '-n' sorts numerically and '-r' reverses. Grouping identical lines together is the setup for counting them.",
+        "es": "Ordena las líneas de entrada; '-n' ordena numéricamente y '-r' invierte. Agrupar líneas idénticas es el paso previo para contarlas."
+      }
+    },
+    {
+      "term": { "en": "uniq", "es": "uniq" },
+      "kind": "command",
+      "definition": {
+        "en": "Collapses ADJACENT duplicate lines; '-c' prefixes each with its count. Needs sorted input, so it almost always follows sort.",
+        "es": "Colapsa líneas duplicadas ADYACENTES; '-c' antepone a cada una su conteo. Necesita entrada ordenada, por eso casi siempre va después de sort."
+      }
+    },
+    {
+      "term": { "en": "tee", "es": "tee" },
+      "kind": "command",
+      "definition": {
+        "en": "Splits a stream: it writes the data to a file AND passes it through to stdout, so you can save a result and keep using it at once.",
+        "es": "Divide un flujo: escribe los datos en un archivo Y los deja pasar a stdout, así puedes guardar un resultado y seguir usándolo a la vez."
+      }
+    },
+    {
+      "term": { "en": "wc", "es": "wc" },
+      "kind": "command",
+      "definition": {
+        "en": "Counts lines, words and bytes; 'wc -l' prints just the line count — a fast way to quantify how many events matched.",
+        "es": "Cuenta líneas, palabras y bytes; 'wc -l' imprime solo el conteo de líneas — una forma rápida de cuantificar cuántos eventos coincidieron."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "three-streams",
+      "label": {
+        "en": "Identify stdin, stdout and stderr and their file descriptors",
+        "es": "Identificar stdin, stdout y stderr y sus descriptores de archivo"
+      }
+    },
+    {
+      "id": "redirect-out",
+      "label": {
+        "en": "Redirect output to files safely with > and >>",
+        "es": "Redirigir la salida a archivos de forma segura con > y >>"
+      }
+    },
+    {
+      "id": "separate-errors",
+      "label": {
+        "en": "Separate errors from results with 2> and /dev/null",
+        "es": "Separar errores de resultados con 2> y /dev/null"
+      }
+    },
+    {
+      "id": "build-pipeline",
+      "label": {
+        "en": "Chain tools into a pipeline with |",
+        "es": "Encadenar herramientas en una tubería con |"
+      }
+    },
+    {
+      "id": "no-contaminate",
+      "label": {
+        "en": "Apply redirection without ever overwriting evidence",
+        "es": "Aplicar redirección sin sobrescribir jamás la evidencia"
+      }
+    },
+    {
+      "id": "tee-record",
+      "label": {
+        "en": "Record results and keep using them at once with tee",
+        "es": "Registrar resultados y seguir usándolos a la vez con tee"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The three standard streams",
+        "es": "Los tres flujos estándar"
+      },
+      "body": {
+        "en": "Every program starts with three streams already open, identified by small numbers called file descriptors. stdin (descriptor 0) is where input comes from — by default the keyboard. stdout (descriptor 1) is where normal results go — by default the screen. stderr (descriptor 2) is a SEPARATE channel for error and diagnostic messages, also shown on screen but distinct from results. Keeping results (stdout) and errors (stderr) on different channels is a deliberate design: it lets you save the findings while still seeing the problems, or silence the noise while keeping the data. Understanding these three streams is what makes redirection and pipelines make sense.",
+        "es": "Cada programa arranca con tres flujos ya abiertos, identificados por números pequeños llamados descriptores de archivo. stdin (descriptor 0) es de donde viene la entrada — por defecto el teclado. stdout (descriptor 1) es a donde van los resultados normales — por defecto la pantalla. stderr (descriptor 2) es un canal SEPARADO para mensajes de error y diagnóstico, también mostrado en pantalla pero distinto de los resultados. Mantener resultados (stdout) y errores (stderr) en canales distintos es un diseño deliberado: te permite guardar los hallazgos mientras sigues viendo los problemas, o silenciar el ruido conservando los datos. Entender estos tres flujos es lo que hace que la redirección y las tuberías cobren sentido."
+      }
+    },
+    {
+      "heading": {
+        "en": "Redirecting output — and a forensic danger",
+        "es": "Redirigir la salida — y un peligro forense"
+      },
+      "body": {
+        "en": "'>' sends stdout to a file instead of the screen: grep 'Failed' auth.log > failed.txt saves the matches. But beware: '>' OVERWRITES the target file, truncating it to empty first. Aim it at an evidence file by mistake — grep pattern > evidence.log — and you have just destroyed the evidence. This is one of the most common ways beginners ruin a case. '>>' is the safer sibling: it APPENDS to the end without erasing anything. The forensic rule is simple and absolute: redirection output goes to YOUR working/notes files, never to anything inside the evidence.",
+        "es": "'>' envía stdout a un archivo en lugar de la pantalla: grep 'Failed' auth.log > failed.txt guarda las coincidencias. Pero cuidado: '>' SOBRESCRIBE el archivo destino, vaciándolo primero. Apúntalo a un archivo de evidencia por error — grep patrón > evidencia.log — y acabas de destruir la evidencia. Esta es una de las formas más comunes en que los principiantes arruinan un caso. '>>' es el hermano más seguro: AGREGA al final sin borrar nada. La regla forense es simple y absoluta: la salida de la redirección va a TUS archivos de trabajo/notas, nunca a algo dentro de la evidencia."
+      }
+    },
+    {
+      "heading": {
+        "en": "Handling stderr separately",
+        "es": "Manejar stderr por separado"
+      },
+      "body": {
+        "en": "Because errors travel on descriptor 2, a plain '>' does NOT capture them — it only redirects stdout (descriptor 1). To capture errors you write '2>': grep -r pattern /etc 2> errors.txt sends 'Permission denied' messages to errors.txt while results still go to the screen. '2> /dev/null' throws the errors away entirely, which is how you silence the flood of 'Permission denied' noise from a recursive search. And '2>&1' means 'send stderr to wherever stdout is currently going', merging both into one stream. This distinction matters forensically: a search that printed nothing might have hit a permission wall on stderr that you never saw if errors were discarded.",
+        "es": "Como los errores viajan por el descriptor 2, un '>' a secas NO los captura — solo redirige stdout (descriptor 1). Para capturar errores escribes '2>': grep -r patrón /etc 2> errors.txt envía los mensajes 'Permission denied' a errors.txt mientras los resultados siguen yendo a la pantalla. '2> /dev/null' descarta los errores por completo, que es como silencias la inundación de ruido 'Permission denied' de una búsqueda recursiva. Y '2>&1' significa 'envía stderr a donde sea que vaya stdout ahora', fusionando ambos en un solo flujo. Esta distinción importa forensemente: una búsqueda que no imprimió nada pudo haber chocado con un muro de permisos en stderr que nunca viste si los errores se descartaron."
+      }
+    },
+    {
+      "heading": {
+        "en": "Feeding input: stdin and <",
+        "es": "Alimentar la entrada: stdin y <"
+      },
+      "body": {
+        "en": "The mirror of '>' is '<', which feeds a file into a program's stdin: 'sort < names.txt' is equivalent to giving sort that file's contents as input. Most tools also accept a filename directly (sort names.txt), so '<' matters most when a command reads only from stdin, or inside scripts. The deeper point is that any tool reading stdin can be placed in the middle of a pipeline, receiving data not from a file but from the previous command. stdin is the socket every filter plugs into.",
+        "es": "El espejo de '>' es '<', que alimenta un archivo a la stdin de un programa: 'sort < nombres.txt' equivale a darle a sort el contenido de ese archivo como entrada. La mayoría de las herramientas también aceptan un nombre de archivo directo (sort nombres.txt), así que '<' importa sobre todo cuando un comando lee solo de stdin, o dentro de scripts. El punto más profundo es que cualquier herramienta que lee stdin puede colocarse en medio de una tubería, recibiendo datos no de un archivo sino del comando anterior. stdin es el enchufe donde se conecta cada filtro."
+      }
+    },
+    {
+      "heading": {
+        "en": "Pipes: chaining tools into a pipeline",
+        "es": "Pipes: encadenar herramientas en una tubería"
+      },
+      "body": {
+        "en": "The '|' (pipe) connects one command's stdout directly to the next command's stdin, with no temporary file in between. This is the heart of the Unix philosophy: small tools that each do one thing, combined into something powerful. A classic forensic pipeline counts the most frequent source IPs in a web log: extract the first field, sort so identical IPs are adjacent, collapse-and-count with uniq -c, then sort numerically in reverse to put the loudest talker on top. Each stage is trivial; together they turn a million-line log into a ranked threat list. Crucially, the whole pipeline only READS the source — it never writes back to it.",
+        "es": "El '|' (pipe) conecta la stdout de un comando directamente con la stdin del siguiente, sin archivo temporal de por medio. Este es el corazón de la filosofía Unix: herramientas pequeñas que hacen una sola cosa, combinadas en algo potente. Una tubería forense clásica cuenta las IPs de origen más frecuentes en un log web: extrae el primer campo, ordena para que las IPs idénticas queden adyacentes, colapsa-y-cuenta con uniq -c, y luego ordena numéricamente en reversa para poner arriba a quien más habla. Cada etapa es trivial; juntas convierten un log de un millón de líneas en una lista priorizada de amenazas. Y algo clave: toda la tubería solo LEE el origen — nunca le escribe de vuelta."
+      }
+    },
+    {
+      "heading": {
+        "en": "Non-contamination discipline",
+        "es": "Disciplina de no contaminación"
+      },
+      "body": {
+        "en": "Redirection is power, and power near evidence is dangerous. Three habits keep you clean. First, never point '>' or '>>' at anything inside the evidence directory — direct all output to a separate working/notes folder. Second, work on a verified copy so even a mistake cannot touch the original (which you also keep read-only at the filesystem level). Third, use 'tee' when you want to BOTH save a result and keep it flowing: grep pattern file | tee finding.txt lets you record the finding to your notes and still pipe it onward — documentation and analysis in one safe step. Discipline here is not bureaucracy; it is what keeps your findings admissible.",
+        "es": "La redirección es poder, y el poder cerca de la evidencia es peligroso. Tres hábitos te mantienen limpio. Primero, nunca apuntes '>' o '>>' a algo dentro del directorio de evidencia — dirige toda la salida a una carpeta de trabajo/notas separada. Segundo, trabaja sobre una copia verificada para que ni un error pueda tocar el original (que además mantienes de solo lectura a nivel del sistema de archivos). Tercero, usa 'tee' cuando quieras a la vez guardar un resultado y mantenerlo fluyendo: grep patrón archivo | tee hallazgo.txt te deja registrar el hallazgo en tus notas y seguir canalizándolo — documentación y análisis en un solo paso seguro. La disciplina aquí no es burocracia; es lo que mantiene tus hallazgos admisibles."
+      }
+    },
+    {
+      "heading": {
+        "en": "Building a forensic pipeline",
+        "es": "Construir una tubería forense"
+      },
+      "body": {
+        "en": "Putting it together, you can answer real questions in one line. 'How many failed logins were there?' becomes grep 'Failed password' auth.log | wc -l. 'Which IPs attacked most?' becomes a sort | uniq -c | sort -rn chain on the extracted IP field. 'Save the suspicious hits but keep reading them' becomes a tee in the middle. The skill is not memorizing commands but THINKING in streams: a source of data, a series of filters that each reshape it, and a clean destination for the result that is never the evidence itself. That mindset carries you through every later layer of the course.",
+        "es": "Juntándolo todo, puedes responder preguntas reales en una línea. '¿Cuántos inicios de sesión fallidos hubo?' se vuelve grep 'Failed password' auth.log | wc -l. '¿Qué IPs atacaron más?' se vuelve una cadena sort | uniq -c | sort -rn sobre el campo de IP extraído. 'Guarda los aciertos sospechosos pero sigue leyéndolos' se vuelve un tee en el medio. La habilidad no es memorizar comandos sino PENSAR en flujos: una fuente de datos, una serie de filtros que la remodelan, y un destino limpio para el resultado que nunca es la evidencia misma. Esa mentalidad te lleva a través de cada capa posterior del curso."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "grep \"Failed password\" auth.log > failed.txt",
+      "intro": {
+        "en": "Save matches to YOUR working file. Note: '>' overwrites the target — never aim it at evidence.",
+        "es": "Guarda las coincidencias en TU archivo de trabajo. Nota: '>' sobrescribe el destino — nunca lo apuntes a la evidencia."
+      },
+      "sampleOutput": "(no terminal output — stdout was redirected; 37 lines written to failed.txt)",
+      "lineByLine": [
+        {
+          "token": "written to failed.txt",
+          "explain": {
+            "en": "Because stdout went to the file, nothing prints on screen. failed.txt is a fresh working file you created — outside the evidence — safe to overwrite.",
+            "es": "Como stdout fue al archivo, nada se imprime en pantalla. failed.txt es un archivo de trabajo nuevo que creaste — fuera de la evidencia — seguro de sobrescribir."
+          }
+        }
+      ]
+    },
+    {
+      "command": "grep -r \"root\" /etc 2> /dev/null",
+      "intro": {
+        "en": "Recursively search but discard the 'Permission denied' noise by sending stderr to /dev/null.",
+        "es": "Busca recursivamente pero descarta el ruido 'Permission denied' enviando stderr a /dev/null."
+      },
+      "sampleOutput": "/etc/passwd:root:x:0:0:root:/root:/bin/bash\n/etc/group:root:x:0:",
+      "lineByLine": [
+        {
+          "token": "/etc/passwd:root:x:0:0:root:/root:/bin/bash",
+          "explain": {
+            "en": "A real result on stdout: the root account entry. Without 2> /dev/null this would be buried under dozens of permission errors.",
+            "es": "Un resultado real en stdout: la entrada de la cuenta root. Sin 2> /dev/null esto quedaría enterrado bajo decenas de errores de permiso."
+          }
+        },
+        {
+          "token": "/etc/group:root:x:0:",
+          "explain": {
+            "en": "Another clean match. The '2> /dev/null' part of the command sent descriptor 2 (stderr) to the discard file, so the usual flood of 'Permission denied' errors never appeared — only real results like this remain. Remember those errors existed: they can hint at locked-down areas.",
+            "es": "Otra coincidencia limpia. La parte '2> /dev/null' del comando envió el descriptor 2 (stderr) al archivo de descarte, así la habitual inundación de errores 'Permission denied' nunca apareció — solo quedan resultados reales como este. Recuerda que esos errores existieron: pueden señalar zonas restringidas."
+          }
+        }
+      ]
+    },
+    {
+      "command": "cat access.log | sort | uniq -c | sort -rn",
+      "intro": {
+        "en": "A full pipeline: feed the log in, group identical lines, count them, and rank by frequency.",
+        "es": "Una tubería completa: alimenta el log, agrupa líneas idénticas, cuéntalas y ordénalas por frecuencia."
+      },
+      "sampleOutput": "    142 203.0.113.45\n     31 198.51.100.22\n      9 192.168.1.50",
+      "lineByLine": [
+        {
+          "token": "142 203.0.113.45",
+          "explain": {
+            "en": "The top talker: 203.0.113.45 appears 142 times — the loudest source, a prime suspect. uniq -c produced the count; sort -rn floated the biggest to the top.",
+            "es": "Quien más habla: 203.0.113.45 aparece 142 veces — la fuente más ruidosa, sospechosa principal. uniq -c produjo el conteo; sort -rn subió el mayor arriba."
+          }
+        },
+        {
+          "token": "9 192.168.1.50",
+          "explain": {
+            "en": "An internal IP with only 9 hits — normal background traffic. The contrast with 142 is exactly what the ranking is meant to surface.",
+            "es": "Una IP interna con solo 9 aciertos — tráfico de fondo normal. El contraste con 142 es justo lo que el ranking busca resaltar."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sort ips.txt | uniq -c",
+      "intro": {
+        "en": "Why sort must come before uniq: uniq only collapses ADJACENT duplicates.",
+        "es": "Por qué sort debe ir antes de uniq: uniq solo colapsa duplicados ADYACENTES."
+      },
+      "sampleOutput": "      2 10.0.0.5\n      3 203.0.113.45",
+      "lineByLine": [
+        {
+          "token": "2 10.0.0.5",
+          "explain": {
+            "en": "sort grouped the two identical 10.0.0.5 lines together so uniq -c could count them. Run uniq on UNSORTED input and the same IP scattered across the file would be counted as separate groups.",
+            "es": "sort agrupó las dos líneas idénticas 10.0.0.5 para que uniq -c pudiera contarlas. Ejecuta uniq sobre entrada NO ordenada y la misma IP dispersa por el archivo se contaría como grupos separados."
+          }
+        }
+      ]
+    },
+    {
+      "command": "grep \"203.0.113.45\" access.log | tee suspect.txt",
+      "intro": {
+        "en": "Record the suspect's hits to your notes AND keep them flowing on screen — with tee.",
+        "es": "Registra los aciertos del sospechoso en tus notas Y mantenlos fluyendo en pantalla — con tee."
+      },
+      "sampleOutput": "203.0.113.45 - - [27/Jun/2026:10:01:00 +0000] \"POST /wp-login.php HTTP/1.1\" 404 567\n203.0.113.45 - - [27/Jun/2026:10:01:02 +0000] \"POST /wp-login.php HTTP/1.1\" 404 567",
+      "lineByLine": [
+        {
+          "token": "POST /wp-login.php HTTP/1.1",
+          "explain": {
+            "en": "tee wrote these lines to suspect.txt AND printed them here — you have a saved record for the report and the live data to pipe onward, in one safe step.",
+            "es": "tee escribió estas líneas en suspect.txt Y las imprimió aquí — tienes un registro guardado para el informe y los datos en vivo para seguir canalizando, en un solo paso seguro."
+          }
+        }
+      ]
+    },
+    {
+      "command": "wc -l failed.txt",
+      "intro": {
+        "en": "Quantify the finding: how many failed-login lines did you capture?",
+        "es": "Cuantifica el hallazgo: ¿cuántas líneas de inicio de sesión fallido capturaste?"
+      },
+      "sampleOutput": "37 failed.txt",
+      "lineByLine": [
+        {
+          "token": "37 failed.txt",
+          "explain": {
+            "en": "wc -l reports 37 lines — a concrete number for your report ('37 failed root logins from one IP'). Numbers turn observations into evidence.",
+            "es": "wc -l reporta 37 líneas — un número concreto para tu informe ('37 inicios de sesión root fallidos desde una IP'). Los números convierten observaciones en evidencia."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which file descriptor number is stderr, and how do you redirect only it to a file?",
+        "es": "¿Qué número de descriptor de archivo es stderr, y cómo rediriges solo ese a un archivo?"
+      },
+      "accept": [
+        "2, con 2>",
+        "2 y 2>",
+        "descriptor 2, 2>",
+        "2 2>",
+        "2, 2> archivo",
+        "fd 2, 2>",
+        "2 and 2>",
+        "2, redirect with 2>"
+      ],
+      "explanation": {
+        "en": "stderr is descriptor 2. '2> file' captures only the error stream, leaving stdout untouched on the screen.",
+        "es": "stderr es el descriptor 2. '2> archivo' captura solo el flujo de error, dejando stdout intacto en la pantalla."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "A teammate ran 'grep pattern > evidence.log' aiming to SAVE matches from evidence.log. What actually happened?",
+        "es": "Un compañero ejecutó 'grep patrón > evidencia.log' creyendo GUARDAR coincidencias de evidencia.log. ¿Qué pasó en realidad?"
+      },
+      "accept": [
+        "borro la evidencia",
+        "sobrescribio la evidencia",
+        "destruyo el archivo de evidencia",
+        "vacio evidencia.log",
+        "trunco el archivo",
+        "overwrote the evidence",
+        "it truncated evidence.log",
+        "destroyed the evidence file",
+        "emptied the file"
+      ],
+      "explanation": {
+        "en": "'>' truncates the target BEFORE running grep, so evidence.log was emptied and then grep waited on stdin. The evidence was destroyed — exactly why output must never point at evidence.",
+        "es": "'>' trunca el destino ANTES de ejecutar grep, así que evidencia.log fue vaciado y luego grep se quedó esperando en stdin. La evidencia fue destruida — justo por eso la salida nunca debe apuntar a la evidencia."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What does the '|' (pipe) operator do between two commands?",
+        "es": "¿Qué hace el operador '|' (pipe) entre dos comandos?"
+      },
+      "accept": [
+        "conecta la stdout del primero con la stdin del segundo",
+        "pasa la salida de uno a la entrada del otro",
+        "envia stdout al stdin siguiente",
+        "encadena la salida con la entrada",
+        "connects stdout to the next stdin",
+        "feeds output into the next command",
+        "sends one command output to another input"
+      ],
+      "explanation": {
+        "en": "'|' connects the first command's stdout to the second's stdin with no temporary file, the basis of every pipeline.",
+        "es": "'|' conecta la stdout del primer comando con la stdin del segundo sin archivo temporal, la base de toda tubería."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Write a one-line pipeline that counts how many lines in auth.log contain 'Failed password'.",
+        "es": "Escribe una tubería de una línea que cuente cuántas líneas de auth.log contienen 'Failed password'."
+      },
+      "accept": [
+        "grep \"Failed password\" auth.log | wc -l",
+        "grep 'Failed password' auth.log | wc -l",
+        "grep -c \"Failed password\" auth.log",
+        "cat auth.log | grep \"Failed password\" | wc -l"
+      ],
+      "explanation": {
+        "en": "Pipe grep's matching lines into 'wc -l' to count them. ('grep -c' achieves the same count directly.)",
+        "es": "Canaliza las líneas que coincide grep hacia 'wc -l' para contarlas. ('grep -c' logra el mismo conteo directamente.)"
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Why must 'sort' come before 'uniq -c' when counting duplicate IPs?",
+        "es": "¿Por qué debe ir 'sort' antes de 'uniq -c' al contar IPs duplicadas?"
+      },
+      "accept": [
+        "porque uniq solo colapsa lineas adyacentes",
+        "uniq solo cuenta duplicados adyacentes",
+        "uniq necesita la entrada ordenada",
+        "porque uniq compara lineas contiguas",
+        "uniq only collapses adjacent lines",
+        "uniq needs sorted input",
+        "uniq only counts adjacent duplicates"
+      ],
+      "explanation": {
+        "en": "uniq only collapses ADJACENT identical lines. Sorting first brings all copies of each IP together so uniq -c can count them correctly.",
+        "es": "uniq solo colapsa líneas idénticas ADYACENTES. Ordenar primero junta todas las copias de cada IP para que uniq -c pueda contarlas correctamente."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You want to save a search result to 'hits.txt' AND still see it on screen in one command. Which tool do you use?",
+        "es": "Quieres guardar el resultado de una búsqueda en 'hits.txt' Y verlo en pantalla a la vez en un solo comando. ¿Qué herramienta usas?"
+      },
+      "accept": [
+        "tee",
+        "tee hits.txt",
+        "| tee hits.txt",
+        "con tee",
+        "use tee",
+        "grep ... | tee hits.txt"
+      ],
+      "explanation": {
+        "en": "'tee hits.txt' writes the stream to the file and passes it through to stdout — save and keep using the data in one step.",
+        "es": "'tee hits.txt' escribe el flujo en el archivo y lo deja pasar a stdout — guardar y seguir usando los datos en un solo paso."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Standard streams: stdin, stdout, stderr and file descriptors 0/1/2 — Shotts, The Linux Command Line (Ch. 6); Blum & Bresnahan, Linux Command Line and Shell Scripting Bible (Ch. 15)",
+    "Output redirection (>, >>) and truncation risk — Shotts, The Linux Command Line (Ch. 6)",
+    "stderr redirection (2>, 2>&1) and /dev/null — Shotts, The Linux Command Line (Ch. 6); Blum & Bresnahan (Ch. 15)",
+    "Input redirection (<) and here-documents — Blum & Bresnahan, Linux Command Line and Shell Scripting Bible (Ch. 15)",
+    "Pipes and pipelines; sort | uniq -c | sort -rn idiom — Shotts, The Linux Command Line (Ch. 6, 20)",
+    "tee for simultaneous save-and-pass — Shotts, The Linux Command Line (Ch. 6)",
+    "Evidence non-contamination and read-only handling — Nikkel, Practical Forensic Imaging; NIST SP 800-86"
+  ],
+  "mangaRevealOnComplete": 2
+}

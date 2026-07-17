@@ -1,0 +1,503 @@
+{
+  "id": "ch13",
+  "layer": 1,
+  "order": 13,
+  "title": {
+    "en": "Environment, PATH, and Shell Configuration",
+    "es": "Entorno, PATH y configuración de la shell"
+  },
+  "subtitle": {
+    "en": "Understand the shell environment, customize your PATH, create aliases, and edit startup files to streamline your forensic workflow.",
+    "es": "Comprende el entorno de la shell, personaliza tu PATH, crea aliases y edita archivos de inicio para optimizar tu flujo de trabajo forense."
+  },
+  "glossary": [
+    {
+      "term": { "en": "environment variable", "es": "variable de entorno" },
+      "definition": {
+        "en": "A named value stored outside the program that influences how programs behave. Examples include PATH, HOME, USER, and SHELL. Environment variables are inherited by child processes.",
+        "es": "Un valor con nombre almacenado fuera del programa que influye en cómo se comportan los programas. Ejemplos incluyen PATH, HOME, USER y SHELL. Las variables de entorno son heredadas por los procesos hijos."
+      }
+    },
+    {
+      "term": { "en": "shell variable", "es": "variable de shell" },
+      "definition": {
+        "en": "A variable set by the shell itself (bash) that is not automatically passed to child processes. Shell variables become environment variables when exported with the export command.",
+        "es": "Una variable establecida por la propia shell (bash) que no se pasa automáticamente a los procesos hijos. Las variables de shell se convierten en variables de entorno cuando se exportan con el comando export."
+      }
+    },
+    {
+      "term": { "en": "PATH", "es": "PATH" },
+      "definition": {
+        "en": "A colon-separated list of directories that the shell searches when you type a command name. If a command is not in one of these directories, the shell returns 'command not found'. Adding ~/bin to PATH lets you run your own scripts from anywhere.",
+        "es": "Una lista separada por dos puntos de directorios que la shell busca cuando escribes un nombre de comando. Si un comando no está en uno de estos directorios, la shell devuelve 'command not found'. Agregar ~/bin al PATH te permite ejecutar tus propios scripts desde cualquier lugar."
+      }
+    },
+    {
+      "term": { "en": "alias", "es": "alias" },
+      "definition": {
+        "en": "A user-defined shortcut for a longer command. Defined with alias name='command'. Aliases are stored in the shell environment and can be listed with the alias command without arguments.",
+        "es": "Un atajo definido por el usuario para un comando más largo. Se define con alias nombre='comando'. Los aliases se almacenan en el entorno de la shell y se pueden listar con el comando alias sin argumentos."
+      }
+    },
+    {
+      "term": { "en": "startup file", "es": "archivo de inicio" },
+      "definition": {
+        "en": "A script that bash reads automatically at the start of a session to configure the environment. The most important for users is ~/.bashrc, which runs for every interactive non-login shell.",
+        "es": "Un script que bash lee automáticamente al inicio de una sesión para configurar el entorno. El más importante para los usuarios es ~/.bashrc, que se ejecuta en cada shell interactiva que no es de inicio de sesión."
+      }
+    },
+    {
+      "term": { "en": "login shell", "es": "shell de inicio de sesión" },
+      "definition": {
+        "en": "A shell session started after authenticating with a username and password, such as a virtual console or SSH session. Login shells read /etc/profile, then ~/.bash_profile, ~/.bash_login, or ~/.profile.",
+        "es": "Una sesión de shell iniciada tras autenticarse con usuario y contraseña, como una consola virtual o una sesión SSH. Las shells de inicio de sesión leen /etc/profile, luego ~/.bash_profile, ~/.bash_login o ~/.profile."
+      }
+    },
+    {
+      "term": { "en": "non-login shell", "es": "shell sin inicio de sesión" },
+      "definition": {
+        "en": "A shell started from within an existing session, typically a terminal emulator in a GUI. Non-login shells read /etc/bash.bashrc and ~/.bashrc, and inherit environment from the parent process.",
+        "es": "Una shell iniciada desde una sesión existente, típicamente un emulador de terminal en una GUI. Las shells sin inicio de sesión leen /etc/bash.bashrc y ~/.bashrc, y heredan el entorno del proceso padre."
+      }
+    },
+    {
+      "term": { "en": "export", "es": "export" },
+      "definition": {
+        "en": "A shell builtin that marks a variable or function for automatic inheritance by child processes. Without export, a variable remains local to the current shell.",
+        "es": "Un builtin de la shell que marca una variable o función para herencia automática por procesos hijos. Sin export, una variable permanece local a la shell actual."
+      }
+    },
+    {
+      "term": { "en": "~/.bashrc", "es": "~/.bashrc" },
+      "definition": {
+        "en": "The personal startup file for bash. It runs for every interactive non-login shell and is typically sourced by login shell startup files as well. This is the primary file for customizing aliases, functions, and prompt settings.",
+        "es": "El archivo de inicio personal de bash. Se ejecuta en cada shell interactiva sin inicio de sesión y también es ejecutado típicamente por los archivos de inicio de shells de inicio de sesión. Este es el archivo principal para personalizar aliases, funciones y configuraciones del prompt."
+      }
+    },
+    {
+      "term": { "en": "printenv", "es": "printenv" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that prints all or part of the environment. Running printenv without arguments lists every environment variable and its value; passing a variable name shows only that value.",
+        "es": "Comando que imprime todo o parte del entorno. Ejecutar printenv sin argumentos lista cada variable de entorno y su valor; pasar un nombre de variable muestra solo ese valor."
+      }
+    },
+    {
+      "term": { "en": "set", "es": "set" },
+      "kind": "command",
+      "definition": {
+        "en": "Shell builtin that displays all shell variables, environment variables, and shell functions when used without arguments. Also used to set shell options (set -o, set +o).",
+        "es": "Builtin de la shell que muestra todas las variables de shell, variables de entorno y funciones de shell cuando se usa sin argumentos. También se usa para establecer opciones de shell (set -o, set +o)."
+      }
+    },
+    {
+      "term": { "en": "export", "es": "export" },
+      "kind": "command",
+      "definition": {
+        "en": "Shell builtin that marks a variable for automatic inheritance by child processes. The syntax export PATH=$PATH:~/bin makes the modified PATH available to every program launched from that shell.",
+        "es": "Builtin de la shell que marca una variable para herencia automática por procesos hijos. La sintaxis export PATH=$PATH:~/bin hace que el PATH modificado esté disponible para cada programa lanzado desde esa shell."
+      }
+    },
+    {
+      "term": { "en": "alias", "es": "alias" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that creates, lists, or removes command aliases. Without arguments, it lists all defined aliases. Syntax: alias ll='ls -l' creates a shortcut ll for the ls -l command.",
+        "es": "Comando que crea, lista o elimina aliases de comandos. Sin argumentos, lista todos los aliases definidos. Sintaxis: alias ll='ls -l' crea un atajo ll para el comando ls -l."
+      }
+    },
+    {
+      "term": { "en": "unalias", "es": "unalias" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that removes a previously defined alias. Syntax: unalias ll removes the alias named ll. Use unalias -a to remove all aliases at once.",
+        "es": "Comando que elimina un alias previamente definido. Sintaxis: unalias ll elimina el alias llamado ll. Usa unalias -a para eliminar todos los aliases de una vez."
+      }
+    },
+    {
+      "term": { "en": "source", "es": "source" },
+      "kind": "command",
+      "definition": {
+        "en": "Shell builtin that reads and executes commands from a file in the current shell. Used to reload startup files after editing: source ~/.bashrc applies changes without starting a new terminal session.",
+        "es": "Builtin de la shell que lee y ejecuta comandos de un archivo en la shell actual. Se usa para recargar archivos de inicio después de editarlos: source ~/.bashrc aplica cambios sin iniciar una nueva sesión de terminal."
+      }
+    },
+    {
+      "term": { "en": "env", "es": "env" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that runs a program with a modified environment. Running env without arguments prints all environment variables. Often used in shebang lines to locate the interpreter: #!/usr/bin/env bash.",
+        "es": "Comando que ejecuta un programa con un entorno modificado. Ejecutar env sin argumentos imprime todas las variables de entorno. Se usa a menudo en líneas shebang para localizar el intérprete: #!/usr/bin/env bash."
+      }
+    },
+    {
+      "term": { "en": "echo", "es": "echo" },
+      "kind": "command",
+      "definition": {
+        "en": "Shell builtin that prints its arguments to standard output. Fundamental for displaying variable values via parameter expansion: echo $PATH shows the current PATH value.",
+        "es": "Builtin de la shell que imprime sus argumentos en la salida estándar. Fundamental para mostrar valores de variables mediante expansión de parámetros: echo $PATH muestra el valor actual de PATH."
+      }
+    },
+    {
+      "term": { "en": "cat", "es": "cat" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that concatenates and prints files to standard output. Used here to display the contents of ~/.bashrc to inspect the current shell configuration.",
+        "es": "Comando que concatena e imprime archivos en la salida estándar. Se usa aquí para mostrar el contenido de ~/.bashrc e inspeccionar la configuración actual de la shell."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "understand-environment",
+      "label": {
+        "en": "Explain what the shell environment is and how it affects command behavior",
+        "es": "Explicar qué es el entorno de la shell y cómo afecta el comportamiento de los comandos"
+      }
+    },
+    {
+      "id": "examine-variables",
+      "label": {
+        "en": "Examine environment and shell variables using printenv, set, and echo",
+        "es": "Examinar variables de entorno y de shell usando printenv, set y echo"
+      }
+    },
+    {
+      "id": "modify-path",
+      "label": {
+        "en": "Add directories to the PATH variable so custom scripts are found automatically",
+        "es": "Agregar directorios a la variable PATH para que los scripts personalizados se encuentren automáticamente"
+      }
+    },
+    {
+      "id": "create-aliases",
+      "label": {
+        "en": "Create and remove aliases to speed up repetitive command sequences",
+        "es": "Crear y eliminar aliases para acelerar secuencias de comandos repetitivas"
+      }
+    },
+    {
+      "id": "edit-startup-files",
+      "label": {
+        "en": "Edit ~/.bashrc to make environment changes permanent across sessions",
+        "es": "Editar ~/.bashrc para hacer cambios permanentes en el entorno entre sesiones"
+      }
+    },
+    {
+      "id": "source-changes",
+      "label": {
+        "en": "Use source to reload startup files without logging out",
+        "es": "Usar source para recargar archivos de inicio sin cerrar sesión"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "What is the shell environment?",
+        "es": "¿Qué es el entorno de la shell?"
+      },
+      "body": {
+        "en": "Every time you open a terminal, bash creates an environment: a collection of name-value pairs that programs read to learn about the system and the user. These pairs are called environment variables. For example, the HOME variable holds the path to your home directory, USER holds your username, and PATH tells the shell where to look for executable programs. The environment also stores shell variables (set by bash itself) and aliases (user-defined command shortcuts). Programs you launch from the shell inherit this environment, which is why changing a variable like PATH affects every command you run afterwards. In forensic work, the environment determines which tools are available without typing full paths — a misconfigured PATH can hide critical tools or accidentally invoke a tampered version.",
+        "es": "Cada vez que abres una terminal, bash crea un entorno: una colección de pares nombre-valor que los programas leen para conocer el sistema y el usuario. Estos pares se llaman variables de entorno. Por ejemplo, la variable HOME contiene la ruta a tu directorio home, USER contiene tu nombre de usuario y PATH le dice a la shell dónde buscar programas ejecutables. El entorno también almacena variables de shell (establecidas por bash mismo) y aliases (atajos de comandos definidos por el usuario). Los programas que lanzas desde la shell heredan este entorno, por lo que cambiar una variable como PATH afecta a cada comando que ejecutes después. En el trabajo forense, el entorno determina qué herramientas están disponibles sin escribir rutas completas — un PATH mal configurado puede ocultar herramientas críticas o invocar accidentalmente una versión manipulada."
+      }
+    },
+    {
+      "heading": {
+        "en": "Examining the environment with printenv, set, and echo",
+        "es": "Examinar el entorno con printenv, set y echo"
+      },
+      "body": {
+        "en": "Three commands reveal what is in the environment. printenv without arguments dumps every environment variable and its value, one per line. To check a single variable, pass its name: printenv HOME returns /home/analyst. The set command goes further, showing shell variables and shell functions in addition to environment variables, all sorted alphabetically. For a quick look at one variable, echo $HOME works the same as printenv HOME. A forensic analyst should start every session with a quick sanity check: verify that PATH includes the expected directories (especially if working on a suspect's system) and that no suspicious variables like LD_PRELOAD are set, which could indicate a rootkit hooking system calls.",
+        "es": "Tres comandos revelan qué hay en el entorno. printenv sin argumentos vuelca cada variable de entorno y su valor, uno por línea. Para verificar una variable, pasa su nombre: printenv HOME devuelve /home/analyst. El comando set va más allá, mostrando variables de shell y funciones de shell además de las variables de entorno, todo ordenado alfabéticamente. Para una revisión rápida de una variable, echo $HOME funciona igual que printenv HOME. Un analista forense debería comenzar cada sesión con una verificación rápida: confirmar que PATH incluye los directorios esperados (especialmente si se trabaja en el sistema de un sospechoso) y que no hay variables sospechosas como LD_PRELOAD, que podrían indicar un rootkit interceptando llamadas al sistema."
+      }
+    },
+    {
+      "heading": {
+        "en": "The PATH variable: where the shell finds commands",
+        "es": "La variable PATH: dónde la shell encuentra comandos"
+      },
+      "body": {
+        "en": "When you type a command like sha256sum, the shell does not search every directory on the system. It consults PATH, a colon-separated list of directories. The shell scans these directories left to right and runs the first matching executable it finds. A typical PATH looks like /usr/local/bin:/usr/bin:/bin:/usr/games. Note that the current directory (.) is NOT in PATH by default for security reasons — an attacker could place a malicious script named ls in a directory and trick you into running it. To add your own scripts to the search path, append ~/bin to PATH: PATH=$PATH:$HOME/bin. Make this change permanent by adding the line to ~/.bashrc followed by export PATH. Many distributions check for ~/bin at login and add it automatically if the directory exists.",
+        "es": "Cuando escribes un comando como sha256sum, la shell no busca en todos los directorios del sistema. Consulta PATH, una lista separada por dos puntos. La shell examina estos directorios de izquierda a derecha y ejecuta el primer ejecutable que encuentra. Un PATH típico se ve como /usr/local/bin:/usr/bin:/bin:/usr/games. Nota que el directorio actual (.) NO está en PATH por defecto por razones de seguridad — un atacante podría colocar un script malicioso llamado ls en un directorio y engañarte para que lo ejecutes. Para agregar tus propios scripts a la ruta de búsqueda, añade ~/bin al PATH: PATH=$PATH:$HOME/bin. Haz este cambio permanente agregando la línea a ~/.bashrc seguida de export PATH. Muchas distribuciones verifican ~/bin al iniciar sesión y lo agregan automáticamente si el directorio existe."
+      }
+    },
+    {
+      "heading": {
+        "en": "Aliases: creating your own command shortcuts",
+        "es": "Aliases: crear tus propios atajos de comandos"
+      },
+      "body": {
+        "en": "An alias lets you define a short name for a longer command. The syntax is alias name='command'. For example, alias ll='ls -l' creates a command ll that runs ls -l. Aliases are commonly used to add default options: many distributions define alias ls='ls --color=auto' so that file listings are colorized automatically. To see all currently defined aliases, run alias with no arguments. To remove one, use unalias name. Aliases defined on the command line vanish when the session ends, so permanent aliases belong in ~/.bashrc. Forensic analysts benefit from aliases that reduce typing during repetitive tasks: alias h='history | grep' quickly searches command history, and alias hl='sha256sum *.bin | tee hashes.txt' hashes every binary in one go.",
+        "es": "Un alias te permite definir un nombre corto para un comando más largo. La sintaxis es alias nombre='comando'. Por ejemplo, alias ll='ls -l' crea un comando ll que ejecuta ls -l. Los aliases se usan comúnmente para agregar opciones por defecto: muchas distribuciones definen alias ls='ls --color=auto' para que los listados de archivos se coloreen automáticamente. Para ver todos los aliases definidos, ejecuta alias sin argumentos. Para eliminar uno, usa unalias nombre. Los aliases definidos en la línea de comandos desaparecen al cerrar la sesión, así que los aliases permanentes van en ~/.bashrc. Los analistas forenses se benefician de aliases que reducen la escritura en tareas repetitivas: alias h='history | grep' busca rápidamente en el historial de comandos, y alias hl='sha256sum *.bin | tee hashes.txt' hashea todos los binarios de una sola vez."
+      }
+    },
+    {
+      "heading": {
+        "en": "Startup files: the login sequence",
+        "es": "Archivos de inicio: la secuencia de inicio de sesión"
+      },
+      "body": {
+        "en": "Bash reads configuration scripts in a specific order depending on how the session started. A login shell (virtual console or SSH) reads /etc/profile first (global for all users), then looks for the first of ~/.bash_profile, ~/.bash_login, or ~/.profile in the home directory. A non-login shell (terminal in a GUI) reads /etc/bash.bashrc and then ~/.bashrc. The ~/.bashrc file is the most important for everyday customization because it is read by almost every shell session: non-login shells read it directly, and login shell startup files typically source it too. In Debian-based distributions like Ubuntu, the default ~/.profile contains a block that sources ~/.bashrc automatically, so editing ~/.bashrc is usually sufficient. Always back up a startup file with cp ~/.bashrc ~/.bashrc.bak before editing — a syntax error can break your shell configuration.",
+        "es": "Bash lee scripts de configuración en un orden específico dependiendo de cómo comenzó la sesión. Una shell de inicio de sesión (consola virtual o SSH) lee /etc/profile primero (global para todos los usuarios), luego busca el primero de ~/.bash_profile, ~/.bash_login o ~/.profile en el directorio home. Una shell sin inicio de sesión (terminal en una GUI) lee /etc/bash.bashrc y luego ~/.bashrc. El archivo ~/.bashrc es el más importante para la personalización diaria porque es leído por casi todas las sesiones de shell: las shells sin inicio de sesión lo leen directamente, y los archivos de inicio de shells de inicio de sesión típicamente también lo ejecutan con source. En distribuciones basadas en Debian como Ubuntu, el ~/.profile por defecto contiene un bloque que ejecuta ~/.bashrc con source automáticamente, así que editar ~/.bashrc suele ser suficiente. Siempre haz una copia de seguridad de un archivo de inicio con cp ~/.bashrc ~/.bashrc.bak antes de editarlo — un error de sintaxis puede romper tu configuración de shell."
+      }
+    },
+    {
+      "heading": {
+        "en": "Making changes permanent and activating them with source",
+        "es": "Hacer cambios permanentes y activarlos con source"
+      },
+      "body": {
+        "en": "Editing ~/.bashrc does not affect the current session — the file is only read when a new shell starts. To apply changes immediately without closing the terminal, use the source command: source ~/.bashrc (or its shorthand . ~/.bashrc). This reads the file and executes every line in the current shell, making new aliases, variables, and functions available right away. Common additions to ~/.bashrc include setting the umask for shared directories, increasing the history size with export HISTSIZE=1000, ignoring duplicate commands with export HISTCONTROL=ignoredups, defining aliases, and adding directories to PATH. Each addition should be commented so that months later you still remember why it is there. Use a text editor like nano or vi to edit the file, and always test that the file is syntactically valid by sourcing it immediately after saving.",
+        "es": "Editar ~/.bashrc no afecta la sesión actual — el archivo solo se lee cuando se inicia una nueva shell. Para aplicar los cambios de inmediato sin cerrar la terminal, usa el comando source: source ~/.bashrc (o su abreviatura . ~/.bashrc). Esto lee el archivo y ejecuta cada línea en la shell actual, haciendo que los nuevos aliases, variables y funciones estén disponibles de inmediato. Las adiciones comunes a ~/.bashrc incluyen establecer el umask para directorios compartidos, aumentar el tamaño del historial con export HISTSIZE=1000, ignorar comandos duplicados con export HISTCONTROL=ignoredups, definir aliases y agregar directorios al PATH. Cada adición debería tener un comentario para que meses después todavía recuerdes por qué está ahí. Usa un editor de texto como nano o vi para editar el archivo, y siempre verifica que el archivo sea sintácticamente válido ejecutando source inmediatamente después de guardar."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "printenv",
+      "intro": {
+        "en": "Display all environment variables. This is the standard way to inspect the environment of the current shell session.",
+        "es": "Muestra todas las variables de entorno. Esta es la forma estándar de inspeccionar el entorno de la sesión actual de la shell."
+      },
+      "sampleOutput": "SHELL=/bin/bash\nUSER=analyst\nPATH=/usr/local/bin:/usr/bin:/bin\nHOME=/home/analyst\nPWD=/home/analyst/case02\nLANG=en_US.UTF-8\nTERM=xterm-256color",
+      "lineByLine": [
+        {
+          "token": "SHELL=/bin/bash",
+          "explain": {
+            "en": "The SHELL variable shows which program is running as the command interpreter. In this case, bash located at /bin/bash.",
+            "es": "La variable SHELL muestra qué programa se ejecuta como intérprete de comandos. En este caso, bash ubicado en /bin/bash."
+          }
+        },
+        {
+          "token": "PATH=/usr/local/bin:/usr/bin:/bin",
+          "explain": {
+            "en": "The PATH variable lists directories separated by colons. The shell scans these directories in order when searching for executable commands.",
+            "es": "La variable PATH lista directorios separados por dos puntos. La shell examina estos directorios en orden cuando busca comandos ejecutables."
+          }
+        },
+        {
+          "token": "HOME=/home/analyst",
+          "explain": {
+            "en": "HOME holds the path to the current user's home directory. Programs use this to store user-specific configuration files like ~/.bashrc.",
+            "es": "HOME contiene la ruta al directorio home del usuario actual. Los programas usan esto para almacenar archivos de configuración específicos del usuario como ~/.bashrc."
+          }
+        }
+      ]
+    },
+    {
+      "command": "echo $PATH",
+      "intro": {
+        "en": "Print only the PATH variable using parameter expansion. The $ prefix tells the shell to replace PATH with its value before echo runs.",
+        "es": "Imprime solo la variable PATH usando expansión de parámetros. El prefijo $ le dice a la shell que reemplace PATH con su valor antes de que echo se ejecute."
+      },
+      "sampleOutput": "/usr/local/bin:/usr/bin:/bin:/home/analyst/bin",
+      "lineByLine": [
+        {
+          "token": "/usr/local/bin",
+          "explain": {
+            "en": "First directory in PATH. The shell tries this directory first when looking for any command. Local system administrator scripts typically go here.",
+            "es": "Primer directorio en PATH. La shell prueba este directorio primero cuando busca cualquier comando. Los scripts de administración local del sistema suelen ir aquí."
+          }
+        },
+        {
+          "token": "/home/analyst/bin",
+          "explain": {
+            "en": "The user's personal bin directory appended to the end of PATH. This is where forensic analysts store their custom scripts so they can be run from any working directory.",
+            "es": "El directorio bin personal del usuario añadido al final de PATH. Aquí es donde los analistas forenses almacenan sus scripts personalizados para poder ejecutarlos desde cualquier directorio de trabajo."
+          }
+        }
+      ]
+    },
+    {
+      "command": "alias",
+      "intro": {
+        "en": "List all currently defined aliases. Without arguments, alias displays every shortcut available in the current shell session.",
+        "es": "Lista todos los aliases definidos actualmente. Sin argumentos, alias muestra cada atajo disponible en la sesión actual de la shell."
+      },
+      "sampleOutput": "alias ll='ls -l'\nalias la='ls -A'\nalias l='ls -CF'\nalias ls='ls --color=auto'\nalias h='history | grep'",
+      "lineByLine": [
+        {
+          "token": "alias ll='ls -l'",
+          "explain": {
+            "en": "Defines ll as a shortcut for ls -l. When you type ll, the shell substitutes it with ls -l before execution. The alias uses single quotes to prevent immediate expansion of the value.",
+            "es": "Define ll como un atajo para ls -l. Cuando escribes ll, la shell lo sustituye por ls -l antes de ejecutarlo. El alias usa comillas simples para evitar la expansión inmediata del valor."
+          }
+        },
+        {
+          "token": "alias ls='ls --color=auto'",
+          "explain": {
+            "en": "Many distributions predefine this alias so file listings are always colorized by file type. The alias uses the same name as the command itself, overriding the default behavior.",
+            "es": "Muchas distribuciones predefinen este alias para que los listados de archivos siempre se coloreen por tipo. El alias usa el mismo nombre que el comando, anulando el comportamiento predeterminado."
+          }
+        }
+      ]
+    },
+    {
+      "command": "alias hl='sha256sum *.bin | tee hashes.txt'",
+      "intro": {
+        "en": "Create a forensic alias that hashes all .bin files and saves the results. The alias is defined inline and available immediately for the current session.",
+        "es": "Crea un alias forense que hashea todos los archivos .bin y guarda los resultados. El alias se define en línea y está disponible de inmediato para la sesión actual."
+      },
+      "sampleOutput": "$ alias hl='sha256sum *.bin | tee hashes.txt'\n$ hl\nda39a3ee5e6b4b0d3255bfef95601890afd80709  image01.bin\n9b04d152845ec0a378394003c96da5e83a1e6014  image02.bin\n$ cat hashes.txt\nda39a3ee5e6b4b0d3255bfef95601890afd80709  image01.bin\n9b04d152845ec0a378394003c96da5e83a1e6014  image02.bin",
+      "lineByLine": [
+        {
+          "token": "da39a3ee5e6b4b0d3255bfef95601890afd80709  image01.bin",
+          "explain": {
+            "en": "The SHA-1 hash of image01.bin. The alias ran sha256sum on every .bin file and piped the output through tee, which displayed it on screen and wrote it to hashes.txt simultaneously.",
+            "es": "El hash SHA-1 de image01.bin. El alias ejecutó sha256sum en cada archivo .bin y canalizó la salida a través de tee, que la mostró en pantalla y la escribió en hashes.txt simultáneamente."
+          }
+        },
+        {
+          "token": "hashes.txt",
+          "explain": {
+            "en": "The output file created by tee. After the alias runs, you have a permanent record of all hashes for your case notes without re-running the command.",
+            "es": "El archivo de salida creado por tee. Después de ejecutar el alias, tienes un registro permanente de todos los hashes para tus notas del caso sin tener que volver a ejecutar el comando."
+          }
+        }
+      ]
+    },
+    {
+      "command": "cat ~/.bashrc",
+      "intro": {
+        "en": "Display the contents of the user's bash configuration file. This is where permanent aliases, PATH modifications, and environment settings belong.",
+        "es": "Muestra el contenido del archivo de configuración bash del usuario. Aquí es donde pertenecen los aliases permanentes, las modificaciones de PATH y la configuración del entorno."
+      },
+      "sampleOutput": "# ~/.bashrc — executed by bash(1) for non-login shells.\n# See /usr/share/doc/bash/examples/startup-files for examples.\n\nif [ -f /etc/bash.bashrc ]; then\n    . /etc/bash.bashrc\nfi\n\n# Forensic aliases\nalias ll='ls -l --color=auto'\nalias la='ls -A'\nalias hl='sha256sum *.bin | tee hashes.txt'\n\n# PATH for personal scripts\nif [ -d \"$HOME/bin\" ]; then\n    PATH=\"$PATH:$HOME/bin\"\nfi\n\nexport HISTSIZE=2000\nexport HISTCONTROL=ignoredups",
+      "lineByLine": [
+        {
+          "token": "# ~/.bashrc",
+          "explain": {
+            "en": "A comment line describing the file. Comments start with # and are ignored by the shell. Always document what each section of your startup file does.",
+            "es": "Una línea de comentario que describe el archivo. Los comentarios comienzan con # y son ignorados por la shell. Siempre documenta lo que hace cada sección de tu archivo de inicio."
+          }
+        },
+        {
+          "token": "if [ -f /etc/bash.bashrc ]; then",
+          "explain": {
+            "en": "A conditional that checks if the global bashrc exists. If it does, it sources it with . (dot), applying system-wide settings before user customizations.",
+            "es": "Un condicional que verifica si el bashrc global existe. Si es así, lo ejecuta con source usando . (punto), aplicando configuraciones del sistema antes de las personalizaciones del usuario."
+          }
+        },
+        {
+          "token": "if [ -d \"$HOME/bin\" ]; then",
+          "explain": {
+            "en": "Conditional that checks if the user's personal bin directory exists. The -d test returns true only if the path is a directory. If it exists, the directory is added to PATH.",
+            "es": "Condicional que verifica si el directorio bin personal del usuario existe. La prueba -d devuelve verdadero solo si la ruta es un directorio. Si existe, el directorio se agrega a PATH."
+          }
+        },
+        {
+          "token": "export HISTSIZE=2000",
+          "explain": {
+            "en": "Sets the command history size to 2000 entries. The export keyword ensures child processes also see this value. Larger history helps forensic analysts trace what commands were run.",
+            "es": "Establece el tamaño del historial de comandos a 2000 entradas. La palabra clave export asegura que los procesos hijos también vean este valor. Un historial más grande ayuda a los analistas forenses a rastrear qué comandos se ejecutaron."
+          }
+        }
+      ]
+    },
+    {
+      "command": "source ~/.bashrc",
+      "intro": {
+        "en": "Reload the bash configuration file into the current session. After editing ~/.bashrc, this command applies all changes without starting a new terminal.",
+        "es": "Recarga el archivo de configuración bash en la sesión actual. Después de editar ~/.bashrc, este comando aplica todos los cambios sin iniciar una nueva terminal."
+      },
+      "sampleOutput": "$ source ~/.bashrc\n$ ll\ntotal 24\ndrwxr-xr-x 2 analyst analyst 4096 Jun 29 10:00 bin\n-rw-r--r-- 1 analyst analyst  187 Jun 29 09:00 notes.txt",
+      "lineByLine": [
+        {
+          "token": "total 24",
+          "explain": {
+            "en": "Output from the newly defined ll alias. Because source reloaded ~/.bashrc, the alias ll='ls -l --color=auto' is now available in this session without reopening the terminal.",
+            "es": "Salida del alias ll recién definido. Como source recargó ~/.bashrc, el alias ll='ls -l --color=auto' ahora está disponible en esta sesión sin reabrir la terminal."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What command displays all environment variables and their values?",
+        "es": "¿Qué comando muestra todas las variables de entorno y sus valores?"
+      },
+      "accept": ["printenv", "printenv | less", "env", "set", "set | less"],
+      "explanation": {
+        "en": "printenv without arguments lists every environment variable. set shows both environment and shell variables plus functions. env also works but is a separate executable.",
+        "es": "printenv sin argumentos lista cada variable de entorno. set muestra variables de entorno y de shell además de funciones. env también funciona pero es un ejecutable separado."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "How do you view the value of a single environment variable named PATH?",
+        "es": "¿Cómo ves el valor de una sola variable de entorno llamada PATH?"
+      },
+      "accept": ["echo $PATH", "printenv PATH", "echo \"$PATH\""],
+      "explanation": {
+        "en": "echo $PATH uses parameter expansion to replace $PATH with its value. printenv PATH passes the variable name as an argument to the command. Both work identically.",
+        "es": "echo $PATH usa expansión de parámetros para reemplazar $PATH con su valor. printenv PATH pasa el nombre de la variable como argumento al comando. Ambos funcionan de manera idéntica."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Write the command to add ~/bin to the end of PATH and make it available to child processes.",
+        "es": "Escribe el comando para agregar ~/bin al final de PATH y hacerlo disponible para procesos hijos."
+      },
+      "accept": ["export PATH=$PATH:$HOME/bin", "export PATH=\"$PATH:$HOME/bin\"", "PATH=$PATH:$HOME/bin && export PATH"],
+      "explanation": {
+        "en": "First append $HOME/bin to the current PATH, then export it. Without export, the change would only affect the current shell and not child processes.",
+        "es": "Primero añade $HOME/bin al PATH actual, luego expórtalo. Sin export, el cambio solo afectaría a la shell actual y no a los procesos hijos."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "If you define alias ls='ls --color=auto' on the command line and then close the terminal, what happens to the alias when you open a new terminal?",
+        "es": "Si defines alias ls='ls --color=auto' en la línea de comandos y luego cierras la terminal, ¿qué sucede con el alias cuando abres una nueva terminal?"
+      },
+      "accept": ["desaparece", "se pierde", "it is lost", "the alias is gone", "not persistent", "no persiste"],
+      "explanation": {
+        "en": "Aliases defined on the command line are session-scoped. They vanish when the shell exits. To make an alias permanent, add it to ~/.bashrc.",
+        "es": "Los aliases definidos en la línea de comandos tienen alcance de sesión. Desaparecen cuando la shell termina. Para hacer un alias permanente, agrégalo a ~/.bashrc."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "What command reloads your ~/.bashrc file so that newly added aliases take effect immediately?",
+        "es": "¿Qué comando recarga tu archivo ~/.bashrc para que los aliases recién agregados surtan efecto de inmediato?"
+      },
+      "accept": ["source ~/.bashrc", ". ~/.bashrc", "source .bashrc", "source $HOME/.bashrc"],
+      "explanation": {
+        "en": "The source builtin (or its shorthand .) reads and executes the file in the current shell. This applies all changes from ~/.bashrc to the running session without logging out.",
+        "es": "El builtin source (o su abreviatura .) lee y ejecuta el archivo en la shell actual. Esto aplica todos los cambios de ~/.bashrc a la sesión en ejecución sin cerrar sesión."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Why does the shell not include the current directory (.) in PATH by default?",
+        "es": "¿Por qué la shell no incluye el directorio actual (.) en PATH por defecto?"
+      },
+      "accept": ["seguridad", "security", "malicious script", "script malicioso", "trojan", "an attacker could place a malicious file", "un atacante podría colocar un archivo malicioso"],
+      "explanation": {
+        "en": "If . were in PATH, running ls in a directory where an attacker placed a malicious script named ls would execute the attacker's code instead of the real ls. This is a Trojan horse attack vector.",
+        "es": "Si . estuviera en PATH, ejecutar ls en un directorio donde un atacante colocó un script malicioso llamado ls ejecutaría el código del atacante en lugar del ls real. Este es un vector de ataque de tipo caballo de Troya."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "The shell environment: environment variables vs shell variables — Shotts, The Linux Command Line",
+    "Examining the environment: printenv, set, echo — Shotts",
+    "The PATH variable: directory search order, adding ~/bin — Shotts",
+    "Aliases: defining, listing, removing, persistence — Shotts",
+    "Startup files: login vs non-login shells, /etc/profile, ~/.bash_profile, ~/.bashrc — Shotts",
+    "The source command: reloading configuration without logout — Shotts",
+    "Editing startup files: backup, commenting, activating changes — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "Customizing the shell prompt with PS1 — Shotts",
+    "Environment variables in forensic analysis: detecting LD_PRELOAD and suspicious PATH entries — Shotts",
+    "The export command: making variables visible to child processes — Shotts"
+  ],
+  "mangaRevealOnComplete": 2
+}

@@ -1,0 +1,5 @@
+# scraped account handles (OSINT dump)
+twitter:Anibalww    -> ?
+twitter:w0rmer      -> reused on irc.anonops + forum:CabinCr3w
+irc:w0rmer          -> email on file: see members.txt
+twitter:sabu        -> (unrelated)

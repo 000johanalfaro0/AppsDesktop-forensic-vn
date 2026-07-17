@@ -1,0 +1,473 @@
+{
+  "id": "ch07",
+  "layer": 1,
+  "order": 7,
+  "title": {
+    "en": "Advanced Text Processing with sed and awk",
+    "es": "Procesamiento avanzado de texto con sed y awk"
+  },
+  "subtitle": {
+    "en": "Filter, substitute and reshape evidence data from the command line using two of the most powerful text tools in forensics.",
+    "es": "Filtra, sustituye y transforma datos de evidencia desde la línea de comandos usando dos de las herramientas de texto más potentes en la forense."
+  },
+  "glossary": [
+    {
+      "term": { "en": "sed", "es": "sed" },
+      "kind": "command",
+      "definition": {
+        "en": "Stream editor that applies editing commands line by line to a text stream; used for filtering, substituting, and deleting text without opening an interactive editor.",
+        "es": "Editor de flujo que aplica comandos de edición línea por línea a un flujo de texto; se usa para filtrar, sustituir y eliminar texto sin abrir un editor interactivo."
+      }
+    },
+    {
+      "term": { "en": "awk", "es": "awk" },
+      "kind": "command",
+      "definition": {
+        "en": "A pattern-scanning and text-processing language that treats each line as a record of fields; ideal for extracting columns, reformatting data, and generating reports from evidence files.",
+        "es": "Un lenguaje de escaneo de patrones y procesamiento de texto que trata cada línea como un registro de campos; ideal para extraer columnas, reformatear datos y generar informes desde archivos de evidencia."
+      }
+    },
+    {
+      "term": { "en": "stream editor", "es": "editor de flujo" },
+      "definition": {
+        "en": "A program that processes text from a stream (file or pipe) by applying editing commands automatically to each line, without requiring manual interaction.",
+        "es": "Un programa que procesa texto de un flujo (archivo o pipe) aplicando comandos de edición automáticamente a cada línea, sin requerir interacción manual."
+      }
+    },
+    {
+      "term": { "en": "substitution command", "es": "comando de sustitución" },
+      "definition": {
+        "en": "The sed command s/old/new/ that replaces text matching a pattern with replacement text; modifiers like g change its behavior.",
+        "es": "El comando de sed s/old/new/ que reemplaza el texto que coincide con un patrón por un texto de reemplazo; modificadores como g cambian su comportamiento."
+      }
+    },
+    {
+      "term": { "en": "global flag", "es": "bandera global" },
+      "definition": {
+        "en": "The g flag appended to a sed substitution that replaces every occurrence on the line instead of just the first one.",
+        "es": "La bandera g que se agrega a una sustitución de sed y reemplaza todas las ocurrencias en la línea en lugar de solo la primera."
+      }
+    },
+    {
+      "term": { "en": "address", "es": "dirección" },
+      "definition": {
+        "en": "A line number, regular expression, or range that specifies which lines in the input stream a sed command should act on.",
+        "es": "Un número de línea, expresión regular o rango que especifica sobre qué líneas del flujo de entrada debe actuar un comando de sed."
+      }
+    },
+    {
+      "term": { "en": "pattern space", "es": "espacio de patrones" },
+      "definition": {
+        "en": "The internal buffer in sed where the current line of text is held while editing commands are applied to it.",
+        "es": "El búfer interno de sed donde se mantiene la línea de texto actual mientras se le aplican los comandos de edición."
+      }
+    },
+    {
+      "term": { "en": "field separator", "es": "separador de campos" },
+      "definition": {
+        "en": "The character that divides a line into fields in awk; the default is whitespace and can be changed with the -F option.",
+        "es": "El carácter que divide una línea en campos en awk; el valor por defecto es el espacio en blanco y se cambia con la opción -F."
+      }
+    },
+    {
+      "term": { "en": "field variable", "es": "variable de campo" },
+      "definition": {
+        "en": "In awk, a variable like $1, $2, or $NF that holds the value of a specific field in the current record; $0 holds the full line.",
+        "es": "En awk, una variable como $1, $2 o $NF que contiene el valor de un campo específico en el registro actual; $0 contiene la línea completa."
+      }
+    },
+    {
+      "term": { "en": "NF", "es": "NF" },
+      "definition": {
+        "en": "An awk built-in variable that holds the number of fields in the current record; $NF refers to the value of the last field.",
+        "es": "Una variable incorporada de awk que contiene la cantidad de campos en el registro actual; $NF se refiere al valor del último campo."
+      }
+    },
+    {
+      "term": { "en": "NR", "es": "NR" },
+      "definition": {
+        "en": "An awk built-in variable that holds the number (ordinal) of the current record being processed.",
+        "es": "Una variable incorporada de awk que contiene el número (ordinal) del registro que se está procesando."
+      }
+    },
+    {
+      "term": { "en": "BEGIN block", "es": "bloque BEGIN" },
+      "definition": {
+        "en": "An awk construct that executes the associated code once before any input line is read; typically used for headers or initializing variables.",
+        "es": "Una construcción de awk que ejecuta el código asociado una vez antes de leer cualquier línea de entrada; se usa típicamente para encabezados o inicializar variables."
+      }
+    },
+    {
+      "term": { "en": "END block", "es": "bloque END" },
+      "definition": {
+        "en": "An awk construct that executes the associated code once after all input lines have been processed; typically used for summaries and totals.",
+        "es": "Una construcción de awk que ejecuta el código asociado una vez después de procesar todas las líneas de entrada; se usa típicamente para resúmenes y totales."
+      }
+    },
+    {
+      "term": { "en": "redaction", "es": "redacción" },
+      "definition": {
+        "en": "The practice of masking or removing sensitive information from evidence before sharing it with other parties or submitting it in court.",
+        "es": "La práctica de ocultar o eliminar información sensible de la evidencia antes de compartirla con otras partes o presentarla en un tribunal."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "understand-sed",
+      "label": {
+        "en": "Understand sed as a stream editor and its role in forensic text processing",
+        "es": "Entender sed como editor de flujo y su rol en el procesamiento forense de texto"
+      }
+    },
+    {
+      "id": "sed-substitute",
+      "label": {
+        "en": "Use sed substitution to redact and transform evidence data",
+        "es": "Usar la sustitución de sed para redactar y transformar datos de evidencia"
+      }
+    },
+    {
+      "id": "sed-address",
+      "label": {
+        "en": "Apply sed addresses to filter and delete specific lines from evidence files",
+        "es": "Aplicar direcciones de sed para filtrar y eliminar líneas específicas de archivos de evidencia"
+      }
+    },
+    {
+      "id": "awk-fields",
+      "label": {
+        "en": "Extract specific data fields from evidence using awk field variables",
+        "es": "Extraer campos de datos específicos de la evidencia usando variables de campo de awk"
+      }
+    },
+    {
+      "id": "awk-separator",
+      "label": {
+        "en": "Use custom field separators with awk to process structured evidence like CSV or passwd files",
+        "es": "Usar separadores de campo personalizados con awk para procesar evidencia estructurada como CSV o archivos passwd"
+      }
+    },
+    {
+      "id": "awk-patterns",
+      "label": {
+        "en": "Combine awk patterns with field extraction to build focused evidence queries",
+        "es": "Combinar patrones de awk con extracción de campos para construir consultas de evidencia enfocadas"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "Text processing in the forensic workflow",
+        "es": "El procesamiento de texto en el flujo de trabajo forense"
+      },
+      "body": {
+        "en": "Evidence rarely arrives as a neat SQL table. More often it is raw text — syslog files, Apache access logs, CSV exports from seized databases, configuration files, chat transcripts. The forensic analyst must navigate, filter, and reshape this sea of text without altering the original. sed and awk are the two most powerful command-line tools for this task. sed edits a stream of text line by line, applying commands you define ahead of time. awk treats each line as a sequence of fields and lets you extract, reformat, and summarize them with a compact programming language. Used together, they turn hours of manual data cleanup into a one-line pipeline.",
+        "es": "La evidencia rara vez llega como una tabla SQL ordenada. Más a menudo es texto crudo — archivos de syslog, logs de acceso de Apache, exportaciones CSV de bases de datos incautadas, archivos de configuración, transcripciones de chat. El analista forense debe navegar, filtrar y transformar este mar de texto sin alterar el original. sed y awk son las dos herramientas de línea de comandos más potentes para esta tarea. sed edita un flujo de texto línea por línea, aplicando comandos que defines de antemano. awk trata cada línea como una secuencia de campos y te permite extraerlos, reformatearlos y resumirlos con un lenguaje de programación compacto. Usados juntos, convierten horas de limpieza manual de datos en una tubería de una sola línea."
+      }
+    },
+    {
+      "heading": {
+        "en": "sed — the stream editor and its substitution command",
+        "es": "sed — el editor de flujo y su comando de sustitución"
+      },
+      "body": {
+        "en": "The heart of sed is the s command (substitute). Its syntax is s/pattern/replacement/flags. You pipe or redirect text into sed, and it outputs the edited stream — without touching the original file (unless you use -i). For example, echo 'front' | sed 's/front/back/' produces 'back'. The pattern can be a fixed string or a regular expression. Without the g flag, only the first occurrence on each line is replaced. Add g and every occurrence on every line is replaced. This is the foundation for redacting IP addresses, email addresses, phone numbers, or any sensitive pattern across thousands of log lines in a single command. The delimiter (/) can be any character, which helps when the pattern itself contains slashes.",
+        "es": "El corazón de sed es el comando s (sustituir). Su sintaxis es s/patrón/reemplazo/banderas. Se canaliza o redirige texto hacia sed, y este produce el flujo editado — sin tocar el archivo original (a menos que uses -i). Por ejemplo, echo 'front' | sed 's/front/back/' produce 'back'. El patrón puede ser un texto fijo o una expresión regular. Sin la bandera g, solo se reemplaza la primera ocurrencia en cada línea. Agrega g y se reemplaza cada ocurrencia en cada línea. Esta es la base para redactar direcciones IP, correos electrónicos, números de teléfono o cualquier patrón sensible a través de miles de líneas de log en un solo comando. El delimitador (/) puede ser cualquier carácter, lo que ayuda cuando el patrón contiene barras."
+      }
+    },
+    {
+      "heading": {
+        "en": "sed addressing — targeting specific lines",
+        "es": "Direcciones en sed — cómo apuntar a líneas específicas"
+      },
+      "body": {
+        "en": "Without an address, a sed command applies to every line. You can restrict it with an address: a line number (5), a regular expression (/pattern/), a range (1,5), or a step (1~2 for odd lines). The -n option suppresses automatic printing; combined with the p command, it prints only lines that match. So sed -n '/ERROR/p' app.log shows only the error lines. The d command deletes the addressed lines: sed '1,3d' removes the first three. The ! operator negates: sed -n '/ERROR/!p' prints everything except errors. In a forensic context, addressing is how you isolate specific events — failed logins, suspicious IP ranges, or transactions within a date range — from a haystack of routine log entries.",
+        "es": "Sin una dirección, un comando de sed se aplica a cada línea. Puedes restringirlo con una dirección: un número de línea (5), una expresión regular (/patrón/), un rango (1,5) o un paso (1~2 para líneas impares). La opción -n suprime la impresión automática; combinada con el comando p, imprime solo las líneas que coinciden. Así, sed -n '/ERROR/p' app.log muestra solo las líneas de error. El comando d elimina las líneas indicadas: sed '1,3d' remueve las tres primeras. El operador ! niega: sed -n '/ERROR/!p' imprime todo excepto los errores. En un contexto forense, las direcciones son cómo se aíslan eventos específicos — intentos de inicio de sesión fallidos, rangos de IP sospechosos o transacciones dentro de un rango de fechas — de un mar de entradas de registro rutinarias."
+      }
+    },
+    {
+      "heading": {
+        "en": "Practical forensic patterns with sed",
+        "es": "Patrones forenses prácticos con sed"
+      },
+      "body": {
+        "en": "Forensic analysts use sed for three common tasks. Filtering: isolate relevant lines from massive log files with sed -n '/pattern/p'. Redacting: substitute sensitive data (IPs, emails, usernames) before sharing evidence with third parties; the g flag ensures no occurrence is missed. Deleting: remove banner headers, metadata blocks, or known noise lines from evidence dumps before analysis. The -i flag edits a file in place — use it only on a verified COPY of the evidence, never the original. Multiple commands can be chained with -e or separated by semicolons: sed 's/old/new/g; s/bad/good/g'. For complex jobs, store commands in a script file and run it with sed -f script.sed. Each of these patterns preserves the original file unless -i is used, making sed a safe and reversible tool in the forensic workflow.",
+        "es": "Los analistas forenses usan sed para tres tareas comunes. Filtrado: aislar líneas relevantes de archivos de log masivos con sed -n '/patrón/p'. Redacción: sustituir datos sensibles (IPs, correos, nombres de usuario) antes de compartir evidencia con terceros; la bandera g asegura que ninguna ocurrencia quede sin reemplazar. Eliminación: remover encabezados de banner, bloques de metadatos o líneas de ruido conocido de volcados de evidencia antes del análisis. La bandera -i edita un archivo directamente — úsala solo sobre una COPIA verificada de la evidencia, nunca sobre el original. Se pueden encadenar varios comandos con -e o separarlos por punto y coma: sed 's/old/new/g; s/bad/good/g'. Para trabajos complejos, guarda los comandos en un archivo de script y ejecútalo con sed -f script.sed. Cada uno de estos patrones preserva el archivo original a menos que se use -i, lo que convierte a sed en una herramienta segura y reversible en el flujo de trabajo forense."
+      }
+    },
+    {
+      "heading": {
+        "en": "awk — field-oriented text processing",
+        "es": "awk — procesamiento de texto orientado a campos"
+      },
+      "body": {
+        "en": "While sed edits lines, awk dissects them into fields. By default, awk splits each line on whitespace (spaces or tabs) and assigns the pieces to variables $1, $2, $3, and so on. The whole line is $0, the number of fields is NF, and the current line number is NR. A minimal awk command looks like: awk '{print $1, $3}'. This prints the first and third field of every input line. If a log line reads '192.168.1.10 admin 200', awk '{print $1}' gives you '192.168.1.10'. This is invaluable for extracting IPs, timestamps, status codes, or usernames from structured log formats. The -F option changes the field separator — for example, -F: splits on colons, perfect for /etc/passwd or colon-delimited evidence exports.",
+        "es": "Mientras sed edita líneas, awk las disecciona en campos. Por defecto, awk divide cada línea por espacios en blanco (espacios o tabs) y asigna las partes a las variables $1, $2, $3, y así sucesivamente. La línea completa es $0, la cantidad de campos es NF y el número de línea actual es NR. Un comando awk mínimo se ve así: awk '{print $1, $3}'. Esto imprime el primer y tercer campo de cada línea de entrada. Si una línea de log dice '192.168.1.10 admin 200', awk '{print $1}' te da '192.168.1.10'. Esto es invaluable para extraer IPs, marcas de tiempo, códigos de estado o nombres de usuario de formatos de log estructurados. La opción -F cambia el separador de campos — por ejemplo, -F: divide por dos puntos, perfecto para /etc/passwd o exportaciones de evidencia delimitadas por dos puntos."
+      }
+    },
+    {
+      "heading": {
+        "en": "awk — patterns, BEGIN, and END",
+        "es": "awk — patrones, BEGIN y END"
+      },
+      "body": {
+        "en": "The full form of an awk command is: awk 'BEGIN { init } /pattern/ { action } END { finish }'. All three sections are optional. The BEGIN block runs once before any input is read — use it for headers or to initialize counters. The pattern filters lines (like /Failed/ selects only lines containing 'Failed'), and the action runs on matching lines. The END block runs once after all input is processed — use it for totals, averages, or closing summaries. For example, awk '/Failed/{count++} END{print count, \"failed attempts\"}' counts failures across a log. This makes awk not just a field extractor but a mini reporting engine, all without leaving the command line. In forensic practice, this means you can process a million-line log into a one-line summary of suspicious events.",
+        "es": "La forma completa de un comando awk es: awk 'BEGIN { init } /patrón/ { acción } END { final }'. Las tres secciones son opcionales. El bloque BEGIN se ejecuta una vez antes de leer cualquier entrada — úsalo para encabezados o para inicializar contadores. El patrón filtra líneas (como /Failed/ selecciona solo las líneas que contienen 'Failed'), y la acción se ejecuta sobre las líneas que coinciden. El bloque END se ejecuta una vez después de procesar toda la entrada — úsalo para totales, promedios o resúmenes finales. Por ejemplo, awk '/Failed/{count++} END{print count, \"failed attempts\"}' cuenta los fallos en un log. Esto convierte a awk no solo en un extractor de campos, sino en un pequeño motor de informes, todo sin salir de la línea de comandos. En la práctica forense, esto significa que puedes procesar un log de un millón de líneas en un resumen de una línea sobre eventos sospechosos."
+      }
+    },
+    {
+      "heading": {
+        "en": "Combining sed and awk in a forensic pipeline",
+        "es": "Combinando sed y awk en una tubería forense"
+      },
+      "body": {
+        "en": "The real power emerges when sed and awk work together through pipes. A common pattern is: sed filters the noise, then awk extracts and summarizes. For example, to get a count of unique IPs that triggered errors: sed -n '/ERROR/p' app.log | awk '{print $1}' | sort | uniq -c. The sed isolates error lines, awk extracts the IP column, and sort + uniq produce the counts. You can also use awk to reshape data for import into a spreadsheet or database: sed 's/\t/,/g' data.tsv | awk -F, '{print $1,$3,$5}' > evidence.csv. This pipeline replaces tabs with commas and extracts only the columns you need, creating a clean CSV ready for analysis. Knowing how to combine these tools is what separates an efficient analyst from one who copies data into a spreadsheet by hand.",
+        "es": "El verdadero poder surge cuando sed y awk trabajan juntos a través de tuberías. Un patrón común es: sed filtra el ruido, luego awk extrae y resume. Por ejemplo, para obtener un conteo de IPs únicas que dispararon errores: sed -n '/ERROR/p' app.log | awk '{print $1}' | sort | uniq -c. sed aísla las líneas de error, awk extrae la columna de IP, y sort + uniq producen los conteos. También puedes usar awk para reformatear datos para importarlos a una hoja de cálculo o base de datos: sed 's/\\t/,/g' data.tsv | awk -F, '{print $1,$3,$5}' > evidence.csv. Esta tubería reemplaza tabs por comas y extrae solo las columnas que necesitas, creando un CSV limpio listo para análisis. Saber combinar estas herramientas es lo que separa a un analista eficiente de uno que copia datos a una hoja de cálculo manualmente."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "sed -n '/sshd.*Failed/p' auth.log",
+      "intro": {
+        "en": "Filter the auth log for lines that show failed SSH login attempts — the first step in identifying a brute-force attack.",
+        "es": "Filtra el log de autenticación para líneas que muestran intentos fallidos de SSH — el primer paso para identificar un ataque de fuerza bruta."
+      },
+      "sampleOutput": "Jan 15 09:23:45 host sshd[1234]: Failed password for root from 10.0.0.5 port 22\nJan 15 09:23:47 host sshd[1234]: Failed password for admin from 10.0.0.5 port 22",
+      "lineByLine": [
+        {
+          "token": "sshd[1234]: Failed",
+          "explain": {
+            "en": "The line matched the pattern 'sshd.*Failed' — the '.*' means any characters between 'sshd' and 'Failed', so it spans the service name and the event.",
+            "es": "La línea coincidió con el patrón 'sshd.*Failed' — el '.*' significa cualquier carácter entre 'sshd' y 'Failed', así que abarca el nombre del servicio y el evento."
+          }
+        },
+        {
+          "token": "10.0.0.5",
+          "explain": {
+            "en": "The attacker IP address extracted from the filtered results. Multiple failed attempts from the same IP indicate a brute-force pattern.",
+            "es": "La dirección IP del atacante extraída de los resultados filtrados. Múltiples intentos fallidos desde la misma IP indican un patrón de fuerza bruta."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sed 's/10\\.0\\.0\\.5/[SUSPECT_IP]/g' auth.log",
+      "intro": {
+        "en": "Redact a specific IP address before sharing the evidence log with a third party or the court.",
+        "es": "Redacta una dirección IP específica antes de compartir el log de evidencia con un tercero o el tribunal."
+      },
+      "sampleOutput": "Jan 15 09:23:45 host sshd[1234]: Failed password for root from [SUSPECT_IP] port 22\nJan 15 10:01:12 host sshd[1234]: Accepted password for user from 192.168.1.10 port 22",
+      "lineByLine": [
+        {
+          "token": "[SUSPECT_IP]",
+          "explain": {
+            "en": "Every occurrence of 10.0.0.5 has been replaced with the redaction marker. The g flag ensures no instance is missed, even if the IP appears multiple times on the same line.",
+            "es": "Cada ocurrencia de 10.0.0.5 ha sido reemplazada con el marcador de redacción. La bandera g asegura que ninguna instancia quede fuera, incluso si la IP aparece varias veces en la misma línea."
+          }
+        },
+        {
+          "token": "192.168.1.10",
+          "explain": {
+            "en": "This IP was NOT replaced because the pattern only matches 10.0.0.5 exactly. The substitution is precise — it only targets the specific suspect IP.",
+            "es": "Esta IP NO fue reemplazada porque el patrón solo coincide exactamente con 10.0.0.5. La sustitución es precisa — solo apunta a la IP sospechosa específica."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sed '1,3d' evidence.txt",
+      "intro": {
+        "en": "Strip the first three lines of metadata or header content from an evidence dump before processing the actual data.",
+        "es": "Elimina las primeras tres líneas de metadatos o contenido de encabezado de un volcado de evidencia antes de procesar los datos reales."
+      },
+      "sampleOutput": "192.168.1.10 - - [15/Jan/2026:09:23:45] GET /index.php\n10.0.0.5 - - [15/Jan/2026:09:23:47] POST /login.php",
+      "lineByLine": [
+        {
+          "token": "GET /index.php",
+          "explain": {
+            "en": "Actual evidence data that was below the three deleted header lines. The address range '1,3d' removed the metadata prefix, exposing the relevant log entries.",
+            "es": "Datos de evidencia reales que estaban debajo de las tres líneas de encabezado eliminadas. El rango '1,3d' removió el prefijo de metadatos, exponiendo las entradas de log relevantes."
+          }
+        },
+        {
+          "token": "POST /login.php",
+          "explain": {
+            "en": "Another log entry that was preserved after the deletion. Notice line numbers shift after removal — what was line 4 in the original file now appears as the second line of output.",
+            "es": "Otra entrada de log que se preservó después de la eliminación. Nota que los números de línea se desplazan tras la remoción — lo que era la línea 4 en el archivo original ahora aparece como la segunda línea de salida."
+          }
+        }
+      ]
+    },
+    {
+      "command": "awk '{print $1, $4}' access.log",
+      "intro": {
+        "en": "Extract the source IP and timestamp from an Apache access log to build a timeline of connections.",
+        "es": "Extrae la IP de origen y la marca de tiempo de un log de acceso de Apache para construir una línea de tiempo de conexiones."
+      },
+      "sampleOutput": "192.168.1.10 [15/Jan/2026:09:23:45\n10.0.0.5 [15/Jan/2026:09:23:47",
+      "lineByLine": [
+        {
+          "token": "192.168.1.10",
+          "explain": {
+            "en": "The first field ($1) from the Apache log — the source IP address. Field splitting on whitespace is awk's default behavior.",
+            "es": "El primer campo ($1) del log de Apache — la dirección IP de origen. La división de campos por espacios en blanco es el comportamiento predeterminado de awk."
+          }
+        },
+        {
+          "token": "[15/Jan/2026:09:23:45",
+          "explain": {
+            "en": "The fourth field ($4) — the timestamp inside bracketed date notation. awk splits it from the closing bracket because they are separated by a space.",
+            "es": "El cuarto campo ($4) — la marca de tiempo dentro de la notación de fecha entre corchetes. awk lo separa del corchete de cierre porque están separados por un espacio."
+          }
+        }
+      ]
+    },
+    {
+      "command": "awk -F: '{print $1, $6, $7}' passwd",
+      "intro": {
+        "en": "List every user account with its home directory and shell from a passwd file found in the evidence.",
+        "es": "Lista cada cuenta de usuario con su directorio personal y shell desde un archivo passwd encontrado en la evidencia."
+      },
+      "sampleOutput": "root /root /bin/bash\nmysql /var/lib/mysql /usr/sbin/nologin\nanalyst /home/analyst /bin/bash",
+      "lineByLine": [
+        {
+          "token": "root /root /bin/bash",
+          "explain": {
+            "en": "The root account with its home directory /root and the bash shell. The -F: option tells awk to split on colons, correctly parsing the seven standard fields.",
+            "es": "La cuenta root con su directorio personal /root y la shell bash. La opción -F: le indica a awk que divida por dos puntos, analizando correctamente los siete campos estándar."
+          }
+        },
+        {
+          "token": "analyst /home/analyst /bin/bash",
+          "explain": {
+            "en": "A user account with a home directory under /home and bash as the login shell. This is the kind of evidence that reveals which users exist on a seized system.",
+            "es": "Una cuenta de usuario con directorio personal bajo /home y bash como shell de inicio de sesión. Este es el tipo de evidencia que revela qué usuarios existen en un sistema incautado."
+          }
+        }
+      ]
+    },
+    {
+      "command": "awk '/Failed/{print $1, $2, $3, $11}' auth.log",
+      "intro": {
+        "en": "Extract the exact timestamp and attacker IP from every failed login attempt, creating a focused timeline of the attack.",
+        "es": "Extrae la marca de tiempo exacta y la IP del atacante de cada intento de inicio de sesión fallido, creando una línea de tiempo enfocada del ataque."
+      },
+      "sampleOutput": "Jan 15 09:23:45 10.0.0.5\nJan 15 09:23:47 10.0.0.5",
+      "lineByLine": [
+        {
+          "token": "Jan 15 09:23:45 10.0.0.5",
+          "explain": {
+            "en": "A single line of output combining the three timestamp fields ($1, $2, $3) and the eleventh field ($11) which is the source IP address from the auth log.",
+            "es": "Una sola línea de salida que combina los tres campos de marca de tiempo ($1, $2, $3) y el undécimo campo ($11) que es la dirección IP de origen del log de autenticación."
+          }
+        },
+        {
+          "token": "10.0.0.5",
+          "explain": {
+            "en": "The same attacker IP appears in both failures within seconds, confirming an automated brute-force script rather than a mistaken password.",
+            "es": "La misma IP de atacante aparece en ambos fallos en cuestión de segundos, confirmando un script automatizado de fuerza bruta en lugar de una contraseña equivocada."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What flag must you add to sed's s command to replace every occurrence of a pattern on a line, not just the first one?",
+        "es": "¿Qué bandera debes agregar al comando s de sed para reemplazar cada ocurrencia de un patrón en una línea, no solo la primera?"
+      },
+      "accept": ["g", "global flag", "la bandera g", "global"],
+      "explanation": {
+        "en": "The g flag (global) tells sed to replace all matches on the line. Without it, only the first match per line is replaced.",
+        "es": "La bandera g (global) le indica a sed que reemplace todas las coincidencias en la línea. Sin ella, solo se reemplaza la primera coincidencia por línea."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Given the command 'sed -n '3,6p' data.txt', what range of lines does it print?",
+        "es": "Dado el comando 'sed -n '3,6p' data.txt', ¿qué rango de líneas imprime?"
+      },
+      "accept": ["lines 3 to 6", "lines 3 through 6", "3 through 6", "3 a 6", "líneas 3 a 6", "de la 3 a la 6"],
+      "explanation": {
+        "en": "The -n suppresses automatic output, and '3,6p' prints only lines 3 through 6. The comma defines a range address from line 3 to line 6.",
+        "es": "La opción -n suprime la salida automática, y '3,6p' imprime solo las líneas 3 a 6. La coma define una dirección de rango desde la línea 3 hasta la línea 6."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "In awk, which special variable refers to the value of the last field on the current line?",
+        "es": "En awk, ¿qué variable especial se refiere al valor del último campo en la línea actual?"
+      },
+      "accept": ["$NF", "NF", "$NF (last field)", "la variable $NF"],
+      "explanation": {
+        "en": "NF holds the number of fields; $NF returns the value of the last field. For a line with 5 fields, $NF equals $5.",
+        "es": "NF contiene la cantidad de campos; $NF devuelve el valor del último campo. Para una línea con 5 campos, $NF equivale a $5."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Write a single sed command that deletes lines 1 through 5 from a file called case.log.",
+        "es": "Escribe un solo comando sed que elimine las líneas 1 a 5 de un archivo llamado case.log."
+      },
+      "accept": ["sed '1,5d' case.log", "sed '1,5d' ./case.log", "sed -e '1,5d' case.log"],
+      "explanation": {
+        "en": "The address range '1,5' selects lines 1 through 5, and the d command deletes them. The original file is not modified unless -i is used.",
+        "es": "El rango de dirección '1,5' selecciona las líneas 1 a 5, y el comando d las elimina. El archivo original no se modifica a menos que se use -i."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which awk option lets you specify a custom field separator character (like a comma for CSV files)?",
+        "es": "¿Qué opción de awk te permite especificar un carácter separador de campos personalizado (como una coma para archivos CSV)?"
+      },
+      "accept": ["-F", "-F,", "-F ,", "field separator option", "la opción -F"],
+      "explanation": {
+        "en": "The -F option defines the field separator. For example, -F: splits on colons and -F, splits on commas, overriding the default whitespace.",
+        "es": "La opción -F define el separador de campos. Por ejemplo, -F: divide por dos puntos y -F, divide por comas, reemplazando el espacio en blanco predeterminado."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What awk keyword runs a block of code once before any input line is processed, typically used for headers?",
+        "es": "¿Qué palabra clave de awk ejecuta un bloque de código una vez antes de procesar cualquier línea de entrada, usado típicamente para encabezados?"
+      },
+      "accept": ["BEGIN", "BEGIN block", "BEGIN keyword", "la palabra clave BEGIN", "el bloque BEGIN"],
+      "explanation": {
+        "en": "The BEGIN block executes before the first line of input. It is ideal for printing column headers, initializing counters, or setting the field separator with FS.",
+        "es": "El bloque BEGIN se ejecuta antes de la primera línea de entrada. Es ideal para imprimir encabezados de columna, inicializar contadores o establecer el separador de campos con FS."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "A log line reads: 'Jan 15 09:23:45 host sshd[1234]: Failed password for root from 10.0.0.5 port 22'. What does 'awk '{print $11}'' output for this line?",
+        "es": "Una línea de log dice: 'Jan 15 09:23:45 host sshd[1234]: Failed password for root from 10.0.0.5 port 22'. ¿Qué imprime 'awk '{print $11}'' para esta línea?"
+      },
+      "accept": ["10.0.0.5", "the IP address 10.0.0.5", "la IP 10.0.0.5"],
+      "explanation": {
+        "en": "awk splits the line on whitespace: field 1 is Jan, 2 is 15, 3 is 09:23:45, 4 is host, 5 is sshd[1234]:, 6 is Failed, 7 is password, 8 is for, 9 is root, 10 is from, and 11 is the IP 10.0.0.5.",
+        "es": "awk divide la línea por espacios: el campo 1 es Jan, 2 es 15, 3 es 09:23:45, 4 es host, 5 es sshd[1234]:, 6 es Failed, 7 es password, 8 es for, 9 es root, 10 es from, y 11 es la IP 10.0.0.5."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "sed stream editor basics, substitution command (s), and flags — Shotts, The Linux Command Line; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "sed addresses: line numbers, regular expressions, ranges, and negation — Shotts, The Linux Command Line",
+    "sed in-place editing (-i), script files (-f), and multiline commands — Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "awk field variables ($1, $0, NF, NR) and the -F option for custom field separators — Shotts, The Linux Command Line; Blum & Bresnahan",
+    "awk patterns, BEGIN/END blocks, and report generation — Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "Combining sed and awk with pipes for evidence processing pipelines — Shotts, The Linux Command Line",
+    "Redaction and data anonymization using text processing tools in forensic practice — Altheide & Carvey, Digital Forensics with Open Source Tools"
+  ],
+  "mangaRevealOnComplete": 2
+}

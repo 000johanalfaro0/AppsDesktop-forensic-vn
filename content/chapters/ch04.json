@@ -1,0 +1,496 @@
+{
+  "id": "ch04",
+  "layer": 1,
+  "order": 4,
+  "title": {
+    "en": "Reading Data at the Byte Level",
+    "es": "Leer datos a nivel de byte"
+  },
+  "subtitle": {
+    "en": "When 'file' and 'grep' aren't enough: hex dumps, magic numbers, encodings and pulling text out of binaries.",
+    "es": "Cuando 'file' y 'grep' no bastan: volcados hex, magic numbers, codificaciones y extraer texto de binarios."
+  },
+  "glossary": [
+    {
+      "term": { "en": "nibble", "es": "nibble" },
+      "definition": {
+        "en": "Half a byte: 4 bits, represented by exactly one hexadecimal digit (0-F). Two nibbles make one byte (00-FF).",
+        "es": "La mitad de un byte: 4 bits, representados por exactamente un dígito hexadecimal (0-F). Dos nibbles forman un byte (00-FF)."
+      }
+    },
+    {
+      "term": { "en": "offset", "es": "desplazamiento (offset)" },
+      "definition": {
+        "en": "The distance, in bytes, from the start of a file to a given position. Hex dumps show it in the left column, usually in hexadecimal.",
+        "es": "La distancia, en bytes, desde el inicio de un archivo hasta una posición dada. Los volcados hex lo muestran en la columna izquierda, normalmente en hexadecimal."
+      }
+    },
+    {
+      "term": { "en": "magic number", "es": "número mágico" },
+      "definition": {
+        "en": "A fixed signature of bytes at the start of a file that identifies its true format: PNG = 89 50 4E 47, JPEG = FF D8 FF, PDF = 25 50 44 46, ZIP = 50 4B, ELF = 7F 45 4C 46.",
+        "es": "Una firma fija de bytes al inicio de un archivo que identifica su formato verdadero: PNG = 89 50 4E 47, JPEG = FF D8 FF, PDF = 25 50 44 46, ZIP = 50 4B, ELF = 7F 45 4C 46."
+      }
+    },
+    {
+      "term": { "en": "endianness", "es": "endianness" },
+      "definition": {
+        "en": "The order in which a multi-byte number is stored: big-endian puts the most significant byte first, little-endian (used by x86) puts it last. Misreading it corrupts every multi-byte value.",
+        "es": "El orden en que se almacena un número de varios bytes: big-endian pone primero el byte más significativo, little-endian (usado por x86) lo pone al final. Leerlo mal corrompe todo valor de varios bytes."
+      }
+    },
+    {
+      "term": { "en": "null byte", "es": "byte nulo" },
+      "definition": {
+        "en": "A byte with value 0x00. It terminates strings in C, separates fields in many formats, and marks unused space — a frequent landmark when reading raw data.",
+        "es": "Un byte con valor 0x00. Termina cadenas en C, separa campos en muchos formatos y marca espacio sin usar — un punto de referencia frecuente al leer datos crudos."
+      }
+    },
+    {
+      "term": { "en": "UTF-8", "es": "UTF-8" },
+      "definition": {
+        "en": "A variable-length text encoding: ASCII characters use 1 byte, other characters 2-4 bytes. It is the dominant encoding on the web and in Linux.",
+        "es": "Una codificación de texto de longitud variable: los caracteres ASCII usan 1 byte, los demás 2-4 bytes. Es la codificación dominante en la web y en Linux."
+      }
+    },
+    {
+      "term": { "en": "printable string", "es": "cadena imprimible" },
+      "definition": {
+        "en": "A run of consecutive printable characters inside binary data — often URLs, file paths, IPs or messages hidden in an otherwise unreadable file.",
+        "es": "Una secuencia de caracteres imprimibles consecutivos dentro de datos binarios — a menudo URLs, rutas de archivo, IPs o mensajes escondidos en un archivo por lo demás ilegible."
+      }
+    },
+    {
+      "term": { "en": "data after EOF", "es": "datos después del EOF" },
+      "definition": {
+        "en": "Extra bytes appended past a file format's logical end marker. Tools that respect the format ignore them, so attackers hide data there — a hex dump reveals it.",
+        "es": "Bytes extra agregados más allá del marcador lógico de fin de un formato. Las herramientas que respetan el formato los ignoran, así que los atacantes esconden datos ahí — un volcado hex los revela."
+      }
+    },
+    {
+      "term": { "en": "xxd", "es": "xxd" },
+      "kind": "command",
+      "definition": {
+        "en": "A command that produces a hex dump of a file: offset, the bytes in hexadecimal, and an ASCII rendering. It is read-only.",
+        "es": "Un comando que produce un volcado hex de un archivo: desplazamiento, los bytes en hexadecimal y una representación ASCII. Es de solo lectura."
+      }
+    },
+    {
+      "term": { "en": "hexdump", "es": "hexdump" },
+      "kind": "command",
+      "definition": {
+        "en": "Another hex-dump tool; 'hexdump -C' gives the canonical offset + hex + ASCII layout, similar to xxd.",
+        "es": "Otra herramienta de volcado hex; 'hexdump -C' da el formato canónico de desplazamiento + hex + ASCII, similar a xxd."
+      }
+    },
+    {
+      "term": { "en": "strings", "es": "strings" },
+      "kind": "command",
+      "definition": {
+        "en": "A command that extracts and prints runs of printable characters from a binary file, ignoring the non-printable bytes.",
+        "es": "Un comando que extrae e imprime secuencias de caracteres imprimibles de un archivo binario, ignorando los bytes no imprimibles."
+      }
+    },
+    {
+      "term": { "en": "echo", "es": "echo" },
+      "kind": "command",
+      "definition": {
+        "en": "A command that prints its arguments to the screen; with -n it omits the trailing newline. Useful for feeding exact bytes into other tools.",
+        "es": "Un comando que imprime sus argumentos en pantalla; con -n omite el salto de línea final. Útil para alimentar bytes exactos a otras herramientas."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "hex-read",
+      "label": {
+        "en": "Read a hex dump: offset, hex bytes and ASCII columns",
+        "es": "Leer un volcado hex: desplazamiento, bytes hex y columnas ASCII"
+      }
+    },
+    {
+      "id": "magic-id",
+      "label": {
+        "en": "Identify a file's real format from its magic number in hex",
+        "es": "Identificar el formato real de un archivo por su número mágico en hex"
+      }
+    },
+    {
+      "id": "encodings",
+      "label": {
+        "en": "Understand bytes, ASCII/UTF-8 and endianness",
+        "es": "Entender bytes, ASCII/UTF-8 y endianness"
+      }
+    },
+    {
+      "id": "strings-pull",
+      "label": {
+        "en": "Pull readable text (URLs, paths, IPs) out of a binary",
+        "es": "Extraer texto legible (URLs, rutas, IPs) de un binario"
+      }
+    },
+    {
+      "id": "seek-offset",
+      "label": {
+        "en": "Seek to a specific offset to inspect a region of a file",
+        "es": "Saltar a un desplazamiento específico para inspeccionar una región del archivo"
+      }
+    },
+    {
+      "id": "hidden-bytes",
+      "label": {
+        "en": "Spot data hidden after a format's logical end",
+        "es": "Detectar datos escondidos después del fin lógico de un formato"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "Why drop to the byte level",
+        "es": "Por qué bajar al nivel de byte"
+      },
+      "body": {
+        "en": "Every file — a photo, a document, a program — is ultimately a sequence of bytes. Commands like 'file' and 'grep' interpret those bytes for you, but they only show what they expect to find. When a file is corrupted, disguised, carved from unallocated space, or carrying hidden data, you must look at the raw bytes yourself. Reading at the byte level is the ground truth of forensics: it cannot be fooled by an extension, a friendly icon, or a format parser that quietly skips the part an attacker abused. This is also entirely read-only — inspecting bytes never changes the file.",
+        "es": "Cada archivo — una foto, un documento, un programa — es en el fondo una secuencia de bytes. Comandos como 'file' y 'grep' interpretan esos bytes por ti, pero solo muestran lo que esperan encontrar. Cuando un archivo está corrupto, disfrazado, recuperado de espacio no asignado o lleva datos escondidos, tienes que mirar los bytes crudos tú mismo. Leer a nivel de byte es la verdad de fondo de la forense: no lo engaña una extensión, un ícono amigable ni un analizador de formato que se salta en silencio la parte que un atacante abusó. Además es totalmente de solo lectura — inspeccionar bytes nunca cambia el archivo."
+      }
+    },
+    {
+      "heading": {
+        "en": "Hexadecimal: one byte, two digits",
+        "es": "Hexadecimal: un byte, dos dígitos"
+      },
+      "body": {
+        "en": "A byte is 8 bits, holding a value from 0 to 255. Writing that in binary is long and writing it in decimal hides structure, so forensics uses hexadecimal (base 16). Each hex digit (0-9, A-F) represents exactly 4 bits — a 'nibble' — so any byte is exactly TWO hex digits: 00 to FF. 0x41 is decimal 65, which is the ASCII letter 'A'. Hex maps cleanly to how data is laid out, which is why every hex dump, magic number and memory address you will ever read is written in hex. Getting fluent at reading hex pairs as bytes is the core literacy of this chapter.",
+        "es": "Un byte son 8 bits, con un valor de 0 a 255. Escribir eso en binario es largo y en decimal esconde la estructura, así que la forense usa hexadecimal (base 16). Cada dígito hex (0-9, A-F) representa exactamente 4 bits — un 'nibble' — así que cualquier byte son exactamente DOS dígitos hex: 00 a FF. 0x41 es el 65 decimal, que es la letra ASCII 'A'. El hex se mapea limpiamente a cómo se disponen los datos, por eso todo volcado hex, número mágico y dirección de memoria que leerás está escrito en hex. Soltarse leyendo pares hex como bytes es la alfabetización central de este capítulo."
+      }
+    },
+    {
+      "heading": {
+        "en": "Anatomy of a hex dump",
+        "es": "Anatomía de un volcado hex"
+      },
+      "body": {
+        "en": "Tools like xxd and 'hexdump -C' show three columns. On the left, the OFFSET: how many bytes from the start, in hex (00000000, 00000010 = 16, and so on). In the middle, the BYTES themselves in hex, grouped for readability. On the right, the ASCII rendering: each byte that is a printable character is shown as that character, and every non-printable byte is shown as a dot '.'. Reading across a row, you see the same 16 bytes twice — once as numbers, once as text. The offset is what lets you say precisely 'at byte 0x10 the header ends and the data begins'.",
+        "es": "Herramientas como xxd y 'hexdump -C' muestran tres columnas. A la izquierda, el DESPLAZAMIENTO: cuántos bytes desde el inicio, en hex (00000000, 00000010 = 16, y así). En el medio, los BYTES en hex, agrupados para legibilidad. A la derecha, la representación ASCII: cada byte que es un carácter imprimible se muestra como ese carácter, y todo byte no imprimible se muestra como un punto '.'. Leyendo a lo ancho de una fila, ves los mismos 16 bytes dos veces — una como números, otra como texto. El desplazamiento es lo que te permite decir con precisión 'en el byte 0x10 termina el encabezado y empiezan los datos'."
+      }
+    },
+    {
+      "heading": {
+        "en": "Magic numbers: the format's fingerprint",
+        "es": "Números mágicos: la huella del formato"
+      },
+      "body": {
+        "en": "Most formats begin with a fixed signature so that programs can recognize them regardless of the filename. A PNG always starts with the bytes 89 50 4E 47 (the 50 4E 47 spells 'PNG' in ASCII). A JPEG starts with FF D8 FF, a PDF with 25 50 44 46 ('%PDF'), a ZIP with 50 4B ('PK', the initials of its inventor Phil Katz), a Linux ELF binary with 7F 45 4C 46. This is exactly what the 'file' command reads — but seeing the magic number yourself in a hex dump is the unfoolable version: if a file named photo.jpg starts with 4D 5A ('MZ'), it is a Windows executable wearing a disguise.",
+        "es": "La mayoría de los formatos comienzan con una firma fija para que los programas puedan reconocerlos sin importar el nombre. Un PNG siempre empieza con los bytes 89 50 4E 47 (el 50 4E 47 deletrea 'PNG' en ASCII). Un JPEG empieza con FF D8 FF, un PDF con 25 50 44 46 ('%PDF'), un ZIP con 50 4B ('PK', las iniciales de su inventor Phil Katz), un binario ELF de Linux con 7F 45 4C 46. Esto es exactamente lo que lee el comando 'file' — pero ver el número mágico tú mismo en un volcado hex es la versión infalible: si un archivo llamado photo.jpg empieza con 4D 5A ('MZ'), es un ejecutable de Windows disfrazado."
+      }
+    },
+    {
+      "heading": {
+        "en": "Encodings and endianness",
+        "es": "Codificaciones y endianness"
+      },
+      "body": {
+        "en": "Bytes only mean something under an encoding. In ASCII each byte 0x00-0x7F is one character; UTF-8 extends this so common characters stay 1 byte while accented or non-Latin characters take 2-4 bytes (you will see them as multiple dots in the ASCII column). Numbers spanning several bytes add another trap: endianness. The value 0x0102 can be stored as 01 02 (big-endian) or 02 01 (little-endian, as x86 CPUs do). If you read a 4-byte size field in the wrong order you will compute a wildly wrong number — a classic mistake when parsing a file's internal structures by hand.",
+        "es": "Los bytes solo significan algo bajo una codificación. En ASCII cada byte 0x00-0x7F es un carácter; UTF-8 lo extiende para que los caracteres comunes sigan en 1 byte mientras los acentuados o no latinos toman 2-4 bytes (los verás como varios puntos en la columna ASCII). Los números que abarcan varios bytes añaden otra trampa: endianness. El valor 0x0102 puede almacenarse como 01 02 (big-endian) o 02 01 (little-endian, como hacen las CPU x86). Si lees un campo de tamaño de 4 bytes en el orden equivocado calcularás un número totalmente erróneo — un error clásico al interpretar a mano las estructuras internas de un archivo."
+      }
+    },
+    {
+      "heading": {
+        "en": "strings: text hidden in binaries",
+        "es": "strings: texto escondido en binarios"
+      },
+      "body": {
+        "en": "A binary file looks unreadable, but it almost always contains islands of plain text: error messages, URLs a malware sample contacts, file paths, usernames, embedded comments. The 'strings' command extracts every run of printable characters above a minimum length (default 4) and prints them. For an analyst this is gold: pointing strings at an unknown executable can instantly reveal the command-and-control domain it calls home. Use -n to raise the minimum length and cut noise. strings is a first, cheap triage step before any deeper reverse engineering.",
+        "es": "Un archivo binario parece ilegible, pero casi siempre contiene islas de texto plano: mensajes de error, URLs que contacta una muestra de malware, rutas de archivo, nombres de usuario, comentarios incrustados. El comando 'strings' extrae cada secuencia de caracteres imprimibles por encima de una longitud mínima (4 por defecto) y los imprime. Para un analista esto es oro: apuntar strings a un ejecutable desconocido puede revelar al instante el dominio de comando y control al que llama. Usa -n para subir la longitud mínima y recortar ruido. strings es un primer paso de triaje, barato, antes de cualquier ingeniería inversa más profunda."
+      }
+    },
+    {
+      "heading": {
+        "en": "Seeking, and data past the end",
+        "es": "Saltar, y datos más allá del fin"
+      },
+      "body": {
+        "en": "You rarely dump a whole large file. xxd lets you SEEK to an offset (-s) and limit how many bytes you read (-l), so you can jump straight to the region that matters — a header at 0x00, a footer, or a structure you located earlier. This also exposes a favorite hiding place: many formats have a logical end marker (a PNG ends with the IEND chunk, a JPEG with FF D9). Anything appended AFTER that marker is ignored by image viewers but still sits in the file. Seeking past the expected end, or simply dumping the tail, reveals data smuggled after EOF — a simple but real steganographic trick.",
+        "es": "Rara vez vuelcas un archivo grande entero. xxd permite SALTAR a un desplazamiento (-s) y limitar cuántos bytes lees (-l), así puedes ir directo a la región que importa — un encabezado en 0x00, un pie, o una estructura que ubicaste antes. Esto también expone un escondite favorito: muchos formatos tienen un marcador de fin lógico (un PNG termina con el bloque IEND, un JPEG con FF D9). Cualquier cosa agregada DESPUÉS de ese marcador es ignorada por los visores de imágenes pero sigue en el archivo. Saltar más allá del fin esperado, o simplemente volcar la cola, revela datos colados después del EOF — un truco esteganográfico simple pero real."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "xxd -l 16 evidence.bin",
+      "intro": {
+        "en": "Dump just the first 16 bytes — the magic number lives right at the start.",
+        "es": "Vuelca solo los primeros 16 bytes — el número mágico vive justo al inicio."
+      },
+      "sampleOutput": "00000000: 8950 4e47 0d0a 1a0a 0000 000d 4948 4452  .PNG........IHDR",
+      "lineByLine": [
+        {
+          "token": "00000000:",
+          "explain": {
+            "en": "The offset column: this row begins at byte 0 of the file. -l 16 limited the dump to 16 bytes, so this is the only row.",
+            "es": "La columna de desplazamiento: esta fila empieza en el byte 0 del archivo. -l 16 limitó el volcado a 16 bytes, así que es la única fila."
+          }
+        },
+        {
+          "token": "8950 4e47",
+          "explain": {
+            "en": "The PNG magic number: 89 50 4E 47. The bytes 50 4E 47 are the ASCII letters 'PNG'. This proves the file is truly a PNG, no matter that it is named '.bin'.",
+            "es": "El número mágico PNG: 89 50 4E 47. Los bytes 50 4E 47 son las letras ASCII 'PNG'. Esto prueba que el archivo es realmente un PNG, sin importar que se llame '.bin'."
+          }
+        },
+        {
+          "token": ".PNG........IHDR",
+          "explain": {
+            "en": "The ASCII column. Non-printable bytes show as dots; '.PNG' and 'IHDR' (the first PNG chunk name) are readable. Numbers and text, side by side.",
+            "es": "La columna ASCII. Los bytes no imprimibles aparecen como puntos; '.PNG' e 'IHDR' (el nombre del primer bloque PNG) son legibles. Números y texto, lado a lado."
+          }
+        }
+      ]
+    },
+    {
+      "command": "hexdump -C evidence.bin",
+      "intro": {
+        "en": "The canonical hex dump: offset, 16 bytes in hex, and the ASCII rendering on the right.",
+        "es": "El volcado hex canónico: desplazamiento, 16 bytes en hex y la representación ASCII a la derecha."
+      },
+      "sampleOutput": "00000000  89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52  |.PNG........IHDR|\n00000010  00 00 07 80 00 00 04 38  08 06 00 00 00 1a 2b 4f  |.......8......+O|",
+      "lineByLine": [
+        {
+          "token": "89 50 4e 47 0d 0a 1a 0a",
+          "explain": {
+            "en": "The full 8-byte PNG signature: 89 'PNG' followed by 0D 0A 1A 0A — a sequence chosen to detect transfer corruption.",
+            "es": "La firma PNG completa de 8 bytes: 89 'PNG' seguido de 0D 0A 1A 0A — una secuencia elegida para detectar corrupción en la transferencia."
+          }
+        },
+        {
+          "token": "00000010",
+          "explain": {
+            "en": "The second row's offset: 0x10 = 16 bytes in. Offsets advance by 16 (0x10) per row in hexdump -C.",
+            "es": "El desplazamiento de la segunda fila: 0x10 = 16 bytes. Los desplazamientos avanzan de 16 en 16 (0x10) por fila en hexdump -C."
+          }
+        },
+        {
+          "token": "|.......8......+O|",
+          "explain": {
+            "en": "The ASCII column is wrapped in | |. Here it is mostly dots — these are the binary width/height/bit-depth fields of the image header, not text.",
+            "es": "La columna ASCII va entre | |. Aquí es casi todo puntos — son los campos binarios de ancho/alto/profundidad de bits del encabezado de la imagen, no texto."
+          }
+        }
+      ]
+    },
+    {
+      "command": "echo -n \"ABC\" | xxd",
+      "intro": {
+        "en": "See how text becomes bytes: feed three letters into xxd and read their ASCII codes in hex.",
+        "es": "Mira cómo el texto se vuelve bytes: alimenta tres letras a xxd y lee sus códigos ASCII en hex."
+      },
+      "sampleOutput": "00000000: 4142 43                                  ABC",
+      "lineByLine": [
+        {
+          "token": "4142 43",
+          "explain": {
+            "en": "A=0x41, B=0x42, C=0x43. Consecutive letters are consecutive byte values — this is the ASCII table at work. -n kept echo from adding a newline (0x0a).",
+            "es": "A=0x41, B=0x42, C=0x43. Letras consecutivas son valores de byte consecutivos — es la tabla ASCII en acción. -n evitó que echo agregara un salto de línea (0x0a)."
+          }
+        }
+      ]
+    },
+    {
+      "command": "strings evidence.bin",
+      "intro": {
+        "en": "Pull every run of readable text out of the binary — chunk names, embedded text, anything human.",
+        "es": "Extrae cada secuencia de texto legible del binario — nombres de bloques, texto incrustado, cualquier cosa humana."
+      },
+      "sampleOutput": "IHDR\nIDAT\ntEXtComment\nCreated with GIMP\nIEND",
+      "lineByLine": [
+        {
+          "token": "IHDR",
+          "explain": {
+            "en": "A PNG chunk name. Even an image yields readable structural strings; in a malware sample these would be functions, libraries or URLs.",
+            "es": "Un nombre de bloque PNG. Hasta una imagen arroja cadenas estructurales legibles; en una muestra de malware serían funciones, librerías o URLs."
+          }
+        },
+        {
+          "token": "Created with GIMP",
+          "explain": {
+            "en": "An embedded text comment inside a tEXt chunk — metadata about the tool that made the file, useful for attribution.",
+            "es": "Un comentario de texto incrustado dentro de un bloque tEXt — metadatos sobre la herramienta que creó el archivo, útil para atribución."
+          }
+        }
+      ]
+    },
+    {
+      "command": "strings -n 10 evidence.bin",
+      "intro": {
+        "en": "Raise the minimum length to 10 to cut short noise and surface only meaningful strings.",
+        "es": "Sube la longitud mínima a 10 para recortar ruido corto y dejar solo cadenas significativas."
+      },
+      "sampleOutput": "tEXtComment\nCreated with GIMP",
+      "lineByLine": [
+        {
+          "token": "Created with GIMP",
+          "explain": {
+            "en": "Short fragments like 'IHDR' (4 chars) are gone; only runs of 10+ printable characters remain, which is usually the human-meaningful content.",
+            "es": "Los fragmentos cortos como 'IHDR' (4 caracteres) desaparecen; solo quedan secuencias de 10+ caracteres imprimibles, que suele ser el contenido significativo para un humano."
+          }
+        }
+      ]
+    },
+    {
+      "command": "xxd -s 0x10 -l 16 evidence.bin",
+      "intro": {
+        "en": "Seek to offset 0x10 (16 bytes in) and read 16 bytes — jump straight to the structure you care about.",
+        "es": "Salta al desplazamiento 0x10 (16 bytes) y lee 16 bytes — ve directo a la estructura que te interesa."
+      },
+      "sampleOutput": "00000010: 0000 0780 0000 0438 0806 0000 001a 2b4f  .......8......+O",
+      "lineByLine": [
+        {
+          "token": "00000010:",
+          "explain": {
+            "en": "-s 0x10 set the starting offset, so the dump begins at byte 16 instead of 0. This is how you inspect a region without dumping everything before it.",
+            "es": "-s 0x10 fijó el desplazamiento inicial, así que el volcado empieza en el byte 16 en lugar del 0. Así inspeccionas una región sin volcar todo lo anterior."
+          }
+        },
+        {
+          "token": "0000 0780",
+          "explain": {
+            "en": "Inside the PNG IHDR: the image width as a 4-byte big-endian number. 0x00000780 = 1920 — matching the resolution 'file' reported in chapter 1.",
+            "es": "Dentro del IHDR del PNG: el ancho de la imagen como número big-endian de 4 bytes. 0x00000780 = 1920 — coincide con la resolución que 'file' reportó en el capítulo 1."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "A file named 'report.pdf' begins with the bytes 'FF D8 FF' in a hex dump. What is it really?",
+        "es": "Un archivo llamado 'reporte.pdf' empieza con los bytes 'FF D8 FF' en un volcado hex. ¿Qué es en realidad?"
+      },
+      "accept": [
+        "un jpeg",
+        "una imagen jpeg",
+        "es un jpeg",
+        "jpeg",
+        "a jpeg",
+        "it is a jpeg",
+        "jpeg image",
+        "no es un pdf, es jpeg"
+      ],
+      "explanation": {
+        "en": "FF D8 FF is the JPEG magic number. The .pdf extension is a disguise; a PDF would start with 25 50 44 46 ('%PDF').",
+        "es": "FF D8 FF es el número mágico de JPEG. La extensión .pdf es un disfraz; un PDF empezaría con 25 50 44 46 ('%PDF')."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "How many hexadecimal digits represent a single byte, and why?",
+        "es": "¿Cuántos dígitos hexadecimales representan un solo byte, y por qué?"
+      },
+      "accept": [
+        "dos",
+        "2",
+        "dos digitos",
+        "dos, cada uno es un nibble de 4 bits",
+        "two",
+        "two digits",
+        "2, one per nibble",
+        "dos porque cada digito es 4 bits"
+      ],
+      "explanation": {
+        "en": "Two. Each hex digit encodes 4 bits (a nibble); a byte is 8 bits, so it takes exactly two hex digits (00-FF).",
+        "es": "Dos. Cada dígito hex codifica 4 bits (un nibble); un byte son 8 bits, así que necesita exactamente dos dígitos hex (00-FF)."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You suspect an unknown binary 'sample' contacts a server. Which command quickly reveals embedded URLs without reverse engineering?",
+        "es": "Sospechas que un binario desconocido 'sample' contacta un servidor. ¿Qué comando revela rápido las URLs incrustadas sin ingeniería inversa?"
+      },
+      "accept": [
+        "strings sample",
+        "strings",
+        "strings ./sample",
+        "strings sample | grep http",
+        "strings -n 8 sample"
+      ],
+      "explanation": {
+        "en": "'strings sample' extracts readable text; piping to grep http narrows it to URLs. It is the cheapest first triage of an unknown binary.",
+        "es": "'strings sample' extrae el texto legible; canalizar a grep http lo acota a URLs. Es el triaje inicial más barato de un binario desconocido."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "In a hex dump's right-hand column you see many dots '.'. What do those dots represent?",
+        "es": "En la columna derecha de un volcado hex ves muchos puntos '.'. ¿Qué representan esos puntos?"
+      },
+      "accept": [
+        "bytes no imprimibles",
+        "caracteres no imprimibles",
+        "bytes que no son texto imprimible",
+        "non-printable bytes",
+        "non printable characters",
+        "bytes not printable",
+        "datos binarios no imprimibles"
+      ],
+      "explanation": {
+        "en": "Each dot is a byte whose value is not a printable character (for example 0x00 or 0x89). The dot is a placeholder, not a literal period in the data.",
+        "es": "Cada punto es un byte cuyo valor no es un carácter imprimible (por ejemplo 0x00 o 0x89). El punto es un marcador de posición, no un punto literal en los datos."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You located a structure at offset 0x100 and want to read 32 bytes there with xxd. Write the command for the file 'img.dat'.",
+        "es": "Ubicaste una estructura en el desplazamiento 0x100 y quieres leer 32 bytes ahí con xxd. Escribe el comando para el archivo 'img.dat'."
+      },
+      "accept": [
+        "xxd -s 0x100 -l 32 img.dat",
+        "xxd -s 0x100 -l 32 ./img.dat",
+        "xxd -s256 -l32 img.dat",
+        "xxd -s 256 -l 32 img.dat"
+      ],
+      "explanation": {
+        "en": "-s sets the start offset (0x100 = 256) and -l limits the length to 32 bytes. Seeking avoids dumping everything before the region of interest.",
+        "es": "-s fija el desplazamiento inicial (0x100 = 256) y -l limita la longitud a 32 bytes. Saltar evita volcar todo lo anterior a la región de interés."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "An image opens normally, but its file size is far larger than the picture warrants, and bytes appear AFTER the IEND/FF D9 marker. What should you suspect?",
+        "es": "Una imagen abre con normalidad, pero su tamaño es mucho mayor de lo que justifica la foto, y aparecen bytes DESPUÉS del marcador IEND/FF D9. ¿Qué deberías sospechar?"
+      },
+      "accept": [
+        "datos ocultos despues del fin",
+        "datos escondidos despues del eof",
+        "hay datos ocultos tras el fin del archivo",
+        "esteganografia",
+        "datos ocultos",
+        "hidden data after eof",
+        "data appended after the end",
+        "steganography",
+        "hidden payload"
+      ],
+      "explanation": {
+        "en": "Bytes past a format's logical end are ignored by viewers but still present — a simple way to smuggle a hidden payload. The hex dump exposes what the image viewer hides.",
+        "es": "Los bytes después del fin lógico de un formato son ignorados por los visores pero siguen presentes — una forma simple de colar una carga oculta. El volcado hex expone lo que el visor de imágenes esconde."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Bytes, bits and hexadecimal representation — Shotts, The Linux Command Line; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "Hex dump anatomy: offset, hex, ASCII (xxd, hexdump -C) — Altheide & Carvey, Digital Forensics with Open Source Tools",
+    "File signatures / magic numbers (PNG, JPEG, PDF, ZIP, ELF) — Carrier, File System Forensic Analysis; Nikkel, Practical Forensic Imaging",
+    "Character encodings (ASCII, UTF-8) and endianness — Bryant & O'Hallaron, Computer Systems: A Programmer's Perspective",
+    "Extracting printable strings from binaries (strings, -n) — Sikorski & Honig, Practical Malware Analysis (Ch. 1)",
+    "Seeking to offsets and reading regions (xxd -s, -l) — Altheide & Carvey, Digital Forensics with Open Source Tools",
+    "Data hidden after a format's end marker (basic steganography / file slack) — Casey, Handbook of Digital Forensics and Investigation"
+  ],
+  "mangaRevealOnComplete": 2
+}

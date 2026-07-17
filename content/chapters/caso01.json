@@ -1,0 +1,129 @@
+{
+  "id": "caso01",
+  "layer": 1,
+  "order": 5.5,
+  "title": {
+    "en": "EXAM 1: EXIF Hunt (w0rmer Case)",
+    "es": "EXAMEN 1: Caza EXIF (Caso w0rmer)"
+  },
+  "subtitle": {
+    "en": "Reconstruct the real-world 2012 investigation of CabinCr3w hacktivist Higinio Ochoa.",
+    "es": "Reconstruye la investigación real de 2012 del hacktivista de CabinCr3w Higinio Ochoa."
+  },
+  "glossary": [],
+  "objectives": [
+    {
+      "id": "exif",
+      "label": {
+        "en": "Extract the GPS location and artist handle hidden in the leaked image.",
+        "es": "Extraer la ubicación GPS y el alias del artista ocultos en la imagen filtrada."
+      }
+    },
+    {
+      "id": "osint",
+      "label": {
+        "en": "Trace the handle in member logs to find the hacker's real name alias.",
+        "es": "Rastrear el alias en logs de miembros para hallar su nombre real."
+      }
+    },
+    {
+      "id": "masquerade",
+      "label": {
+        "en": "Expose the masqueraded file format using magic bytes.",
+        "es": "Exponer el formato de archivo enmascarado usando magic bytes."
+      }
+    },
+    {
+      "id": "hash",
+      "label": {
+        "en": "Compute payload hashes and match them against threat intelligence database.",
+        "es": "Calcular hashes de payloads y compararlos con la base de datos de amenazas."
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The Anonymous CabinCr3w Defacement",
+        "es": "La desfiguración de Anonymous CabinCr3w"
+      },
+      "body": {
+        "en": "In early 2012, a hacktivist defaced several police websites, leaking database credentials. To taunt the FBI, the actor posted a photo on Twitter. That photo became their undoing.\n\nYour task is to analyze the evidence directory. Find where the hacker was staying, trace their handle to an email and real-name alias, detect a file masquerading on the system, and confirm if a local script matches their signature payload.",
+        "es": "A principios de 2012, un activista desfiguró sitios de policía y filtró credenciales. Para burlarse del FBI, publicó una foto en Twitter. Esa foto fue su ruina.\n\nTu tarea es analizar el directorio de evidencias. Encuentra dónde se alojaba el hacker, rastrea su alias hasta un mail y un nombre real, detecta un archivo enmascarado y confirma si un script local coincide con su firma de payload."
+      }
+    }
+  ],
+  "commands": [],
+  "exercises": [
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Extract the GPS coordinates from the leaked photo 'leak.jpg' (format: DD.DDDD S, DDD.DDDD E).",
+        "es": "Extrae las coordenadas GPS de la foto filtrada 'leak.jpg' (formato: DD.DDDD S, DDD.DDDD E)."
+      },
+      "accept": [
+        "37.8136 s, 145.2200 e",
+        "37.8136s, 145.2200e",
+        "37.8136 s 145.2200 e",
+        "37.8136s 145.2200e",
+        "37.8136s,145.2200e"
+      ],
+      "explanation": {
+        "en": "Running 'strings leak.jpg | grep GPSPosition' reveals '37.8136 S, 145.2200 E'. In the same metadata trailer, the 'Artist' field identifies the user as 'w0rmer'.",
+        "es": "Ejecutar 'strings leak.jpg | grep GPSPosition' revela '37.8136 S, 145.2200 E'. En la misma cola de metadatos, el campo 'Artist' identifica al usuario como 'w0rmer'."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Search handles.txt and members.txt to identify the real-name alias of the 'w0rmer' handle.",
+        "es": "Busca en handles.txt y members.txt para identificar el alias de nombre real para 'w0rmer'."
+      },
+      "accept": [
+        "higinio o.",
+        "higinio o",
+        "higinio"
+      ],
+      "explanation": {
+        "en": "Running 'grep -ri w0rmer .' finds the forum export in members.txt pointing to the email 'w0rmer.cc@example.invalid' and real name notes: 'poss. real name Higinio O.'.",
+        "es": "Ejecutar 'grep -ri w0rmer .' encuentra la exportación del foro en members.txt apuntando al mail 'w0rmer.cc@example.invalid' y las notas: 'poss. real name Higinio O.'."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Determine the actual file format of the masquerading file 'avatar.dat'.",
+        "es": "Determina el formato de archivo real del archivo enmascarado 'avatar.dat'."
+      },
+      "accept": [
+        "png image data",
+        "png"
+      ],
+      "explanation": {
+        "en": "Running 'file avatar.dat' reveals it is actually a 'PNG image data', exposing that the extension was disguised.",
+        "es": "Ejecutar 'file avatar.dat' revela que en realidad es un 'PNG image data', exponiendo que la extensión estaba disfrazada."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Calculate the SHA-256 hash of 'dropper.bin' and search for it in 'hashes.txt' to identify the threat name.",
+        "es": "Calcula el hash SHA-256 de 'dropper.bin' y búscalo en 'hashes.txt' para identificar el nombre de la amenaza."
+      },
+      "accept": [
+        "cabincr3w_uploader"
+      ],
+      "explanation": {
+        "en": "Running 'sha256sum dropper.bin' returns '9986cf5e...'. Searching this hash in hashes.txt identifies it as the 'cabincr3w_uploader' utility.",
+        "es": "Ejecutar 'sha256sum dropper.bin' devuelve '9986cf5e...'. Buscar este hash en hashes.txt lo identifica como la utilidad 'cabincr3w_uploader'."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Extract metadata from file trailers using strings",
+    "Identify file masquerading via magic signatures",
+    "Trace and correlate handles across logs",
+    "Verify integrity and identify payloads via SHA-256 hashes"
+  ],
+  "mangaRevealOnComplete": 1
+}

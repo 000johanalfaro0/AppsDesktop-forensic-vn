@@ -1,0 +1,3 @@
+# forum member export (fabricated for training)
+user=w0rmer  joined=2011  email=w0rmer.cc@example.invalid  note=poss. real name Higinio O.
+user=neuron  joined=2010  email=neuron@example.invalid

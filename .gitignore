@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+*.log
+.DS_Store
+
+# Internal working artifacts — NEVER distributed (copyright: book-derived markdown)
+.sources/
+.tools/venv/

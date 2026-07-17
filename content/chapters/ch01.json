@@ -1,0 +1,590 @@
+{
+  "id": "ch01",
+  "layer": 1,
+  "order": 1,
+  "title": {
+    "en": "First Contact with the Evidence",
+    "es": "Primer contacto con la evidencia"
+  },
+  "subtitle": {
+    "en": "You were handed a seized folder. From the terminal: orient yourself, list it, identify it, and prove it wasn't altered.",
+    "es": "Te entregaron una carpeta incautada. Desde la terminal: oriéntate, lístala, identifícala y demuestra que no fue alterada."
+  },
+  "glossary": [
+    {
+      "term": { "en": "shell", "es": "shell" },
+      "definition": {
+        "en": "The program that reads the commands you type and asks the operating system to run them. On Linux the usual one is bash, part of the GNU project.",
+        "es": "El programa que lee los comandos que escribes y le pide al sistema operativo que los ejecute. En Linux el más común es bash, parte del proyecto GNU."
+      }
+    },
+    {
+      "term": { "en": "prompt", "es": "prompt" },
+      "definition": {
+        "en": "The text the shell shows when it is ready for a command. It usually includes user, machine and current directory; a trailing # (instead of $) means you are root.",
+        "es": "El texto que muestra la shell cuando está lista para un comando. Suele incluir usuario, máquina y directorio actual; un # final (en lugar de $) indica que eres root."
+      }
+    },
+    {
+      "term": { "en": "command history", "es": "historial de comandos" },
+      "definition": {
+        "en": "The record the shell keeps of commands you ran, recoverable with the up/down arrows. Bash stores it in the file .bash_history.",
+        "es": "El registro que la shell guarda de los comandos que ejecutaste, recuperable con las flechas arriba/abajo. Bash lo almacena en el archivo .bash_history."
+      }
+    },
+    {
+      "term": { "en": "virtual console", "es": "consola virtual" },
+      "definition": {
+        "en": "A text terminal session running behind the graphical environment, reachable with key combinations like Ctrl+Alt+F1 through F6.",
+        "es": "Una sesión de terminal de texto que corre detrás del entorno gráfico, accesible con combinaciones como Ctrl+Alt+F1 hasta F6."
+      }
+    },
+    {
+      "term": { "en": "digital evidence", "es": "evidencia digital" },
+      "definition": {
+        "en": "Any data that can support or refute a hypothesis in an investigation.",
+        "es": "Cualquier dato que pueda sostener o refutar una hipótesis en una investigación."
+      }
+    },
+    {
+      "term": { "en": "integrity", "es": "integridad" },
+      "definition": {
+        "en": "The guarantee that data has not changed since it was acquired.",
+        "es": "La garantía de que un dato no cambió desde que fue adquirido."
+      }
+    },
+    {
+      "term": { "en": "chain of custody", "es": "cadena de custodia" },
+      "definition": {
+        "en": "The documented record of who handled the evidence, when and how — essential for it to be admissible.",
+        "es": "El registro documentado de quién manejó la evidencia, cuándo y cómo; esencial para que sea admisible."
+      }
+    },
+    {
+      "term": { "en": "metadata", "es": "metadatos" },
+      "definition": {
+        "en": "Data that describes other data — a file's size, owner, permissions and timestamps, rather than its content.",
+        "es": "Datos que describen a otros datos: el tamaño, el dueño, los permisos y las marcas de tiempo de un archivo, en lugar de su contenido."
+      }
+    },
+    {
+      "term": { "en": "MAC times", "es": "tiempos MAC" },
+      "definition": {
+        "en": "A file's trio of timestamps — Modify, Access and Change — used to reconstruct what happened and when.",
+        "es": "El trío de marcas de tiempo de un archivo — Modify (modificación), Access (acceso) y Change (cambio de metadatos) — que sirve para reconstruir qué pasó y cuándo."
+      }
+    },
+    {
+      "term": { "en": "inode", "es": "inodo" },
+      "definition": {
+        "en": "The structure a Linux filesystem uses to store a file's metadata and data location; the filename only points to it.",
+        "es": "La estructura que un sistema de archivos de Linux usa para guardar los metadatos de un archivo y la ubicación de sus datos; el nombre solo apunta a ella."
+      }
+    },
+    {
+      "term": { "en": "hash", "es": "hash" },
+      "definition": {
+        "en": "A fixed-length fingerprint computed from data; the same input always yields the same value and any change alters it completely.",
+        "es": "Una huella de longitud fija calculada a partir de datos; la misma entrada siempre da el mismo valor y cualquier cambio lo altera por completo."
+      }
+    },
+    {
+      "term": { "en": "SHA-256", "es": "SHA-256" },
+      "definition": {
+        "en": "A cryptographic hash that outputs 64 hexadecimal characters (256 bits); the current standard for proving file integrity. MD5 and SHA-1 are deprecated because collisions can be forged.",
+        "es": "Un hash criptográfico que produce 64 caracteres hexadecimales (256 bits); el estándar actual para probar la integridad de un archivo. MD5 y SHA-1 están obsoletos porque se pueden fabricar colisiones."
+      }
+    },
+    {
+      "term": { "en": "magic bytes", "es": "magic bytes" },
+      "definition": {
+        "en": "The first bytes of a file that identify its real format, regardless of its extension.",
+        "es": "Los primeros bytes de un archivo que identifican su formato real, sin importar su extensión."
+      }
+    },
+    {
+      "term": { "en": "pwd", "es": "pwd" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that prints the absolute path of the directory you are currently in.",
+        "es": "Comando que imprime la ruta absoluta del directorio en el que estás."
+      }
+    },
+    {
+      "term": { "en": "ls", "es": "ls" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that lists a directory's contents; with -l it adds details and with -a it includes hidden files.",
+        "es": "Comando que lista el contenido de un directorio; con -l agrega detalles y con -a incluye los archivos ocultos."
+      }
+    },
+    {
+      "term": { "en": "cat", "es": "cat" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that prints a file's contents to the screen. It is read-only: it never modifies the file.",
+        "es": "Comando que imprime el contenido de un archivo en pantalla. Es de solo lectura: nunca modifica el archivo."
+      }
+    },
+    {
+      "term": { "en": "file", "es": "file" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that identifies a file's real type by reading its magic bytes, ignoring the extension.",
+        "es": "Comando que identifica el tipo real de un archivo leyendo sus magic bytes, ignorando la extensión."
+      }
+    },
+    {
+      "term": { "en": "sha256sum", "es": "sha256sum" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that computes the SHA-256 hash of a file to verify its integrity.",
+        "es": "Comando que calcula el hash SHA-256 de un archivo para verificar su integridad."
+      }
+    },
+    {
+      "term": { "en": "stat", "es": "stat" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that shows a file's metadata: size, permissions, owner and MAC times.",
+        "es": "Comando que muestra los metadatos de un archivo: tamaño, permisos, dueño y tiempos MAC."
+      }
+    },
+    {
+      "term": { "en": "date", "es": "date" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that prints the system date and time; with -u it prints it in UTC, the timezone you record actions in.",
+        "es": "Comando que imprime la fecha y hora del sistema; con -u la imprime en UTC, la zona horaria en la que se registran las acciones."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "orient",
+      "label": {
+        "en": "Understand the shell as the analyst's instrument and orient yourself in it",
+        "es": "Entender la shell como el instrumento del analista y orientarte en ella"
+      }
+    },
+    {
+      "id": "locate",
+      "label": {
+        "en": "Locate yourself inside the evidence directory and timestamp your session",
+        "es": "Ubicarte dentro del directorio de evidencia y registrar la hora de tu sesión"
+      }
+    },
+    {
+      "id": "list-all",
+      "label": {
+        "en": "List everything, including hidden files, with permissions",
+        "es": "Listar todo, incluidos los archivos ocultos, con permisos"
+      }
+    },
+    {
+      "id": "identify",
+      "label": {
+        "en": "Identify the REAL type of a file, ignoring its extension",
+        "es": "Identificar el tipo REAL de un archivo, ignorando su extensión"
+      }
+    },
+    {
+      "id": "hash",
+      "label": {
+        "en": "Compute and understand an integrity hash",
+        "es": "Calcular y entender un hash de integridad"
+      }
+    },
+    {
+      "id": "metadata",
+      "label": {
+        "en": "Read the MAC times and inode metadata of a file",
+        "es": "Leer los tiempos MAC y los metadatos de inodo de un archivo"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The terminal is your instrument",
+        "es": "El terminal es tu instrumento"
+      },
+      "body": {
+        "en": "A forensic analyst lives in the terminal, not the graphical desktop. The shell — usually bash on Linux — is the program that reads what you type and asks the operating system to run it. Why the shell and not clicks? Because every action becomes a precise, repeatable, recordable line: you can document the exact command you ran, paste it into your notes, and another analyst can reproduce it identically in court. A double-click hides what it touched; a command does not. The prompt (something like analyst@lab:~$) tells you who you are and where you are — and if it ends in # instead of $, you are root and one careless command can destroy evidence. Reading the prompt before every command is a habit, not a detail.",
+        "es": "Un analista forense vive en el terminal, no en el escritorio gráfico. La shell —en Linux suele ser bash— es el programa que lee lo que escribes y le pide al sistema operativo que lo ejecute. ¿Por qué la shell y no los clics? Porque cada acción se vuelve una línea precisa, repetible y registrable: puedes documentar el comando exacto que ejecutaste, pegarlo en tus notas, y otro analista puede reproducirlo igual ante un tribunal. Un doble clic esconde lo que tocó; un comando no. El prompt (algo como analyst@lab:~$) te dice quién eres y dónde estás — y si termina en # en vez de $, eres root y un comando descuidado puede destruir evidencia. Leer el prompt antes de cada comando es un hábito, no un detalle."
+      }
+    },
+    {
+      "heading": {
+        "en": "What counts as digital evidence",
+        "es": "Qué cuenta como evidencia digital"
+      },
+      "body": {
+        "en": "Digital evidence is any data that can support or refute a hypothesis in an investigation. Unlike a fingerprint, it is trivially copyable AND trivially alterable — a single byte changed by accident can destroy its value in court. That fragility is why two ideas rule everything you will do: integrity (proving the data did not change) and chain of custody (documenting who touched it, when, and how). Standards like NIST SP 800-86 and ISO/IEC 27037 exist precisely to formalize these guarantees.",
+        "es": "La evidencia digital es cualquier dato que pueda sostener o refutar una hipótesis en una investigación. A diferencia de una huella dactilar, se copia con un comando Y se altera con la misma facilidad: un solo byte cambiado por accidente puede destruir su valor ante un tribunal. Esa fragilidad explica por qué dos ideas gobiernan todo el trabajo: la integridad (probar que el dato no cambió) y la cadena de custodia (documentar quién lo tocó, cuándo y cómo). Estándares como NIST SP 800-86 e ISO/IEC 27037 existen justamente para formalizar esas garantías."
+      }
+    },
+    {
+      "heading": {
+        "en": "The golden rule: do not alter the original",
+        "es": "La regla de oro: no alterar el original"
+      },
+      "body": {
+        "en": "A forensic analyst never works on the original. You acquire a copy (later chapters: dd, write-blockers, hashing) and analyze the copy. The commands in this chapter — pwd, ls, cat, file, sha256sum, stat, date — are READ-ONLY: they observe without modifying content. But beware the subtle trap: simply OPENING a file can update its access time (atime) on the original medium, and an editor like vim writes swap files and changes metadata. That is exactly why you work on a verified copy and reserve the original as untouched. Knowing which commands are safe is itself a core skill.",
+        "es": "Un analista forense nunca trabaja sobre el original. Se adquiere una copia (en capítulos siguientes: dd, bloqueadores de escritura, hashing) y se analiza la copia. Los comandos de este capítulo — pwd, ls, cat, file, sha256sum, stat, date — son de SOLO LECTURA: observan sin modificar el contenido. Pero cuidado con la trampa sutil: con solo ABRIR un archivo se puede actualizar su tiempo de acceso (atime) en el medio original, y un editor como vim escribe archivos de intercambio y cambia metadatos. Por eso justamente se trabaja sobre una copia verificada y se reserva el original intacto. Saber qué comandos son seguros es, en sí mismo, una habilidad central."
+      }
+    },
+    {
+      "heading": {
+        "en": "Extension lies, magic bytes don't",
+        "es": "La extensión miente, los magic bytes no"
+      },
+      "body": {
+        "en": "An attacker renames a file to hide it: malware.exe becomes vacation.jpg. The extension is just text in the name — it proves nothing. The real type lives in the first bytes of the file (its 'magic number'): a PNG starts with the bytes 89 50 4E 47, a PDF with %PDF, a ZIP with PK. The 'file' command reads those bytes and tells you what the file truly is. Distrusting extensions is a forensic reflex, and it is the exact technique that exposes a file disguised to slip past a casual look.",
+        "es": "Un atacante renombra un archivo para esconderlo: malware.exe se convierte en vacaciones.jpg. La extensión es apenas texto en el nombre: no prueba nada. El tipo real vive en los primeros bytes del archivo (su 'magic number'): un PNG empieza con los bytes 89 50 4E 47, un PDF con %PDF, un ZIP con PK. El comando 'file' lee esos bytes y dice qué es el archivo en realidad. Desconfiar de las extensiones es un reflejo forense, y es la técnica exacta que descubre un archivo disfrazado para pasar desapercibido en una mirada rápida."
+      }
+    },
+    {
+      "heading": {
+        "en": "Integrity through hashing",
+        "es": "Integridad por medio del hash"
+      },
+      "body": {
+        "en": "A cryptographic hash (SHA-256) turns any file into a fixed 64-hex-character fingerprint. Two properties make it the backbone of evidence integrity: the same input always yields the same hash, and changing even ONE bit produces a completely different hash (the 'avalanche effect'). You hash the evidence the moment you acquire it; if the hash matches later, you have proven it was untouched. Currency note: use SHA-256, not MD5 or SHA-1 — both are broken for integrity because attackers can forge two different files with the same value (a collision).",
+        "es": "Un hash criptográfico (SHA-256) convierte cualquier archivo en una huella fija de 64 caracteres hexadecimales. Dos propiedades lo vuelven la columna vertebral de la integridad: la misma entrada siempre da el mismo hash, y cambiar aunque sea UN bit produce un hash completamente distinto (el 'efecto avalancha'). Se calcula el hash de la evidencia en el momento de adquirirla; si el hash coincide más tarde, queda probado que no fue alterada. Nota de vigencia: usa SHA-256, no MD5 ni SHA-1 — ambos están rotos para integridad porque un atacante puede fabricar dos archivos distintos con el mismo valor (una colisión)."
+      }
+    },
+    {
+      "heading": {
+        "en": "MAC times and the inode",
+        "es": "Los tiempos MAC y el inodo"
+      },
+      "body": {
+        "en": "Every file carries timestamps that tell a story: Modify (when content last changed), Access (when last read), and Change (when metadata — permissions, name, location — last changed). Together they are the 'MAC times'. On Linux this metadata lives in a structure called the inode, which also holds size, owner, permissions and link count. The name you see is only a label pointing to an inode number. Reading timelines from MAC times is one of the most powerful techniques in an investigation — and ctime is especially valuable because normal user tools cannot freely set it, which makes tampering harder to hide.",
+        "es": "Cada archivo lleva marcas de tiempo que cuentan una historia: Modify (cuándo cambió el contenido por última vez), Access (cuándo se leyó por última vez) y Change (cuándo cambiaron los metadatos — permisos, nombre, ubicación). Juntas son los 'tiempos MAC'. En Linux esos metadatos viven en una estructura llamada inodo, que además guarda tamaño, dueño, permisos y cantidad de enlaces. El nombre que ves es solo una etiqueta que apunta a un número de inodo. Reconstruir líneas de tiempo a partir de los tiempos MAC es una de las técnicas más potentes de una investigación — y el ctime es especialmente valioso porque las herramientas de usuario normales no lo pueden fijar a voluntad, lo que dificulta esconder una manipulación."
+      }
+    },
+    {
+      "heading": {
+        "en": "Your own trail: history and consoles",
+        "es": "Tu propio rastro: historial y consolas"
+      },
+      "body": {
+        "en": "The forensic discipline cuts both ways: your OWN actions leave traces too. The shell records what you run in its command history (bash keeps the last commands in .bash_history), and that file is itself evidence — on a suspect's machine it can reveal exactly what they did; on YOUR analysis machine it documents and reproduces your work. The console also has hidden depth: behind the graphical desktop Linux keeps virtual consoles (Ctrl+Alt+F1 to F6) — independent text sessions. The lesson is professional habit: assume everything you do is logged, work cleanly, and treat your own command history as part of the case record.",
+        "es": "La disciplina forense corta en ambos sentidos: tus PROPIAS acciones también dejan rastro. La shell registra lo que ejecutas en su historial de comandos (bash guarda los últimos comandos en .bash_history), y ese archivo es evidencia en sí mismo — en la máquina de un sospechoso puede revelar exactamente qué hizo; en TU máquina de análisis documenta y reproduce tu trabajo. La consola también tiene profundidad oculta: detrás del escritorio gráfico, Linux mantiene consolas virtuales (Ctrl+Alt+F1 a F6), sesiones de texto independientes. La lección es un hábito profesional: asume que todo lo que haces queda registrado, trabaja limpio y trata tu propio historial de comandos como parte del expediente del caso."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "date -u",
+      "intro": {
+        "en": "Before touching anything, stamp the time. Forensic notes are timestamped in UTC so they line up across timezones.",
+        "es": "Antes de tocar nada, marca la hora. Las notas forenses se fechan en UTC para que coincidan entre zonas horarias."
+      },
+      "sampleOutput": "Fri Jun 26 19:00:04 UTC 2026",
+      "lineByLine": [
+        {
+          "token": "UTC 2026",
+          "explain": {
+            "en": "The -u flag forces Coordinated Universal Time. Recording actions in UTC removes any ambiguity about local timezone or daylight saving when you build a timeline.",
+            "es": "El flag -u fuerza el Tiempo Universal Coordinado. Registrar las acciones en UTC elimina toda ambigüedad sobre zona local u horario de verano al armar una línea de tiempo."
+          }
+        }
+      ]
+    },
+    {
+      "command": "pwd",
+      "intro": {
+        "en": "Know exactly where you are standing. This exact path is the first line of your chain-of-custody notes.",
+        "es": "Ten claro exactamente dónde estás ubicado. Esta ruta exacta es la primera línea de tus notas de cadena de custodia."
+      },
+      "sampleOutput": "/home/analyst/evidence/case01",
+      "lineByLine": [
+        {
+          "token": "/home/analyst/evidence/case01",
+          "explain": {
+            "en": "Absolute path of your current working directory — it starts at the root /, so it is unambiguous no matter where you launched the shell from.",
+            "es": "Ruta absoluta del directorio de trabajo actual — empieza en la raíz /, así que es inequívoca sin importar desde dónde abriste la shell."
+          }
+        }
+      ]
+    },
+    {
+      "command": "ls -la",
+      "intro": {
+        "en": "List EVERYTHING — including hidden files — with permissions, owner and size. Attackers hide files with a leading dot.",
+        "es": "Lista TODO — incluidos los ocultos — con permisos, dueño y tamaño. Los atacantes esconden archivos con un punto inicial."
+      },
+      "sampleOutput": "total 28\ndrwxr-xr-x 2 analyst analyst 4096 Jun 26 19:04 .\ndrwxr-xr-x 4 analyst analyst 4096 Jun 26 18:50 ..\n-rw-r--r-- 1 analyst analyst  142 Jun 26 19:02 .hidden_note.txt\n-rw-r--r-- 1 analyst analyst   95 Jun 26 18:55 README.txt\n-rw-r--r-- 1 analyst analyst 4023 Jun 26 19:01 evidence.bin",
+      "lineByLine": [
+        {
+          "token": "total 28",
+          "explain": {
+            "en": "Sum of disk blocks (in 1K units) used by the listed files — not the number of files.",
+            "es": "Suma de los bloques de disco (en unidades de 1K) usados por los archivos listados — NO la cantidad de archivos."
+          }
+        },
+        {
+          "token": "drwxr-xr-x",
+          "explain": {
+            "en": "Type + permissions. The leading 'd' = directory. Then three triads: owner (rwx = read/write/execute), group (r-x), others (r-x).",
+            "es": "Tipo + permisos. La 'd' inicial = directorio. Luego tres tríadas: dueño (rwx = leer/escribir/ejecutar), grupo (r-x) y otros (r-x)."
+          }
+        },
+        {
+          "token": "-rw-r--r--",
+          "explain": {
+            "en": "Leading '-' = regular file. Owner can read/write, group can read, others can read. No execute bit anywhere.",
+            "es": "El '-' inicial = archivo regular. El dueño lee/escribe, el grupo lee, los otros leen. Sin bit de ejecución en ninguno."
+          }
+        },
+        {
+          "token": "Jun 26 19:04",
+          "explain": {
+            "en": "Last modification time (mtime) of this entry — one of the MAC times you'll build timelines from.",
+            "es": "Hora de última modificación (mtime) de esta entrada — uno de los tiempos MAC con los que se arman las líneas de tiempo."
+          }
+        },
+        {
+          "token": ".hidden_note.txt",
+          "explain": {
+            "en": "The leading dot makes it 'hidden'. A plain 'ls' would NOT show it — only the -a flag reveals it. This is the first place to look.",
+            "es": "El punto inicial lo hace 'oculto'. Un 'ls' a secas NO lo muestra — solo el flag -a lo revela. Es el primer lugar donde mirar."
+          }
+        }
+      ]
+    },
+    {
+      "command": "cat README.txt",
+      "intro": {
+        "en": "Read the case brief without altering it. 'cat' prints content to screen and never writes to the file.",
+        "es": "Lee el informe del caso sin alterarlo. 'cat' imprime el contenido en pantalla y nunca escribe en el archivo."
+      },
+      "sampleOutput": "CASE 01 - seized USB drive\nDo NOT modify originals; work on the verified copy.\nHashes are recorded in the manifest.",
+      "lineByLine": [
+        {
+          "token": "Do NOT modify originals",
+          "explain": {
+            "en": "The brief itself states the golden rule. cat is safe here because it only reads — contrast with opening the file in an editor, which would write metadata.",
+            "es": "El propio informe enuncia la regla de oro. cat es seguro aquí porque solo lee — a diferencia de abrir el archivo en un editor, que escribiría metadatos."
+          }
+        }
+      ]
+    },
+    {
+      "command": "file evidence.bin",
+      "intro": {
+        "en": "The name says '.bin'. Don't trust it — ask the file what it really is by reading its magic bytes.",
+        "es": "El nombre dice '.bin'. No confíes en él — pregúntale al archivo qué es realmente leyendo sus magic bytes."
+      },
+      "sampleOutput": "evidence.bin: PNG image data, 1920 x 1080, 8-bit/color RGBA, non-interlaced",
+      "lineByLine": [
+        {
+          "token": "PNG image data",
+          "explain": {
+            "en": "Identified from the file's magic bytes, NOT from the '.bin' extension. The file is actually a PNG image — the extension was misleading.",
+            "es": "Identificado por los magic bytes del archivo, NO por la extensión '.bin'. El archivo es en realidad una imagen PNG — la extensión engañaba."
+          }
+        },
+        {
+          "token": "1920 x 1080",
+          "explain": {
+            "en": "The 'file' command also parses format-specific fields — here, the image resolution read from the PNG header.",
+            "es": "El comando 'file' también interpreta campos específicos del formato — aquí, la resolución de la imagen leída del encabezado PNG."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sha256sum evidence.bin",
+      "intro": {
+        "en": "Fingerprint the evidence. This hash is what you'll compare against later to prove integrity.",
+        "es": "Obtén la huella de la evidencia. Este hash es lo que se compara más adelante para probar la integridad."
+      },
+      "sampleOutput": "9f2a7b1c8e4d5a6f0b3c2d1e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a  evidence.bin",
+      "lineByLine": [
+        {
+          "token": "9f2a7b1c8e4d5a6f0b3c2d1e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a",
+          "explain": {
+            "en": "The SHA-256 digest: 64 hexadecimal characters (256 bits). Recompute it any time; if a single bit of the file changed, this string changes entirely (avalanche effect).",
+            "es": "El digest SHA-256: 64 caracteres hexadecimales (256 bits). Se puede recalcular en cualquier momento; si cambió un solo bit del archivo, esta cadena cambia por completo (efecto avalancha)."
+          }
+        },
+        {
+          "token": "evidence.bin",
+          "explain": {
+            "en": "The file the hash belongs to. Always record the hash next to the exact filename and path in your notes.",
+            "es": "El archivo al que pertenece el hash. Conviene registrar siempre el hash junto al nombre y la ruta exactos en las notas."
+          }
+        }
+      ]
+    },
+    {
+      "command": "stat evidence.bin",
+      "intro": {
+        "en": "Pull the metadata: timestamps and inode details that drive timeline analysis.",
+        "es": "Extrae los metadatos: marcas de tiempo y detalles de inodo que impulsan el análisis de líneas de tiempo."
+      },
+      "sampleOutput": "  File: evidence.bin\n  Size: 4023      Blocks: 8       IO Block: 4096   regular file\nDevice: 259,2   Inode: 1838221   Links: 1\nAccess: (0644/-rw-r--r--)  Uid: ( 1000/ analyst)   Gid: ( 1000/ analyst)\nAccess: 2026-06-26 19:05:11.000000000 +0000\nModify: 2026-06-26 19:01:42.000000000 +0000\nChange: 2026-06-26 19:01:42.000000000 +0000",
+      "lineByLine": [
+        {
+          "token": "Inode: 1838221",
+          "explain": {
+            "en": "The inode number — the filesystem's internal ID for this file. The name is just a pointer to it; the inode holds size, permissions, owner and timestamps.",
+            "es": "El número de inodo — el ID interno del sistema de archivos para este archivo. El nombre es solo un puntero hacia él; el inodo guarda tamaño, permisos, dueño y marcas de tiempo."
+          }
+        },
+        {
+          "token": "Access: 2026-06-26 19:05:11.000000000 +0000",
+          "explain": {
+            "en": "atime — when the file's content was last READ. Note: simply opening evidence can update this, which is why you work on copies.",
+            "es": "atime — cuándo se LEYÓ por última vez el contenido. Atención: con solo abrir la evidencia se puede actualizar, por eso se trabaja sobre copias."
+          }
+        },
+        {
+          "token": "Modify: 2026-06-26 19:01:42.000000000 +0000",
+          "explain": {
+            "en": "mtime — when the file's CONTENT last changed. The most commonly used timestamp in timeline analysis.",
+            "es": "mtime — cuándo cambió por última vez el CONTENIDO del archivo. La marca de tiempo más usada en el análisis de líneas de tiempo."
+          }
+        },
+        {
+          "token": "Change: 2026-06-26 19:01:42.000000000 +0000",
+          "explain": {
+            "en": "ctime — when the file's METADATA last changed (permissions, name, location). Cannot be set by normal user tools, which makes it valuable against tampering.",
+            "es": "ctime — cuándo cambiaron por última vez los METADATOS del archivo (permisos, nombre, ubicación). No lo pueden fijar las herramientas de usuario normales, lo que lo hace valioso contra manipulaciones."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You just opened the terminal on the evidence copy. What is the FIRST command you run to document exactly where you are standing?",
+        "es": "Acabas de abrir la terminal sobre la copia de evidencia. ¿Cuál es el PRIMER comando que ejecutas para documentar exactamente dónde estás parado?"
+      },
+      "accept": ["pwd"],
+      "explanation": {
+        "en": "'pwd' prints the absolute path of your working directory — the opening line of your chain-of-custody notes.",
+        "es": "'pwd' imprime la ruta absoluta de tu directorio de trabajo — la línea inicial de tus notas de cadena de custodia."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command lists ALL files (including hidden ones) with permissions, owner and size?",
+        "es": "¿Qué comando lista TODOS los archivos (incluidos los ocultos) con permisos, dueño y tamaño?"
+      },
+      "accept": ["ls -la", "ls -al", "ls -lah", "ls -la .", "la"],
+      "explanation": {
+        "en": "'ls -l' gives the long format; '-a' adds hidden (dot) files. Combined: ls -la.",
+        "es": "'ls -l' da el formato largo; '-a' agrega los archivos ocultos (con punto). Combinado: ls -la."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "In the permissions string 'drwxr-xr-x', what does the leading 'd' tell you?",
+        "es": "En la cadena de permisos 'drwxr-xr-x', ¿qué indica la 'd' inicial?"
+      },
+      "accept": ["directorio", "es un directorio", "directory", "is a directory", "d es directorio", "carpeta"],
+      "explanation": {
+        "en": "The first character is the file TYPE. 'd' = directory; '-' = regular file; 'l' = symbolic link.",
+        "es": "El primer carácter es el TIPO de archivo. 'd' = directorio; '-' = archivo regular; 'l' = enlace simbólico."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "An attacker emailed 'invoice.pdf'. Running 'file invoice.pdf' prints 'PNG image data'. In one phrase, what do you conclude?",
+        "es": "Un atacante envió 'factura.pdf'. Al ejecutar 'file factura.pdf' imprime 'PNG image data'. En una frase, ¿qué concluyes?"
+      },
+      "accept": [
+        "la extension es falsa",
+        "la extensión es falsa",
+        "el archivo esta disfrazado",
+        "el archivo está disfrazado",
+        "no es un pdf",
+        "es una imagen png disfrazada",
+        "the extension is fake",
+        "it is disguised",
+        "not a pdf"
+      ],
+      "explanation": {
+        "en": "The magic bytes say PNG, so the .pdf extension is a disguise. Never trust the extension — trust 'file'.",
+        "es": "Los magic bytes dicen PNG, así que la extensión .pdf es un disfraz. Nunca confíes en la extensión — confía en 'file'."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command computes the SHA-256 hash of 'evidence.bin' to verify its integrity?",
+        "es": "¿Qué comando calcula el hash SHA-256 de 'evidence.bin' para verificar su integridad?"
+      },
+      "accept": ["sha256sum evidence.bin", "sha256sum", "sha256sum ./evidence.bin"],
+      "explanation": {
+        "en": "'sha256sum <file>' prints the 64-hex digest you record at acquisition time.",
+        "es": "'sha256sum <archivo>' imprime el digest de 64 hex que se registra al momento de la adquisición."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You flip ONE bit in the file and recompute SHA-256. What happens to the hash?",
+        "es": "Cambias UN solo bit del archivo y vuelves a calcular el SHA-256. ¿Qué le pasa al hash?"
+      },
+      "accept": [
+        "cambia",
+        "cambia completamente",
+        "cambia totalmente",
+        "es completamente distinto",
+        "cambia todo",
+        "changes completely",
+        "it changes completely",
+        "completely different",
+        "avalancha",
+        "efecto avalancha"
+      ],
+      "explanation": {
+        "en": "The avalanche effect: a single bit flip produces an entirely different digest — that's exactly why hashing detects any tampering.",
+        "es": "El efecto avalancha: cambiar un solo bit produce un digest completamente distinto — por eso justamente el hashing detecta cualquier manipulación."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "Two filenames in the case point to the SAME inode number. What does that tell you about them?",
+        "es": "Dos nombres de archivo del caso apuntan al MISMO número de inodo. ¿Qué te dice eso sobre ellos?"
+      },
+      "accept": [
+        "son el mismo archivo",
+        "es el mismo archivo",
+        "son el mismo archivo (enlace duro)",
+        "son enlaces al mismo archivo",
+        "es un enlace duro",
+        "same file",
+        "they are the same file",
+        "hard link",
+        "they are hard links to the same data"
+      ],
+      "explanation": {
+        "en": "The name only points to an inode. Two names on the same inode are the same file (a hard link) — the data and metadata are shared, not copied.",
+        "es": "El nombre solo apunta a un inodo. Dos nombres sobre el mismo inodo son el mismo archivo (un enlace duro) — los datos y metadatos se comparten, no se copian."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "The shell, terminal emulator, prompt & virtual consoles — Shotts, The Linux Command Line",
+    "Command history as an artifact (.bash_history) — Shotts; Nelson et al.",
+    "Linux filesystem navigation & absolute paths — Shotts, The Linux Command Line",
+    "Long listing, permission triads & ownership (ls -l) — Shotts; Nelson et al.",
+    "File type identification via magic numbers — Altheide & Carvey, Digital Forensics with Open Source Tools",
+    "Cryptographic hashing for integrity (SHA-256, avalanche, MD5/SHA-1 deprecation) — Nikkel, Practical Forensic Imaging",
+    "MAC times (atime/mtime/ctime) & the inode — Carrier, File System Forensic Analysis",
+    "Evidence integrity & chain of custody — NIST SP 800-86; Casey, Digital Evidence and Computer Crime"
+  ],
+  "mangaRevealOnComplete": 2
+}

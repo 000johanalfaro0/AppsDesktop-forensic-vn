@@ -1,0 +1,658 @@
+{
+  "id": "ch10",
+  "layer": 1,
+  "order": 10,
+  "title": {
+    "en": "Processes, Jobs, and Spotting Suspicious Activity",
+    "es": "Procesos, trabajos y detección de actividad sospechosa"
+  },
+  "subtitle": {
+    "en": "Snapshot every running process, trace its lineage, control it, and recognise the signs of an intruder.",
+    "es": "Toma una instantánea de cada proceso en ejecución, traza su linaje, contrólalo y reconoce las señales de un intruso."
+  },
+  "glossary": [
+    {
+      "term": { "en": "process", "es": "proceso" },
+      "definition": {
+        "en": "An instance of a running program, managed by the kernel, with its own PID, memory, and state.",
+        "es": "Una instancia de un programa en ejecución, gestionada por el kernel, con su propio PID, memoria y estado."
+      }
+    },
+    {
+      "term": { "en": "PID", "es": "PID" },
+      "definition": {
+        "en": "Process ID; a unique number the kernel assigns to each process when it starts, used to refer to it in commands.",
+        "es": "ID de proceso; un número único que el kernel asigna a cada proceso al iniciarlo, usado para referirse a él en los comandos."
+      }
+    },
+    {
+      "term": { "en": "PPID", "es": "PPID" },
+      "definition": {
+        "en": "Parent PID; the PID of the process that started (spawned) this process.",
+        "es": "PID del padre; el PID del proceso que inició (creó) este proceso."
+      }
+    },
+    {
+      "term": { "en": "init", "es": "init" },
+      "definition": {
+        "en": "The first process the kernel starts at boot (PID 1); it launches all other system services and daemons.",
+        "es": "El primer proceso que el kernel inicia al arrancar (PID 1); lanza todos los demás servicios del sistema y daemons."
+      }
+    },
+    {
+      "term": { "en": "daemon", "es": "daemon" },
+      "definition": {
+        "en": "A background process that runs without a user interface, providing system services (e.g., sshd, cron).",
+        "es": "Un proceso en segundo plano que se ejecuta sin interfaz de usuario y ofrece servicios del sistema (p.ej., sshd, cron)."
+      }
+    },
+    {
+      "term": { "en": "foreground", "es": "primer plano" },
+      "definition": {
+        "en": "The mode where a process occupies the terminal — you cannot type new commands until it finishes or is suspended.",
+        "es": "El modo en que un proceso ocupa la terminal — no puedes escribir nuevos comandos hasta que termine o sea suspendido."
+      }
+    },
+    {
+      "term": { "en": "background", "es": "segundo plano" },
+      "definition": {
+        "en": "The mode where a process runs without blocking the terminal; you get the prompt back immediately and can run other commands.",
+        "es": "El modo en que un proceso se ejecuta sin bloquear la terminal; recuperas el prompt de inmediato y puedes ejecutar otros comandos."
+      }
+    },
+    {
+      "term": { "en": "job", "es": "trabajo" },
+      "definition": {
+        "en": "A process managed by the shell's job control facility, identified by a job number (e.g., [1]).",
+        "es": "Un proceso gestionado por el sistema de control de trabajos de la shell, identificado por un número de trabajo (p.ej., [1])."
+      }
+    },
+    {
+      "term": { "en": "jobspec", "es": "especificación de trabajo" },
+      "definition": {
+        "en": "A reference to a job using % followed by its job number (e.g., %1) or other identifier.",
+        "es": "Una referencia a un trabajo usando % seguido de su número de trabajo (p.ej., %1) u otro identificador."
+      }
+    },
+    {
+      "term": { "en": "signal", "es": "señal" },
+      "definition": {
+        "en": "A predefined message the kernel or a process sends to another process to request an action (terminate, stop, continue, etc.).",
+        "es": "Un mensaje predefinido que el kernel o un proceso envía a otro proceso para solicitar una acción (terminar, detener, continuar, etc.)."
+      }
+    },
+    {
+      "term": { "en": "SIGTERM", "es": "SIGTERM" },
+      "definition": {
+        "en": "Signal 15; the default signal sent by kill, asking the process to terminate gracefully and clean up its resources.",
+        "es": "Señal 15; la señal que kill envía por defecto, pidiendo al proceso que termine de forma ordenada y limpie sus recursos."
+      }
+    },
+    {
+      "term": { "en": "SIGKILL", "es": "SIGKILL" },
+      "definition": {
+        "en": "Signal 9; forces the kernel to immediately terminate the process without giving it a chance to clean up. Use only as a last resort.",
+        "es": "Señal 9; obliga al kernel a terminar el proceso de inmediato sin darle oportunidad de limpiar. Úsalo solo como último recurso."
+      }
+    },
+    {
+      "term": { "en": "SIGHUP", "es": "SIGHUP" },
+      "definition": {
+        "en": "Signal 1; traditionally sent when a terminal hangs up, but daemons often use it to reload their configuration files.",
+        "es": "Señal 1; tradicionalmente se enviaba al colgar la terminal, pero los daemons suelen usarla para recargar sus archivos de configuración."
+      }
+    },
+    {
+      "term": { "en": "SIGINT", "es": "SIGINT" },
+      "definition": {
+        "en": "Signal 2; sent when you press Ctrl-C, typically causing the foreground process to interrupt and terminate.",
+        "es": "Señal 2; se envía al presionar Ctrl-C, lo que normalmente hace que el proceso en primer plano se interrumpa y termine."
+      }
+    },
+    {
+      "term": { "en": "SIGSTOP", "es": "SIGSTOP" },
+      "definition": {
+        "en": "Signal 19; pauses a process unconditionally — it cannot be ignored or handled by the program.",
+        "es": "Señal 19; pausa un proceso de forma incondicional — el programa no puede ignorarla ni manejarla."
+      }
+    },
+    {
+      "term": { "en": "SIGTSTP", "es": "SIGTSTP" },
+      "definition": {
+        "en": "Signal 20; sent when you press Ctrl-Z, pausing the foreground process so it can be moved to the background.",
+        "es": "Señal 20; se envía al presionar Ctrl-Z, pausando el proceso en primer plano para poder moverlo al segundo plano."
+      }
+    },
+    {
+      "term": { "en": "SIGCONT", "es": "SIGCONT" },
+      "definition": {
+        "en": "Signal 18; resumes a stopped process, sent automatically by fg and bg.",
+        "es": "Señal 18; reanuda un proceso detenido, enviada automáticamente por fg y bg."
+      }
+    },
+    {
+      "term": { "en": "zombie", "es": "zombi" },
+      "definition": {
+        "en": "A process that has finished but still has an entry in the process table because its parent has not read its exit status.",
+        "es": "Un proceso que terminó pero aún tiene una entrada en la tabla de procesos porque su padre no ha leído su estado de salida."
+      }
+    },
+    {
+      "term": { "en": "load average", "es": "promedio de carga" },
+      "definition": {
+        "en": "The number of processes waiting to run, averaged over 1, 5, and 15 minutes; shown at the top of the top output. Values below 1.0 mean the CPU is not busy.",
+        "es": "La cantidad de procesos esperando ejecutarse, promediada en 1, 5 y 15 minutos; se muestra al inicio de la salida de top. Valores menores a 1.0 indican que la CPU no está ocupada."
+      }
+    },
+    {
+      "term": { "en": "uptime", "es": "tiempo de actividad" },
+      "definition": {
+        "en": "The time elapsed since the system was last booted, displayed by top and the uptime command.",
+        "es": "El tiempo transcurrido desde el último arranque del sistema, mostrado por top y el comando uptime."
+      }
+    },
+    {
+      "term": { "en": "ps", "es": "ps" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that takes a snapshot of the current processes. Supports Unix (ps -ef), BSD (ps aux), and GNU (ps --forest) styles.",
+        "es": "Comando que toma una instantánea de los procesos actuales. Soporta estilos Unix (ps -ef), BSD (ps aux) y GNU (ps --forest)."
+      }
+    },
+    {
+      "term": { "en": "top", "es": "top" },
+      "kind": "command",
+      "definition": {
+        "en": "Interactive real-time process viewer that updates every few seconds, showing CPU, memory, and process details sorted by activity.",
+        "es": "Visor interactivo de procesos en tiempo real que se actualiza cada pocos segundos, mostrando CPU, memoria y detalles de procesos ordenados por actividad."
+      }
+    },
+    {
+      "term": { "en": "kill", "es": "kill" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that sends a signal to a process by PID; defaults to SIGTERM (15). Use kill -9 for SIGKILL.",
+        "es": "Comando que envía una señal a un proceso por su PID; por defecto envía SIGTERM (15). Usa kill -9 para SIGKILL."
+      }
+    },
+    {
+      "term": { "en": "killall", "es": "killall" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that sends a signal to all processes matching a given name (e.g., killall firefox), supporting wildcards.",
+        "es": "Comando que envía una señal a todos los procesos que coinciden con un nombre dado (p.ej., killall firefox), con soporte para comodines."
+      }
+    },
+    {
+      "term": { "en": "jobs", "es": "jobs" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that lists the background jobs started from the current shell session, showing their job numbers and states.",
+        "es": "Comando que lista los trabajos en segundo plano iniciados desde la sesión actual de la shell, mostrando sus números de trabajo y estados."
+      }
+    },
+    {
+      "term": { "en": "fg", "es": "fg" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that brings a background job to the foreground, optionally specifying the job with a jobspec (e.g., fg %1).",
+        "es": "Comando que trae un trabajo del segundo plano al primer plano, opcionalmente especificando el trabajo con un jobspec (p.ej., fg %1)."
+      }
+    },
+    {
+      "term": { "en": "bg", "es": "bg" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that resumes a stopped job in the background (e.g., bg %1).",
+        "es": "Comando que reanuda un trabajo detenido en el segundo plano (p.ej., bg %1)."
+      }
+    },
+    {
+      "term": { "en": "pstree", "es": "pstree" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that displays the process hierarchy as a tree, showing parent-child relationships visually.",
+        "es": "Comando que muestra la jerarquía de procesos como un árbol, mostrando visualmente las relaciones padre-hijo."
+      }
+    },
+    {
+      "term": { "en": "nohup", "es": "nohup" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that runs a process immune to hangups (SIGHUP), allowing it to continue even after the terminal session ends.",
+        "es": "Comando que ejecuta un proceso inmune a los cuelgues (SIGHUP), permitiendo que continúe incluso después de cerrar la sesión de la terminal."
+      }
+    },
+    {
+      "term": { "en": "sleep", "es": "sleep" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that pauses execution for a given number of seconds; often used to test job control behavior.",
+        "es": "Comando que pausa la ejecución por una cantidad dada de segundos; se usa a menudo para probar el control de trabajos."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "what-is-process",
+      "label": {
+        "en": "Understand what a process is and how the kernel manages it with PIDs, PPIDs, and states",
+        "es": "Entender qué es un proceso y cómo el kernel lo gestiona con PIDs, PPIDs y estados"
+      }
+    },
+    {
+      "id": "ps-snapshot",
+      "label": {
+        "en": "Take a full process snapshot with ps using Unix, BSD, and GNU styles",
+        "es": "Tomar una instantánea completa de los procesos con ps usando estilos Unix, BSD y GNU"
+      }
+    },
+    {
+      "id": "top-monitor",
+      "label": {
+        "en": "Monitor system activity in real time with top and interpret its fields",
+        "es": "Monitorear la actividad del sistema en tiempo real con top e interpretar sus campos"
+      }
+    },
+    {
+      "id": "job-control",
+      "label": {
+        "en": "Control processes with foreground, background, and job commands (&, jobs, fg, bg, Ctrl-C, Ctrl-Z)",
+        "es": "Controlar procesos con primer plano, segundo plano y comandos de trabajo (&, jobs, fg, bg, Ctrl-C, Ctrl-Z)"
+      }
+    },
+    {
+      "id": "signals-kill",
+      "label": {
+        "en": "Send signals to processes with kill and killall to stop, pause, or resume them",
+        "es": "Enviar señales a procesos con kill y killall para detenerlos, pausarlos o reanudarlos"
+      }
+    },
+    {
+      "id": "suspicious-procs",
+      "label": {
+        "en": "Spot suspicious processes during a forensic investigation",
+        "es": "Detectar procesos sospechosos durante una investigación forense"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "What is a process and how the kernel manages it",
+        "es": "Qué es un proceso y cómo lo gestiona el kernel"
+      },
+      "body": {
+        "en": "Every program you run becomes a process — an instance of execution with its own memory space, environment, and a unique Process ID (PID). The kernel juggles hundreds of processes by rapidly switching the CPU among them, creating the illusion of multitasking. When the system boots, the kernel starts the init process (PID 1), which then spawns daemons and services via init scripts. Each process can produce child processes — the parent-process relationship is central to understanding what is running and why. A child that terminates before its parent reads its exit code becomes a zombie, visible as a Z in ps output. For a forensic analyst, this hierarchy is critical: an unusual child under a legitimate parent is a red flag.",
+        "es": "Cada programa que ejecutas se convierte en un proceso — una instancia de ejecución con su propio espacio de memoria, entorno y un identificador único de proceso (PID). El kernel gestiona cientos de procesos alternando rápidamente la CPU entre ellos, creando la ilusión de multitarea. Al arrancar el sistema, el kernel inicia el proceso init (PID 1), que luego crea daemons y servicios mediante scripts de inicio. Cada proceso puede generar procesos hijos — la relación padre-hijo es central para entender qué se está ejecutando y por qué. Un hijo que termina antes de que su padre lea su código de salida se convierte en un zombi, visible como una Z en la salida de ps. Para un analista forense, esta jerarquía es crítica: un hijo inusual bajo un padre legítimo es una bandera roja."
+      }
+    },
+    {
+      "heading": {
+        "en": "Understanding process states while monitoring",
+        "es": "Comprensión de los estados de proceso durante el monitoreo"
+      },
+      "body": {
+        "en": "Each process exists in a specific state that ps and top report under the STAT or S column. R means running or runnable — the process is actively executing or waiting for its turn on the CPU. S (sleeping) is the most common state: the process is idle, waiting for an event like a keystroke or network packet. D is uninterruptible sleep, typically waiting for disk I/O — a process stuck in D for a long time indicates a hardware problem. T means stopped, usually after receiving SIGSTOP or SIGTSTP (Ctrl-Z). Z is a zombie: the process terminated but its parent never read the exit status. The second character in BSD-style STAT adds context: s for session leader, + for foreground, < for high priority, N for low priority. Knowing these codes lets you diagnose at a glance whether an unknown process is sleeping normally or stuck in a suspicious state.",
+        "es": "Cada proceso existe en un estado específico que ps y top reportan en la columna STAT o S. R significa ejecutándose o ejecutable — el proceso se está ejecutando activamente o esperando su turno en la CPU. S (durmiendo) es el estado más común: el proceso está inactivo, esperando un evento como una pulsación de tecla o un paquete de red. D es sueño ininterrumpible, típicamente esperando E/S de disco — un proceso atascado en D por mucho tiempo indica un problema de hardware. T significa detenido, usualmente después de recibir SIGSTOP o SIGTSTP (Ctrl-Z). Z es un zombi: el proceso terminó pero su padre nunca leyó el estado de salida. El segundo carácter en el estilo BSD de STAT añade contexto: s para líder de sesión, + para primer plano, < para alta prioridad, N para baja prioridad. Conocer estos códigos te permite diagnosticar de un vistazo si un proceso desconocido está durmiendo normalmente o atascado en un estado sospechoso."
+      }
+    },
+    {
+      "heading": {
+        "en": "Snapshotting processes with ps",
+        "es": "Instantánea de procesos con ps"
+      },
+      "body": {
+        "en": "The ps command is the Swiss Army knife of process inspection. A bare ps shows only your processes on the current terminal — two lines, useless for forensics. You need the full picture. The Unix-style ps -ef shows every process in the system with its UID, PID, PPID, CPU time, and command. The BSD-style ps aux adds %CPU, %MEM, VSZ (virtual memory), RSS (physical RAM), and a STAT column that reveals the process state. The GNU --forest flag draws the parent-child tree with ASCII lines. In an investigation, you always start with ps aux and ps -ef to inventory every running program. Pipe the output to less (ps aux | less) to scroll through it methodically.",
+        "es": "El comando ps es la navaja suiza de la inspección de procesos. Un ps solo muestra tus procesos en la terminal actual — dos líneas, inútil para lo forense. Necesitas la imagen completa. El estilo Unix ps -ef muestra todos los procesos del sistema con su UID, PID, PPID, tiempo de CPU y comando. El estilo BSD ps aux agrega %CPU, %MEM, VSZ (memoria virtual), RSS (RAM física) y una columna STAT que revela el estado del proceso. El flag GNU --forest dibuja el árbol padre-hijo con líneas ASCII. En una investigación, siempre empiezas con ps aux y ps -ef para inventariar cada programa en ejecución. Puedes canalizar la salida a less (ps aux | less) para desplazarte metódicamente."
+      }
+    },
+    {
+      "heading": {
+        "en": "Real-time monitoring with top",
+        "es": "Monitoreo en tiempo real con top"
+      },
+      "body": {
+        "en": "While ps is a still photograph, top is a live video feed. It refreshes every three seconds and shows a system summary (uptime, load average, tasks, CPU breakdown, memory and swap usage) followed by a process table sorted by CPU consumption. The load average (three numbers for 1, 5, and 15 minutes) is your first health check: values above 1.0 per CPU core mean processes are queuing up. Inside top, press h for help, k to kill a process by PID, r to renice it, and q to quit. top consumes minimal resources, making it ideal for examining a compromised system without further loading it. If a process is using 99% CPU and the machine is sluggish, top finds it in seconds.",
+        "es": "Mientras ps es una fotografía fija, top es un video en vivo. Se actualiza cada tres segundos y muestra un resumen del sistema (tiempo de actividad, promedio de carga, tareas, desglose de CPU, uso de memoria y swap) seguido de una tabla de procesos ordenada por consumo de CPU. El promedio de carga (tres números para 1, 5 y 15 minutos) es tu primer control de salud: valores por encima de 1.0 por núcleo de CPU indican que los procesos están haciendo fila. Dentro de top, presiona h para ayuda, k para matar un proceso por PID, r para cambiar su prioridad y q para salir. top consume recursos mínimos, lo que lo hace ideal para examinar un sistema comprometido sin cargarlo más. Si un proceso usa el 99% de la CPU y la máquina está lenta, top lo encuentra en segundos."
+      }
+    },
+    {
+      "heading": {
+        "en": "Job control: foreground, background, and signals",
+        "es": "Control de trabajos: primer plano, segundo plano y señales"
+      },
+      "body": {
+        "en": "The shell lets you run multiple tasks from one terminal through job control. A command followed by & starts immediately in the background — you get the prompt back and the shell prints the job number and PID (e.g., [1] 28236). The jobs command lists your background jobs. Use fg %1 to bring a job to the foreground, bg %1 to resume a stopped job in the background. Ctrl-C sends SIGINT (interrupt, signal 2) to the foreground process, typically terminating it. Ctrl-Z sends SIGTSTP (terminal stop, signal 20), pausing it without killing it — useful when you want to move a long-running process to the background. The kill command sends signals by PID or jobspec: kill -9 1234 sends SIGKILL (signal 9), which the kernel enforces immediately. SIGTERM (signal 15, the default) asks politely; SIGKILL is the sledgehammer. For batch termination, killall firefox kills every process named firefox. nohup makes a process immune to SIGHUP (terminal hangup), letting it outlive the session — an attacker may use this to keep backdoors alive.",
+        "es": "La shell permite ejecutar varias tareas desde una terminal mediante el control de trabajos. Un comando seguido de & se inicia directamente en segundo plano — recuperas el prompt y la shell imprime el número de trabajo y el PID (p.ej., [1] 28236). El comando jobs lista tus trabajos en segundo plano. Usa fg %1 para traer un trabajo al primer plano, bg %1 para reanudar un trabajo detenido en segundo plano. Ctrl-C envía SIGINT (interrupción, señal 2) al proceso en primer plano, normalmente terminándolo. Ctrl-Z envía SIGTSTP (parada de terminal, señal 20), pausándolo sin matarlo — útil cuando quieres mover un proceso de larga duración al segundo plano. El comando kill envía señales por PID o jobspec: kill -9 1234 envía SIGKILL (señal 9), que el kernel ejecuta de inmediato. SIGTERM (señal 15, la predeterminada) pide amablemente; SIGKILL es el mazazo. Para terminar por lotes, killall firefox mata todos los procesos llamados firefox. nohup hace que un proceso sea inmune a SIGHUP (colgado de terminal), permitiendo que sobreviva a la sesión — un atacante puede usarlo para mantener backdoors activos."
+      }
+    },
+    {
+      "heading": {
+        "en": "Spotting suspicious processes as a forensic analyst",
+        "es": "Detección de procesos sospechosos como analista forense"
+      },
+      "body": {
+        "en": "Attackers live in the process list. A backdoor, a cryptominer, or a reverse shell will show up — if you know where to look. Red flags include: processes with strange names that mimic system utilities (e.g., crond instead of crond), processes running from /tmp or /dev/shm (no legitimate daemon runs there), a single process using 100% CPU (likely a miner), hidden processes that fork from unexpected parents, and processes with no controlling terminal (TTY = ?) under a user account that should not have any. Cross-reference with known good baselines: a web server should run httpd or nginx, not python3 /tmp/.cache.py. The pstree command gives you the hierarchy at a glance — a root shell spawned by a browser process is game over. Document every unusual process with ps aux, its PID, its full command line (/proc/PID/cmdline), and its open files (lsof -p PID). This inventory becomes evidence.",
+        "es": "Los atacantes viven en la lista de procesos. Un backdoor, un criptominero o una reverse shell aparecerán — si sabes dónde mirar. Las banderas rojas incluyen: procesos con nombres extraños que imitan utilidades del sistema (p.ej., crond en lugar de crond), procesos ejecutándose desde /tmp o /dev/shm (ningún daemon legítimo se ejecuta ahí), un solo proceso usando el 100% de la CPU (probablemente un minero), procesos ocultos que se bifurcan desde padres inesperados y procesos sin terminal de control (TTY = ?) bajo una cuenta de usuario que no debería tener ninguno. Haz referencia cruzada con líneas base conocidas: un servidor web debe ejecutar httpd o nginx, no python3 /tmp/.cache.py. El comando pstree te da la jerarquía de un vistazo — una shell root generada por un proceso del navegador es game over. Documenta cada proceso inusual con ps aux, su PID, su línea de comandos completa (/proc/PID/cmdline) y sus archivos abiertos (lsof -p PID). Este inventario se convierte en evidencia."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "ps aux",
+      "intro": {
+        "en": "The forensic analyst's first command on any system — full snapshot of every running process with resource usage and state.",
+        "es": "El primer comando de un analista forense en cualquier sistema — instantánea completa de todos los procesos en ejecución con uso de recursos y estado."
+      },
+      "sampleOutput": "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nroot         1  0.0  0.0 170168 13336 ?        Ss   Jun29   0:08 /sbin/init\nroot       441  0.0  0.2 100436 45272 ?        Ss   Jun29   0:02 /usr/lib/systemd/journald\nroot       585  0.0  0.1 106372 36920 ?        Ss   Jun29   0:00 /usr/sbin/sshd -D\nanalyst   1532  0.0  0.0  23508  5480 pts/0    Ss   Jun29   0:00 -bash\nanalyst  10001 99.9  2.5 891240 205120 ?       R    Jun30  45:30 ./miner --pool xmr.example.com\nanalyst  10023  0.0  0.0  11824  3096 pts/0    R+   12:00   0:00 ps aux",
+      "lineByLine": [
+        {
+          "token": "PID",
+          "explain": {
+            "en": "Process ID — the unique number the kernel assigned when each process started.",
+            "es": "ID de proceso — el número único que el kernel asignó cuando cada proceso inició."
+          }
+        },
+        {
+          "token": "99.9",
+          "explain": {
+            "en": "The process named ./miner is consuming 99.9% of a CPU core — the strongest single indicator of a cryptominer or runaway process.",
+            "es": "El proceso llamado ./miner está consumiendo el 99.9% de un núcleo de CPU — el indicador más fuerte de un criptominero o proceso desbocado."
+          }
+        },
+        {
+          "token": "R",
+          "explain": {
+            "en": "Running state — the process is actively executing or ready to run at this moment.",
+            "es": "Estado de ejecución — el proceso se está ejecutando activamente o está listo para ejecutarse en este momento."
+          }
+        },
+        {
+          "token": "Ss",
+          "explain": {
+            "en": "S = sleeping, waiting for an event; s = session leader (the main process of a session).",
+            "es": "S = durmiendo, esperando un evento; s = líder de sesión (el proceso principal de una sesión)."
+          }
+        },
+        {
+          "token": "?",
+          "explain": {
+            "en": "No controlling terminal — typical for daemons and background services, but suspicious for a user process like ./miner.",
+            "es": "Sin terminal de control — típico para daemons y servicios del sistema, pero sospechoso para un proceso de usuario como ./miner."
+          }
+        },
+        {
+          "token": "./miner --pool xmr.example.com",
+          "explain": {
+            "en": "The full command line reveals the executable path and arguments. Running from the current directory (./) instead of /usr/bin is a red flag.",
+            "es": "La línea de comandos completa revela la ruta del ejecutable y sus argumentos. Ejecutar desde el directorio actual (./) en lugar de /usr/bin es una bandera roja."
+          }
+        }
+      ]
+    },
+    {
+      "command": "top -b -n1 | head -15",
+      "intro": {
+        "en": "Run top once in batch mode and capture the first 15 lines — useful when you need a non-interactive snapshot for your notes.",
+        "es": "Ejecuta top una vez en modo batch y captura las primeras 15 líneas — útil cuando necesitas una instantánea no interactiva para tus notas."
+      },
+      "sampleOutput": "top - 12:05:30 up 23:15,  2 users,  load average: 1.25, 0.80, 0.45\nTasks: 213 total,   1 running, 210 sleeping,   0 stopped,   2 zombie\n%Cpu(s): 50.3 us, 12.1 sy,  0.0 ni, 37.0 id,  0.6 wa,  0.0 hi,  0.0 si\nMiB Mem :   7951.2 total,   1024.5 free,   5123.8 used,   1802.9 buff/cache\nMiB Swap:   2048.0 total,   1800.0 free,    248.0 used.   2450.3 avail Mem\n\n  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n10001 analyst   20   0  891240 205120   1088 R  99.9   2.5  45:30.82 ./miner\n 1532 analyst   20   0   23508   5480   4236 S   0.0   0.1   0:00.12 bash\n    1 root      20   0  170168  13336   8768 S   0.0   0.2   0:08.23 systemd",
+      "lineByLine": [
+        {
+          "token": "load average: 1.25, 0.80, 0.45",
+          "explain": {
+            "en": "Processes waiting in the run queue over 1, 5, and 15 minutes. 1.25 on a single-core system means the CPU is overloaded.",
+            "es": "Procesos esperando en la cola de ejecución en 1, 5 y 15 minutos. 1.25 en un sistema de un núcleo significa que la CPU está sobrecargada."
+          }
+        },
+        {
+          "token": "2 zombie",
+          "explain": {
+            "en": "Two processes that terminated but their parent never read the exit status. A growing zombie count indicates a buggy parent process — or malware avoiding cleanup.",
+            "es": "Dos procesos que terminaron pero su padre nunca leyó el estado de salida. Una cantidad creciente de zombies indica un proceso padre defectuoso — o malware que evita la limpieza."
+          }
+        },
+        {
+          "token": "50.3 us, 12.1 sy",
+          "explain": {
+            "en": "us = user processes (50.3%), sy = kernel processes (12.1%). Unusually high us with one process dominant points to a single consumer like a miner.",
+            "es": "us = procesos de usuario (50.3%), sy = procesos del kernel (12.1%). Un us inusualmente alto con un proceso dominante apunta a un consumidor único como un minero."
+          }
+        },
+        {
+          "token": "37.0 id",
+          "explain": {
+            "en": "Idle CPU — only 37% is free, which confirms the system is under sustained load.",
+            "es": "CPU inactiva — solo el 37% está libre, lo que confirma que el sistema está bajo carga sostenida."
+          }
+        },
+        {
+          "token": "45:30.82",
+          "explain": {
+            "en": "Total CPU time consumed by the process since it started — over 45 minutes of solid CPU use for ./miner.",
+            "es": "Tiempo total de CPU consumido por el proceso desde que inició — más de 45 minutos de uso sólido de CPU para ./miner."
+          }
+        }
+      ]
+    },
+    {
+      "command": "sleep 3000 &\njobs -l",
+      "intro": {
+        "en": "Launch a long-running process in the background and list all background jobs with their PIDs.",
+        "es": "Lanza un proceso de larga duración en segundo plano y lista todos los trabajos en segundo plano con sus PIDs."
+      },
+      "sampleOutput": "[1] 25600\n[2] 25601\n\n[1]- 25600 Running                 sleep 3000 &\n[2]+ 25601 Running                 sleep 3000 &",
+      "lineByLine": [
+        {
+          "token": "[1] 25600",
+          "explain": {
+            "en": "Job number [1] and PID 25600. The shell prints this when you launch a process with &.",
+            "es": "Número de trabajo [1] y PID 25600. La shell imprime esto cuando lanzas un proceso con &."
+          }
+        },
+        {
+          "token": "[1]- 25600 Running",
+          "explain": {
+            "en": "The jobs -l output shows the job number, PID, state (Running), and command. The minus sign (-) means this is the previous current job.",
+            "es": "La salida de jobs -l muestra el número de trabajo, PID, estado (Running) y comando. El signo menos (-) significa que este es el trabajo anterior."
+          }
+        },
+        {
+          "token": "[2]+ 25601",
+          "explain": {
+            "en": "The plus sign (+) marks the current default job — the one that fg, bg, or kill will act on if you omit the jobspec.",
+            "es": "El signo más (+) marca el trabajo actual por defecto — sobre el que actuarán fg, bg o kill si omites el jobspec."
+          }
+        }
+      ]
+    },
+    {
+      "command": "kill -9 25600",
+      "intro": {
+        "en": "Forcefully terminate a process that is ignoring gentler signals. Signal 9 (SIGKILL) cannot be caught or ignored.",
+        "es": "Termina a la fuerza un proceso que está ignorando señales más suaves. La señal 9 (SIGKILL) no puede ser atrapada ni ignorada."
+      },
+      "sampleOutput": "[1]-  Killed                  sleep 3000",
+      "lineByLine": [
+        {
+          "token": "Killed",
+          "explain": {
+            "en": "The shell reports that the background job was killed. With SIGKILL the process gets no chance to clean up — it vanishes instantly.",
+            "es": "La shell reporta que el trabajo en segundo plano fue matado. Con SIGKILL el proceso no tiene oportunidad de limpiar — desaparece al instante."
+          }
+        },
+        {
+          "token": "sleep 3000",
+          "explain": {
+            "en": "The command line of the terminated process. The job control system tracks which command was associated with each job.",
+            "es": "La línea de comandos del proceso terminado. El sistema de control de trabajos registra qué comando estaba asociado a cada trabajo."
+          }
+        }
+      ]
+    },
+    {
+      "command": "pstree -p",
+      "intro": {
+        "en": "Display the full process tree with PIDs, revealing the parent-child lineage at a glance.",
+        "es": "Muestra el árbol completo de procesos con sus PIDs, revelando el linaje padre-hijo de un vistazo."
+      },
+      "sampleOutput": "systemd(1)─┬─sshd(585)───sshd(598)───bash(1532)───miner(10001)\n           ├─systemd-journal(441)\n           └─cron(720)",
+      "lineByLine": [
+        {
+          "token": "systemd(1)─┬─sshd(585)───sshd(598)───bash(1532)───miner(10001)",
+          "explain": {
+            "en": "Trace the lineage: systemd (PID 1) spawned sshd, which spawned sshd for our session, which spawned bash, which spawned ./miner. An SSH session spawning a miner is suspicious — investigate how it got there.",
+            "es": "Sigue el linaje: systemd (PID 1) creó sshd, que creó sshd para nuestra sesión, que creó bash, que creó ./miner. Una sesión SSH generando un minero es sospechoso — investiga cómo llegó ahí."
+          }
+        },
+        {
+          "token": "miner(10001)",
+          "explain": {
+            "en": "Leaf node — the process with no children. pstree shows its PID in parentheses, matching what ps aux reported.",
+            "es": "Nodo hoja — el proceso sin hijos. pstree muestra su PID entre paréntesis, coincidiendo con lo que reportó ps aux."
+          }
+        }
+      ]
+    },
+    {
+      "command": "killall -9 miner",
+      "intro": {
+        "en": "Kill every running instance of a program by name — faster than finding each PID individually.",
+        "es": "Mata todas las instancias de un programa por su nombre — más rápido que encontrar cada PID individualmente."
+      },
+      "sampleOutput": "[1]+  Killed                  ./miner --pool xmr.example.com\n[2]+  Killed                  ./miner --pool mine.eth.local",
+      "lineByLine": [
+        {
+          "token": "./miner",
+          "explain": {
+            "en": "killall matched and terminated every process whose command name contained 'miner'. Wildcards work too (killall http*).",
+            "es": "killall encontró y terminó todo proceso cuyo nombre de comando contenía 'miner'. Los comodines también funcionan (killall http*)."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command shows every running process on the system in BSD format with CPU and memory percentages?",
+        "es": "¿Qué comando muestra todos los procesos en ejecución del sistema en formato BSD con porcentajes de CPU y memoria?"
+      },
+      "accept": [
+        "ps aux",
+        "ps -aux",
+        "ps aux | less"
+      ],
+      "explanation": {
+        "en": "'ps aux' is the BSD-style snapshot with USER, PID, %CPU, %MEM, VSZ, RSS, STAT, START, TIME, and COMMAND columns.",
+        "es": "'ps aux' es la instantánea estilo BSD con las columnas USER, PID, %CPU, %MEM, VSZ, RSS, STAT, START, TIME y COMMAND."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What signal does Ctrl-C send to the foreground process, and what is its signal number?",
+        "es": "¿Qué señal envía Ctrl-C al proceso en primer plano y cuál es su número de señal?"
+      },
+      "accept": [
+        "SIGINT",
+        "SIGINT 2",
+        "SIGINT (2)",
+        "interrupt signal 2",
+        "señal SIGINT",
+        "SIGINT señal 2"
+      ],
+      "explanation": {
+        "en": "Ctrl-C sends SIGINT (signal 2), which tells the process to interrupt and terminate.",
+        "es": "Ctrl-C envía SIGINT (señal 2), que le indica al proceso que se interrumpa y termine."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You launched a command but forgot to add &. How can you move it to the background without restarting it?",
+        "es": "Ejecutaste un comando pero olvidaste poner &. ¿Cómo lo mueves al segundo plano sin reiniciarlo?"
+      },
+      "accept": [
+        "Ctrl-Z then bg",
+        "Ctrl-Z luego bg",
+        "ctrl-z, bg",
+        "Ctrl-Z followed by bg",
+        "press Ctrl-Z then type bg"
+      ],
+      "explanation": {
+        "en": "Press Ctrl-Z to stop the foreground process (SIGTSTP), then 'bg' resumes it in the background.",
+        "es": "Presiona Ctrl-Z para detener el proceso en primer plano (SIGTSTP), luego 'bg' lo reanuda en segundo plano."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'ps aux' and see a process named 'sh -c /tmp/.update' with %CPU at 99.9 and TTY showing '?'. List three red flags in this process.",
+        "es": "Ejecutas 'ps aux' y ves un proceso llamado 'sh -c /tmp/.update' con %CPU en 99.9 y TTY mostrando '?'. Enumera tres banderas rojas en este proceso."
+      },
+      "accept": [
+        "running from /tmp, no controlling terminal, 99.9 CPU",
+        "ruta /tmp, sin terminal, 99.9% CPU",
+        "suspicious path /tmp, no tty, high cpu",
+        "nohup, /tmp, 99% cpu",
+        "nombre raro, /tmp, 99.9% cpu",
+        "strange path /tmp, no controlling terminal, high CPU",
+        "se ejecuta desde /tmp, no tiene TTY, usa 99.9% de CPU"
+      ],
+      "explanation": {
+        "en": "Three red flags: (1) running from /tmp where no legitimate service lives, (2) no controlling terminal (TTY = ?) despite being a user-owned process, (3) 99.9% CPU consumption — classic cryptominer behavior.",
+        "es": "Tres banderas rojas: (1) ejecutándose desde /tmp donde ningún servicio legítimo reside, (2) sin terminal de control (TTY = ?) a pesar de ser un proceso de usuario, (3) 99.9% de consumo de CPU — comportamiento clásico de criptominero."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "A process with PID 4412 is hung and ignores 'kill 4412'. What is the next command you try, and why?",
+        "es": "Un proceso con PID 4412 está colgado e ignora 'kill 4412'. ¿Cuál es el siguiente comando que pruebas y por qué?"
+      },
+      "accept": [
+        "kill -9 4412",
+        "kill -SIGKILL 4412",
+        "kill -KILL 4412",
+        "kill -9 4412 porque SIGTERM no funciono",
+        "kill -9 PID 4412"
+      ],
+      "explanation": {
+        "en": "'kill -9 4412' sends SIGKILL, which the kernel enforces immediately — the process cannot ignore or catch it. Use only after SIGTERM fails.",
+        "es": "'kill -9 4412' envía SIGKILL, que el kernel ejecuta de inmediato — el proceso no puede ignorarla ni atraparla. Úsalo solo después de que SIGTERM falle."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'pstree -p' and see 'cron(720)---bash(2100)---python3(2150)'. Why is this suspicious?",
+        "es": "Ejecutas 'pstree -p' y ves 'cron(720)---bash(2100)---python3(2150)'. ¿Por qué es esto sospechoso?"
+      },
+      "accept": [
+        "cron no deberia ejecutar un python interactivo",
+        "cron runs shell scripts not python interactively",
+        "un python3 colgado de cron sugiere un backdoor",
+        "cron typically runs scripts via sh, not spawning python3 under bash",
+        "cron normalmente ejecuta scripts con sh, no python3 con bash"
+      ],
+      "explanation": {
+        "en": "cron usually runs scripts directly via sh, not by spawning an interactive bash that then runs python3. A python3 process under cron points to a persistence mechanism — an attacker likely added a cron job to keep a reverse shell alive.",
+        "es": "cron normalmente ejecuta scripts directamente con sh, no creando un bash interactivo que luego ejecuta python3. Un proceso python3 bajo cron apunta a un mecanismo de persistencia — un atacante probablemente agregó una tarea cron para mantener activa una reverse shell."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Process lifecycle, PID, parent-child, init, daemon — Shotts, The Linux Command Line, Ch. 10",
+    "Viewing processes with ps (Uniz, BSD, GNU styles) — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible, Ch. 4",
+    "Real-time monitoring with top (load average, CPU breakdown, memory) — Shotts; Blum & Bresnahan",
+    "Job control: &, jobs, fg, bg, Ctrl-C, Ctrl-Z — Shotts, The Linux Command Line, Ch. 10",
+    "Signals and kill/killall (SIGTERM, SIGKILL, SIGHUP, SIGINT, SIGSTOP, SIGTSTP, SIGCONT) — Shotts; Blum & Bresnahan",
+    "Process hierarchy visualization with pstree — Shotts, The Linux Command Line, Ch. 10",
+    "nohup and background immunity to SIGHUP — Shotts; Blum & Bresnahan",
+    "Spotting suspicious processes (unusual paths, high CPU, no TTY, wrong parent) — Casey, Digital Evidence and Computer Crime; Nikkel, Practical Forensic Imaging"
+  ],
+  "mangaRevealOnComplete": 2
+}

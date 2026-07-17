@@ -1,0 +1,5 @@
+CASE 02 - THE LOGIC BOMB
+A major financial institution had its backup systems wiped. Investigation shows
+a logic bomb was planted in the crontab. Analyze the logs and configs in this directory.
+Identify the script name, the trigger timestamp, the user who edited it, and the file modification date.
+Tools you know: find, grep, stat, cat, xargs. Do NOT modify originals.

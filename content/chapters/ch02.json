@@ -1,0 +1,494 @@
+{
+  "id": "ch02",
+  "layer": 1,
+  "order": 2,
+  "title": {
+    "en": "Viewing Evidence Without Touching It",
+    "es": "Ver la evidencia sin tocarla"
+  },
+  "subtitle": {
+    "en": "cat, less, head, tail, hexdump, xxd — read files and raw bytes from the terminal without altering the evidence.",
+    "es": "cat, less, head, tail, hexdump, xxd — lee archivos y bytes en bruto desde la terminal sin alterar la evidencia."
+  },
+  "glossary": [
+    {
+      "term": { "en": "standard output (stdout)", "es": "salida estándar (stdout)" },
+      "definition": {
+        "en": "The default stream where a command writes its normal output; by default it goes to the terminal screen.",
+        "es": "El flujo por defecto donde un comando escribe su salida normal; por defecto va a la pantalla de la terminal."
+      }
+    },
+    {
+      "term": { "en": "pager", "es": "paginador" },
+      "definition": {
+        "en": "A program that displays text one screen at a time, allowing backward and forward navigation (e.g., less).",
+        "es": "Un programa que muestra texto pantalla por pantalla, permitiendo navegar hacia adelante y atrás (ej. less)."
+      }
+    },
+    {
+      "term": { "en": "magic bytes", "es": "magic bytes" },
+      "definition": {
+        "en": "The first bytes of a file that identify its true format regardless of extension; also called a file signature or magic number.",
+        "es": "Los primeros bytes de un archivo que identifican su formato real sin importar la extensión; también llamados firma de archivo o magic number."
+      }
+    },
+    {
+      "term": { "en": "hex dump", "es": "volcado hexadecimal" },
+      "definition": {
+        "en": "A representation of binary data as hexadecimal byte values, often paired with ASCII rendering, used to inspect raw file structure.",
+        "es": "Una representación de datos binarios como valores de bytes hexadecimales, a menudo con representación ASCII, usada para inspeccionar la estructura real de un archivo."
+      }
+    },
+    {
+      "term": { "en": "cat", "es": "cat" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that concatenates files and prints them to standard output; used to view small files entirely without paging.",
+        "es": "Comando que concatena archivos y los imprime a la salida estándar; se usa para ver archivos pequeños completos sin paginación."
+      }
+    },
+    {
+      "term": { "en": "less", "es": "less" },
+      "kind": "command",
+      "definition": {
+        "en": "A pager that lets you scroll forward and backward through a file or piped output; read-only and safe for evidence.",
+        "es": "Un paginador que permite desplazarse adelante y atrás en un archivo o salida por tubería; de solo lectura y seguro para evidencia."
+      }
+    },
+    {
+      "term": { "en": "head", "es": "head" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that prints the first N lines (default 10) of a file or stream; useful for quickly peeking at headers or log starts.",
+        "es": "Comando que imprime las primeras N líneas (por defecto 10) de un archivo o flujo; útil para inspeccionar rápidamente encabezados o inicios de logs."
+      }
+    },
+    {
+      "term": { "en": "tail", "es": "tail" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that prints the last N lines (default 10) of a file or stream; with -f it follows new lines in real time (log monitoring).",
+        "es": "Comando que imprime las últimas N líneas (por defecto 10) de un archivo o flujo; con -f sigue nuevas líneas en tiempo real (monitoreo de logs)."
+      }
+    },
+    {
+      "term": { "en": "hexdump", "es": "hexdump" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that displays a file's raw bytes in hexadecimal (and optionally ASCII); essential for verifying magic bytes and file structure.",
+        "es": "Comando que muestra los bytes en bruto de un archivo en hexadecimal (y opcionalmente ASCII); esencial para verificar magic bytes y estructura de archivo."
+      }
+    },
+    {
+      "term": { "en": "xxd", "es": "xxd" },
+      "kind": "command",
+      "definition": {
+        "en": "Command that creates a hex dump or converts a hex dump back to binary; -r reverses the dump, useful for patching or verifying exact bytes.",
+        "es": "Comando que crea un volcado hexadecimal o convierte un volcado hexadecimal de vuelta a binario; -r invierte el volcado, útil para parchear o verificar bytes exactos."
+      }
+    },
+    {
+      "term": { "en": "read-only command", "es": "comando de solo lectura" },
+      "definition": {
+        "en": "A command that only reads data and never modifies the file; safe to run on original evidence without breaking chain of custody.",
+        "es": "Un comando que solo lee datos y nunca modifica el archivo; seguro para ejecutar sobre evidencia original sin romper la cadena de custodia."
+      }
+    },
+    {
+      "term": { "en": "pipeline (pipe)", "es": "tubería (pipe)" },
+      "definition": {
+        "en": "The | operator that connects the standard output of one command to the standard input of another, enabling chained processing.",
+        "es": "El operador | que conecta la salida estándar de un comando a la entrada estándar de otro, permitiendo procesamiento encadenado."
+      }
+    },
+    {
+      "term": { "en": "offset", "es": "desplazamiento (offset)" },
+      "definition": {
+        "en": "The byte position from the start of a file; shown in hex dumps as the leftmost column (e.g., 00000000, 00000010).",
+        "es": "La posición en bytes desde el inicio del archivo; se muestra en volcados hexadecimales como la columna izquierda (ej. 00000000, 00000010)."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "view-small",
+      "label": {
+        "en": "View small text files entirely with cat",
+        "es": "Ver archivos de texto pequeños completos con cat"
+      }
+    },
+    {
+      "id": "pager-nav",
+      "label": {
+        "en": "Navigate large files and piped output safely with less",
+        "es": "Navegar archivos grandes y salidas por tubería de forma segura con less"
+      }
+    },
+    {
+      "id": "peek-head-tail",
+      "label": {
+        "en": "Peek at the start or end of files using head and tail",
+        "es": "Inspeccionar el inicio o el final de archivos con head y tail"
+      }
+    },
+    {
+      "id": "follow-logs",
+      "label": {
+        "en": "Follow live log updates with tail -f",
+        "es": "Seguir actualizaciones de logs en vivo con tail -f"
+      }
+    },
+    {
+      "id": "inspect-bytes",
+      "label": {
+        "en": "Inspect raw bytes and magic numbers with hexdump and xxd",
+        "es": "Inspeccionar bytes en bruto y magic numbers con hexdump y xxd"
+      }
+    },
+    {
+      "id": "forensic-safe",
+      "label": {
+        "en": "Confirm every command used is read-only and forensically safe",
+        "es": "Confirmar que cada comando usado es de solo lectura y forenseamente seguro"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "The forensic rule: read only, never write",
+        "es": "La regla forense: solo leer, nunca escribir"
+      },
+      "body": {
+        "en": "Every command in this chapter — cat, less, head, tail, hexdump, xxd — is read-only. They open files with the O_RDONLY flag and never modify content, timestamps, or metadata. In a real investigation you would work on a verified copy (covered in later layers), but knowing which tools are inherently safe is a core competency. Running cat evidence.bin on the original drive does not alter a single bit; running vim evidence.bin would, because editors write swap files and update access times.",
+        "es": "Todos los comandos de este capítulo — cat, less, head, tail, hexdump, xxd — son de solo lectura. Abren archivos con la bandera O_RDONLY y nunca modifican contenido, marcas de tiempo ni metadatos. En una investigación real trabajarás sobre una copia verificada (capas posteriores), pero saber qué herramientas son intrínsecamente seguras es una competencia central. Ejecutar cat evidencia.bin sobre el disco original no altera ni un solo bit; ejecutar vim evidencia.bin sí lo haría, porque los editores escriben archivos de intercambio y actualizan tiempos de acceso."
+      }
+    },
+    {
+      "heading": {
+        "en": "cat — dump the whole file to the screen",
+        "es": "cat — volcar el archivo completo a la pantalla"
+      },
+      "body": {
+        "en": "cat (concatenate) reads each file argument in order and writes its contents to standard output. With no arguments it reads from standard input, making it a universal glue tool in pipelines. For forensics, cat is ideal for small text artifacts — a README, a script, a config file — because it shows everything at once with no interactive mode to accidentally trigger a write. The -n flag numbers lines; -s squeezes multiple blank lines into one. Both are display-only and safe.",
+        "es": "cat (concatenar) lee cada archivo argumento en orden y escribe su contenido a la salida estándar. Sin argumentos lee de la entrada estándar, volviéndolo una herramienta universal de pegamento en tuberías. Para forense, cat es ideal para artefactos de texto pequeños — un README, un script, un archivo de configuración — porque muestra todo de una vez sin modo interactivo que pueda disparar una escritura accidental. Las opciones -n numeran líneas; -s colapsa líneas en blanco múltiples en una. Ambas son solo de visualización y seguras."
+      }
+    },
+    {
+      "heading": {
+        "en": "less — the safe pager for evidence review",
+        "es": "less — el paginador seguro para revisión de evidencia"
+      },
+      "body": {
+        "en": "less is a pager: it loads a file (or stdin) one screen at a time and lets you scroll forward (space, page down) and backward (b, page up). It never writes to the file. Key forensic navigation keys: G jumps to end, g to start, /pattern searches forward, n repeats search, q quits. Because less can read from stdin, you can pipe massive command output into it: ls -la /evidence | less. The -N flag shows line numbers, useful when cross-referencing log entries.",
+        "es": "less es un paginador: carga un archivo (o stdin) pantalla por pantalla y permite desplazarse adelante (espacio, page down) y atrás (b, page up). Nunca escribe en el archivo. Teclas clave para forense: G salta al final, g al inicio, /patrón busca adelante, n repite la búsqueda, q sale. Como less puede leer de stdin, puedes tubería salida masiva hacia él: ls -la /evidencia | less. La opción -N muestra números de línea, útil al cruzar referencias de entradas de log."
+      }
+    },
+    {
+      "heading": {
+        "en": "head and tail — surgical peek at boundaries",
+        "es": "head y tail — inspección quirúrgica de los bordes"
+      },
+      "body": {
+        "en": "head prints the first 10 lines by default; tail prints the last 10. Both accept -n N to change the line count (head -n 20, tail -n 50). tail -f (follow) keeps the file open and prints new lines as they are appended — essential for watching live logs during an incident without altering the log file. head -c K and tail -c K work in bytes instead of lines, letting you grab exactly the first or last K bytes — handy for checking a file's magic bytes without a hex dumper.",
+        "es": "head imprime las primeras 10 líneas por defecto; tail las últimas 10. Ambos aceptan -n N para cambiar la cantidad (head -n 20, tail -n 50). tail -f (seguir) mantiene el archivo abierto e imprime líneas nuevas conforme se agregan — esencial para vigilar logs en vivo durante un incidente sin alterar el archivo de log. head -c K y tail -c K trabajan en bytes en lugar de líneas, permitiendo tomar exactamente los primeros o últimos K bytes — útil para revisar magic bytes sin un volcado hexadecimal."
+      }
+    },
+    {
+      "heading": {
+        "en": "hexdump and xxd — seeing the invisible structure",
+        "es": "hexdump y xxd — viendo la estructura invisible"
+      },
+      "body": {
+        "en": "Text viewers interpret bytes as characters; they hide null bytes, control codes, and binary structure. hexdump -C (canonical) shows offset, hex bytes in two 8-byte groups, and an ASCII column where non-printable characters appear as dots. xxd is similar but more compact and reversible: xxd -r converts a hex dump back to binary. For forensics, the first 16-32 bytes (offset 0x00000000) reveal the magic number — e.g., PNG: 89 50 4E 47 0D 0A 1A 0A; JPEG: FF D8 FF; ZIP/PK: 50 4B 03 04. Verifying magic bytes proves the file type regardless of extension.",
+        "es": "Los visores de texto interpretan bytes como caracteres; ocultan bytes nulos, códigos de control y estructura binaria. hexdump -C (canónico) muestra desplazamiento, bytes hex en dos grupos de 8 y una columna ASCII donde lo no imprimible aparece como puntos. xxd es similar pero más compacto y reversible: xxd -r convierte un volcado hex a binario. Para forense, los primeros 16-32 bytes (desplazamiento 0x00000000) revelan el magic number — ej. PNG: 89 50 4E 47 0D 0A 1A 0A; JPEG: FF D8 FF; ZIP/PK: 50 4B 03 04. Verificar magic bytes prueba el tipo de archivo sin importar la extensión."
+      }
+    },
+    {
+      "heading": {
+        "en": "Pipelines: chaining viewers without touching disk",
+        "es": "Tuberías: encadenar visores sin tocar el disco"
+      },
+      "body": {
+        "en": "The pipe operator | connects stdout of one command to stdin of the next. This lets you filter before viewing: head -n 100 large.log | less shows only the first 100 lines in a pager; tail -f /var/log/auth.log | grep sshd shows only SSH log lines in real time; cat suspicious.bin | xxd | head -n 20 shows the first 20 lines of hex (320 bytes) without writing a temporary file. Every stage in a read-only pipeline stays read-only — no intermediate files are created, preserving the evidence chain.",
+        "es": "El operador tubería | conecta la stdout de un comando a la stdin del siguiente. Esto permite filtrar antes de ver: head -n 100 grande.log | less muestra solo las primeras 100 líneas en un paginador; tail -f /var/log/auth.log | grep sshd muestra solo líneas SSH en tiempo real; cat sospechoso.bin | xxd | head -n 20 muestra las primeras 20 líneas de hex (320 bytes) sin escribir archivo temporal. Cada etapa en una tubería de solo lectura permanece de solo lectura — no se crean archivos intermedios, preservando la cadena de evidencia."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "cat /etc/passwd",
+      "intro": {
+        "en": "Display a small system file entirely — safe, instant, no pager needed.",
+        "es": "Muestra un archivo de sistema pequeño por completo — seguro, instantáneo, sin paginador."
+      },
+      "sampleOutput": "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nsys:x:3:3:sys:/dev:/usr/sbin/nologin\nsync:x:4:65534:sync:/bin:/bin/sync\ngames:x:5:60:games:/usr/games:/usr/sbin/nologin\nman:x:6:12:man:/var/cache/man:/usr/sbin/nologin\nlp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin\nmail:x:8:8:mail:/var/mail:/usr/sbin/nologin\nnews:x:9:9:news:/var/spool/news:/usr/sbin/nologin",
+      "lineByLine": [
+        {
+          "token": "root:x:0:0:root:/root:/bin/bash",
+          "explain": {
+            "en": "First line of /etc/passwd: username root, placeholder x for password, UID 0, GID 0, comment root, home /root, shell /bin/bash.",
+            "es": "Primera línea de /etc/passwd: usuario root, x como placeholder de contraseña, UID 0, GID 0, comentario root, home /root, shell /bin/bash."
+          }
+        },
+        {
+          "token": "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin",
+          "explain": {
+            "en": "Each field separated by colons: name, password placeholder, UID, GID, GECOS, home directory, login shell. nologin means no interactive login.",
+            "es": "Cada campo separado por dos puntos: nombre, placeholder de contraseña, UID, GID, GECOS, directorio home, shell de login. nologin significa sin login interactivo."
+          }
+        }
+      ]
+    },
+    {
+      "command": "less -N /var/log/syslog",
+      "intro": {
+        "en": "Open a large log file with line numbers; navigate with arrows, search with /, quit with q.",
+        "es": "Abre un archivo de log grande con números de línea; navega con flechas, busca con /, sale con q."
+      },
+      "sampleOutput": "     1  Jun 27 08:15:01 host systemd[1]: Started Daily apt upgrade and clean activities.\n     2  Jun 27 08:15:02 host systemd[1]: apt-daily-upgrade.service: Deactivated successfully.\n     3  Jun 27 08:17:01 host CRON[1234]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)\n     4  Jun 27 08:25:01 host systemd[1]: Started Daily apt download activities.\n     5  Jun 27 08:25:02 host systemd[1]: apt-daily.service: Deactivated successfully.\n     6  Jun 27 08:30:01 host CRON[1235]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)\n     7  Jun 27 08:35:01 host systemd[1]: Started Daily apt upgrade and clean activities.\n     8  Jun 27 08:35:02 host systemd[1]: apt-daily-upgrade.service: Deactivated successfully.\n     9  Jun 27 08:39:01 host CRON[1236]: (root) CMD (   cd / && run-parts --report /etc/cron.hourly)\n    10  Jun 27 08:45:01 host systemd[1]: Started Daily apt download activities.",
+      "lineByLine": [
+        {
+          "token": "     1",
+          "explain": {
+            "en": "Line number added by -N; useful when you need to reference a specific entry in notes or cross-reference with line-based tools.",
+            "es": "Número de línea añadido por -N; útil cuando necesitas referenciar una entrada específica en notas o cruzar con herramientas basadas en líneas."
+          }
+        },
+        {
+          "token": "Jun 27 08:15:01",
+          "explain": {
+            "en": "Syslog timestamp format: month day HH:MM:SS. The year is omitted (current year assumed).",
+            "es": "Formato de marca de tiempo syslog: mes día HH:MM:SS. El año se omite (se asume el actual)."
+          }
+        },
+        {
+          "token": "systemd[1]",
+          "explain": {
+            "en": "Process name and PID in brackets that generated the log line. systemd PID 1 is the init process.",
+            "es": "Nombre de proceso y PID entre corchetes que generó la línea de log. systemd PID 1 es el proceso init."
+          }
+        }
+      ]
+    },
+    {
+      "command": "head -n 5 /var/log/auth.log",
+      "intro": {
+        "en": "Peek at the first 5 lines of the authentication log — fast, no pager.",
+        "es": "Inspecciona las primeras 5 líneas del log de autenticación — rápido, sin paginador."
+      },
+      "sampleOutput": "Jun 27 08:00:01 host sshd[101]: Accepted password for analyst from 192.168.1.50\nJun 27 08:00:05 host sshd[101]: pam_unix(sshd:session): session opened for user analyst\nJun 27 08:00:12 host sudo: analyst : COMMAND=/bin/ls /evidence\nJun 27 08:00:15 host sshd[101]: pam_unix(sshd:session): session closed for user analyst\nJun 27 08:05:01 host CRON[102]: pam_unix(cron:session): session opened for user root",
+      "lineByLine": [
+        {
+          "token": "Accepted password for analyst from 192.168.1.50",
+          "explain": {
+            "en": "Successful SSH login event. Shows user, source IP, and authentication method. Critical for intrusion timeline.",
+            "es": "Evento de login SSH exitoso. Muestra usuario, IP origen y método de autenticación. Crítico para línea de tiempo de intrusión."
+          }
+        },
+        {
+          "token": "session opened for user analyst",
+          "explain": {
+            "en": "PAM session start — correlates with the login above. The session ID lets you track all actions in that login.",
+            "es": "Inicio de sesión PAM — correlaciona con el login anterior. El ID de sesión permite rastrear todas las acciones de ese login."
+          }
+        },
+        {
+          "token": "COMMAND=/bin/ls /evidence",
+          "explain": {
+            "en": "sudo command executed. The full command line is logged — this IS the chain of custody for analyst actions.",
+            "es": "Comando sudo ejecutado. La línea completa del comando se registra — esto ES la cadena de custodia de acciones del analista."
+          }
+        }
+      ]
+    },
+    {
+      "command": "tail -f /var/log/auth.log",
+      "intro": {
+        "en": "Follow the auth log in real time; press Ctrl-C to stop. Safe — only reads.",
+        "es": "Sigue el log de autenticación en tiempo real; Ctrl-C para parar. Seguro — solo lee."
+      },
+      "sampleOutput": "Jun 27 09:15:22 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2\nJun 27 09:15:25 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2\nJun 27 09:15:28 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2\nJun 27 09:15:31 host sshd[205]: Connection closed by authenticating user root 203.0.113.45 port 54321\nJun 27 09:16:01 host CRON[206]: pam_unix(cron:session): session opened for user root",
+      "lineByLine": [
+        {
+          "token": "Failed password for root from 203.0.113.45",
+          "explain": {
+            "en": "Brute-force SSH attempt against root from a public IP (TEST-NET-3 documentation address). Each failure is a separate log line.",
+            "es": "Intento de fuerza bruta SSH contra root desde una IP pública (dirección TEST-NET-3 de documentación). Cada fallo es una línea de log separada."
+          }
+        },
+        {
+          "token": "Connection closed by authenticating user root",
+          "explain": {
+            "en": "The attacker disconnected after three failures — typical behavior when facing rate limiting or fail2ban.",
+            "es": "El atacante se desconectó tras tres fallos — comportamiento típico al enfrentar limitación de tasa o fail2ban."
+          }
+        }
+      ]
+    },
+    {
+      "command": "hexdump -C evidence.png | head -n 5",
+      "intro": {
+        "en": "Canonical hex dump of a PNG file — first 5 lines (160 bytes) showing magic bytes and IHDR chunk.",
+        "es": "Volcado hex canónico de un PNG — primeras 5 líneas (160 bytes) mostrando magic bytes e IHDR chunk."
+      },
+      "sampleOutput": "00000000  89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52  |.PNG........IHDR|\n00000010  00 00 07 80 00 00 04 38  08 06 00 00 00 8e 3e 1d  |.......8......>.|\n00000020  00 00 00 04 73 42 49 54  08 08 08 08 7c 08 64 88  |....sBIT....|.d.|\n00000030  00 00 00 09 70 48 59 73  00 00 0b 13 00 00 0b 13  |....pHYs........|\n00000040  01 00 9a 9c 18 00 00 00  07 74 49 4d 45 07 e6 06  |.........tIME...|",
+      "lineByLine": [
+        {
+          "token": "89 50 4e 47 0d 0a 1a 0a",
+          "explain": {
+            "en": "PNG magic bytes at offset 0: 0x89 'P' 'N' 'G' \\r \\n \\x1a \\n. This signature proves the file is a PNG regardless of extension.",
+            "es": "Magic bytes PNG en desplazamiento 0: 0x89 'P' 'N' 'G' \\r \\n \\x1a \\n. Esta firma prueba que el archivo es PNG sin importar la extensión."
+          }
+        },
+        {
+          "token": "00000000",
+          "explain": {
+            "en": "File offset in hexadecimal (byte 0). Each line advances by 16 bytes (0x10).",
+            "es": "Desplazamiento en el archivo en hexadecimal (byte 0). Cada línea avanza 16 bytes (0x10)."
+          }
+        },
+        {
+          "token": "49 48 44 52",
+          "explain": {
+            "en": "ASCII 'IHDR' — the first chunk type in a PNG, appearing at offset 0x08. Contains image width, height, bit depth, color type.",
+            "es": "ASCII 'IHDR' — el primer tipo de chunk en un PNG, aparece en desplazamiento 0x08. Contiene ancho, alto, profundidad de bits, tipo de color."
+          }
+        },
+        {
+          "token": "|.PNG........IHDR|",
+          "explain": {
+            "en": "Right column: ASCII rendering. Printable chars shown literally; non-printable as dots. Confirms magic bytes and chunk name visually.",
+            "es": "Columna derecha: representación ASCII. Caracteres imprimibles se muestran literales; no imprimibles como puntos. Confirma visualmente magic bytes y nombre de chunk."
+          }
+        }
+      ]
+    },
+    {
+      "command": "xxd suspicious.bin | head -n 3",
+      "intro": {
+        "en": "xxd default output (16 bytes per line) — compact alternative to hexdump -C.",
+        "es": "Salida por defecto de xxd (16 bytes por línea) — alternativa compacta a hexdump -C."
+      },
+      "sampleOutput": "00000000: 4d 5a 90 00 03 00 00 00 04 00 00 00 ff ff 00 00  MZ..............\n00000010: b8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00  ........@.......\n00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................",
+      "lineByLine": [
+        {
+          "token": "4d 5a",
+          "explain": {
+            "en": "Magic bytes 'MZ' (0x4D 0x5A) — DOS/Windows executable header. The file is a PE binary regardless of its name.",
+            "es": "Magic bytes 'MZ' (0x4D 0x5A) — cabecera de ejecutable DOS/Windows. El archivo es un binario PE sin importar su nombre."
+          }
+        },
+        {
+          "token": "00000000:",
+          "explain": {
+            "en": "xxd uses colon after offset; each line shows 16 bytes. Offset 0x00000000 = start of file.",
+            "es": "xxd usa dos puntos tras el desplazamiento; cada línea muestra 16 bytes. Desplazamiento 0x00000000 = inicio del archivo."
+          }
+        },
+        {
+          "token": "MZ..............",
+          "explain": {
+            "en": "ASCII column: 'MZ' then dots for non-printable bytes. Confirms the PE signature visually.",
+            "es": "Columna ASCII: 'MZ' luego puntos para bytes no imprimibles. Confirma visualmente la firma PE."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command displays a file one screen at a time and lets you scroll both forward and backward?",
+        "es": "¿Qué comando muestra un archivo pantalla por pantalla y permite desplazarse tanto adelante como atrás?"
+      },
+      "accept": ["less", "less archivo", "less -N archivo"],
+      "explanation": {
+        "en": "less is a pager that supports bidirectional scrolling. cat dumps everything at once; head/tail show only edges.",
+        "es": "less es un paginador que soporta desplazamiento bidireccional. cat vuelca todo de una vez; head/tail solo muestran los bordes."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What flag makes tail follow new lines appended to a file in real time?",
+        "es": "¿Qué flag hace que tail siga nuevas líneas agregadas a un archivo en tiempo real?"
+      },
+      "accept": ["-f", "--follow", "tail -f", "tail --follow"],
+      "explanation": {
+        "en": "tail -f (or --follow) keeps the file open and prints new data as it arrives — essential for live log monitoring.",
+        "es": "tail -f (o --follow) mantiene el archivo abierto e imprime datos nuevos al llegar — esencial para monitoreo de logs en vivo."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'head -c 8 unknown.bin' and see 'FF D8 FF E0 00 10 4A 46'. What file type is it and why?",
+        "es": "Ejecutas 'head -c 8 unknown.bin' y ves 'FF D8 FF E0 00 10 4A 46'. ¿Qué tipo de archivo es y por qué?"
+      },
+      "accept": ["JPEG", "jpg", "jpeg", "imagen imagen JPEG porque empieza con FF D8 FF", "JPEG magic bytes FF D8 FF"],
+      "explanation": {
+        "en": "FF D8 FF is the JPEG magic number (SOI marker + APP0). The 'JFIF' (4A 46 49 46) at bytes 6-9 confirms it. Extensions lie; magic bytes don't.",
+        "es": "FF D8 FF es el magic number JPEG (marcador SOI + APP0). El 'JFIF' (4A 46 49 46) en bytes 6-9 lo confirma. Las extensiones mienten; los magic bytes no."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Show the last 20 lines of /var/log/syslog with line numbers, then pipe to less for navigation.",
+        "es": "Muestra las últimas 20 líneas de /var/log/syslog con números de línea, luego envía a less para navegar."
+      },
+      "accept": ["tail -n 20 /var/log/syslog | cat -n | less", "tail -20 /var/log/syslog | nl | less", "tail -n 20 /var/log/syslog | less -N"],
+      "explanation": {
+        "en": "tail -n 20 gets the last 20 lines; cat -n or nl adds line numbers; less -N shows them in the pager. All read-only.",
+        "es": "tail -n 20 toma las últimas 20 líneas; cat -n o nl agrega números de línea; less -N los muestra en el paginador. Todo de solo lectura."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'xxd -r dump.hex restored.bin'. What does the -r flag do, and when is this useful in forensics?",
+        "es": "Ejecutas 'xxd -r dump.hex restored.bin'. ¿Qué hace la opción -r y cuándo es útil en forense?"
+      },
+      "accept": ["revierte el volcado", "convierte hex a binario", "restaura binario desde hex", "reverse dump", "hex to binary", "crea archivo binario desde volcado hex"],
+      "explanation": {
+        "en": "xxd -r reverses a hex dump back to binary. Useful for reconstructing a file from a hex snippet in a report, or patching a single byte in a copy for testing without a hex editor.",
+        "es": "xxd -r invierte un volcado hex a binario. Útil para reconstruir un archivo desde un fragmento hex en un reporte, o parchear un byte en una copia para pruebas sin editor hex."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which command prints just the first 10 lines of a file, ideal for peeking at a log header without a pager?",
+        "es": "¿Qué comando imprime solo las primeras 10 líneas de un archivo, ideal para ver el encabezado de un log sin un paginador?"
+      },
+      "accept": ["head", "head archivo", "head -n 10", "head -n 10 archivo"],
+      "explanation": {
+        "en": "head prints the first 10 lines by default (-n changes the count). Unlike less it does not page; unlike cat it does not dump the whole file.",
+        "es": "head imprime las primeras 10 líneas por defecto (-n cambia la cantidad). A diferencia de less no pagina; a diferencia de cat no vuelca el archivo entero."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Extract only the first 32 bytes of 'disk.img' and display them as a canonical hex dump with ASCII column.",
+        "es": "Extrae solo los primeros 32 bytes de 'disk.img' y muéstralos como volcado hex canónico con columna ASCII."
+      },
+      "accept": ["head -c 32 disk.img | hexdump -C", "dd if=disk.img bs=1 count=32 | hexdump -C", "xxd -l 32 disk.img"],
+      "explanation": {
+        "en": "head -c 32 reads exactly 32 bytes; hexdump -C formats canonically. xxd -l 32 does the same in one command. All read-only.",
+        "es": "head -c 32 lee exactamente 32 bytes; hexdump -C formatea canónicamente. xxd -l 32 hace lo mismo en un comando. Todos de solo lectura."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Viewing file contents: cat, less — Shotts, The Linux Command Line (Ch. 6, 12)",
+    "head/tail for first/last lines and byte ranges — Shotts, The Linux Command Line (Ch. 6); Ward, How Linux Works (Ch. 2.5.7)",
+    "Pagers and safe evidence viewing — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible (Ch. 10)",
+    "Hexadecimal inspection: hexdump, xxd — Janssens, Data Science at the Command Line (Ch. 3); standard Linux man pages",
+    "Magic bytes / file signatures for format identification — Altheide & Carvey, Digital Forensics with Open Source Tools (Ch. 4); Carrier, File System Forensic Analysis (Ch. 2)",
+    "Read-only commands and evidence integrity — NIST SP 800-86; Casey, Handbook of Digital Forensics and Investigation (Ch. 2)"
+  ],
+  "mangaRevealOnComplete": 2
+}

@@ -1,0 +1,442 @@
+{
+  "id": "ch09",
+  "layer": 1,
+  "order": 9,
+  "title": {
+    "en": "Archives and Raw Copies",
+    "es": "Archivos y copias raw"
+  },
+  "subtitle": {
+    "en": "Compress, bundle and transport evidence with tar, gzip and zip, and clone drives byte-for-byte with dd.",
+    "es": "Comprime, agrupa y transporta evidencia con tar, gzip y zip, y clona discos byte por byte con dd."
+  },
+  "glossary": [
+    {
+      "term": { "en": "compression", "es": "compresión" },
+      "definition": {
+        "en": "The process of encoding data to use fewer bytes, by removing statistical redundancy from the original.",
+        "es": "El proceso de codificar datos para que ocupen menos bytes, eliminando la redundancia estadística del original."
+      }
+    },
+    {
+      "term": { "en": "lossless compression", "es": "compresión sin pérdida" },
+      "definition": {
+        "en": "A compression method where the decompressed output is bit-for-bit identical to the original. Mandatory for forensic evidence.",
+        "es": "Un método de compresión donde la salida descomprimida es bit por bit idéntica al original. Obligatorio para evidencia forense."
+      }
+    },
+    {
+      "term": { "en": "archive", "es": "archivo" },
+      "definition": {
+        "en": "A single file that bundles multiple files and directories together, preserving their structure, for transport or backup.",
+        "es": "Un archivo único que agrupa múltiples archivos y directorios, preservando su estructura, para transporte o respaldo."
+      }
+    },
+    {
+      "term": { "en": "compression ratio", "es": "ratio de compresión" },
+      "definition": {
+        "en": "The percentage reduction from the original file size to the compressed size. A ratio of 49.9% means the compressed file is roughly half the original.",
+        "es": "La reducción porcentual del tamaño original al tamaño comprimido. Un ratio de 49.9% significa que el archivo comprimido ocupa aproximadamente la mitad del original."
+      }
+    },
+    {
+      "term": { "en": "block", "es": "bloque" },
+      "definition": {
+        "en": "The minimum unit of data that a storage device reads or writes at once. dd operates on blocks rather than files.",
+        "es": "La unidad mínima de datos que un dispositivo de almacenamiento lee o escribe de una vez. dd opera sobre bloques en lugar de archivos."
+      }
+    },
+    {
+      "term": { "en": "disk image", "es": "imagen de disco" },
+      "definition": {
+        "en": "A file that contains the exact byte-for-byte contents of a storage device, including partitions and unallocated space.",
+        "es": "Un archivo que contiene el contenido exacto byte por byte de un dispositivo de almacenamiento, incluyendo particiones y espacio no asignado."
+      }
+    },
+    {
+      "term": { "en": "gzip", "es": "gzip" },
+      "kind": "command",
+      "definition": {
+        "en": "GNU zip — compresses a single file using the Lempel-Ziv (LZ77) algorithm, replacing it with a .gz version.",
+        "es": "GNU zip — comprime un solo archivo usando el algoritmo Lempel-Ziv (LZ77), reemplazándolo con una versión .gz."
+      }
+    },
+    {
+      "term": { "en": "gunzip", "es": "gunzip" },
+      "kind": "command",
+      "definition": {
+        "en": "Decompresses a .gz file back to its original form. Equivalent to gzip -d.",
+        "es": "Descomprime un archivo .gz devolviéndolo a su forma original. Equivalente a gzip -d."
+      }
+    },
+    {
+      "term": { "en": "tar", "es": "tar" },
+      "kind": "command",
+      "definition": {
+        "en": "Tape archive — bundles files and directories into a single archive file while preserving permissions and structure. Often combined with gzip via -z.",
+        "es": "Tape archive — agrupa archivos y directorios en un solo archivo preservando permisos y estructura. A menudo se combina con gzip mediante -z."
+      }
+    },
+    {
+      "term": { "en": "zip", "es": "zip" },
+      "kind": "command",
+      "definition": {
+        "en": "A cross-platform tool that both archives and compresses files into a .zip file, using the deflate algorithm.",
+        "es": "Una herramienta multiplataforma que archiva y comprime archivos en un archivo .zip usando el algoritmo deflate."
+      }
+    },
+    {
+      "term": { "en": "unzip", "es": "unzip" },
+      "kind": "command",
+      "definition": {
+        "en": "Lists, tests or extracts files from a .zip archive.",
+        "es": "Lista, prueba o extrae archivos de un archivo .zip."
+      }
+    },
+    {
+      "term": { "en": "dd", "es": "dd" },
+      "kind": "command",
+      "definition": {
+        "en": "Data duplicator — copies raw bytes from a source to a destination at the block level. The standard tool for forensic disk imaging.",
+        "es": "Data duplicator — copia bytes raw desde un origen hacia un destino a nivel de bloques. La herramienta estándar para la imagen forense de discos."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "compression-vs-archive",
+      "label": {
+        "en": "Distinguish compression from archiving and identify when each is needed",
+        "es": "Distinguir compresión de archivado e identificar cuándo se necesita cada uno"
+      }
+    },
+    {
+      "id": "gzip-compress",
+      "label": {
+        "en": "Compress and decompress individual files with gzip and gunzip",
+        "es": "Comprimir y descomprimir archivos individuales con gzip y gunzip"
+      }
+    },
+    {
+      "id": "tar-archive",
+      "label": {
+        "en": "Create, inspect and extract tar archives, with and without compression",
+        "es": "Crear, inspeccionar y extraer archivos tar, con y sin compresión"
+      }
+    },
+    {
+      "id": "zip-cross",
+      "label": {
+        "en": "Create and extract zip archives for cross-platform evidence transfer",
+        "es": "Crear y extraer archivos zip para transferencia de evidencia entre plataformas"
+      }
+    },
+    {
+      "id": "dd-raw-copy",
+      "label": {
+        "en": "Perform a byte-for-byte copy of a storage device with dd",
+        "es": "Realizar una copia byte por byte de un dispositivo de almacenamiento con dd"
+      }
+    },
+    {
+      "id": "forensic-archive-integrity",
+      "label": {
+        "en": "Understand how archiving and compression preserve or affect evidence integrity",
+        "es": "Entender cómo el archivado y la compresión preservan o afectan la integridad de la evidencia"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "Compression and Archiving: Two Different Jobs",
+        "es": "Compresión y archivado: dos trabajos distintos"
+      },
+      "body": {
+        "en": "Newcomers often confuse archiving with compression, but they solve different problems. Archiving takes many files and packs them into a single container, preserving the directory tree. Compression applies an algorithm — like LZ77 (used by gzip) or deflate (used by zip) — to make data smaller by removing redundancy. A tool can do just one (gzip compresses but does not archive), both (zip does both), or be combined (tar archives and then you pipe through gzip for compression). In forensics, you always use lossless compression: every bit must be recoverable exactly. Lossy methods (JPEG, MP3) discard data permanently and would destroy evidence.",
+        "es": "Quienes empiezan suelen confundir archivado con compresión, pero resuelven problemas distintos. El archivado toma muchos archivos y los empaqueta en un solo contenedor, preservando el árbol de directorios. La compresión aplica un algoritmo —como LZ77 (usado por gzip) o deflate (usado por zip)— para reducir el tamaño eliminando redundancia. Una herramienta puede hacer solo una (gzip comprime pero no archiva), ambas (zip hace las dos), o combinarse (tar archiva y luego se canaliza por gzip para comprimir). En forense siempre se usa compresión sin pérdida: cada bit debe recuperarse exactamente. Los métodos con pérdida (JPEG, MP3) descartan datos permanentemente y destruirían la evidencia."
+      }
+    },
+    {
+      "heading": {
+        "en": "gzip: Compression File by File",
+        "es": "gzip: compresión archivo por archivo"
+      },
+      "body": {
+        "en": "The gzip program compresses a single file using the Lempel-Ziv (LZ77) algorithm. When you run gzip on a file, it replaces the original with a compressed copy bearing the .gz extension. The original file name, its permissions and its modification timestamp are preserved inside the compressed file. To reverse the operation, use gunzip, which restores the original. The -k flag (keep) tells gzip to keep the original file alongside the compressed one. Compression levels range from 1 (fastest, least compression) to 9 (slowest, most compression); the default is 6. The -l option lists compression statistics without decompressing. Forensic note: since gzip compresses only one file per invocation, you normally pair it with tar for multi-file evidence.",
+        "es": "El programa gzip comprime un solo archivo usando el algoritmo Lempel-Ziv (LZ77). Cuando ejecutas gzip sobre un archivo, reemplaza el original con una copia comprimida con extensión .gz. El nombre original, sus permisos y su marca de modificación se preservan dentro del archivo comprimido. Para revertir la operación usa gunzip, que restaura el original. El flag -k (keep) indica a gzip que conserve el original junto al comprimido. Los niveles de compresión van del 1 (más rápido, menos compresión) al 9 (más lento, más compresión); el valor predeterminado es 6. La opción -l muestra estadísticas de compresión sin descomprimir. Nota forense: como gzip comprime solo un archivo por invocación, normalmente se combina con tar para evidencia con múltiples archivos."
+      }
+    },
+    {
+      "heading": {
+        "en": "tar: The Standard Unix Archiver",
+        "es": "tar: el archivador estándar de Unix"
+      },
+      "body": {
+        "en": "The tar command — short for tape archive — is the classic tool for bundling files and directories into a single archive file. Its basic syntax is tar mode options pathnames. The mode is a single letter: c to create an archive, x to extract, t to list the contents. The -f option specifies the archive file name. Without -v (verbose), tar works silently; with -v it prints each pathname as it is processed. Tar alone does NOT compress — it just bundles. To compress the resulting archive, you combine tar with gzip using the -z option. The result is a .tar.gz file, often shortened to .tgz. To extract a compressed archive in one step, use tar xzf file.tgz. Tar preserves permissions, ownership and timestamps by default, which is critical for forensic copies of directory structures.",
+        "es": "El comando tar —abreviatura de tape archive— es la herramienta clásica para agrupar archivos y directorios en un solo archivo. Su sintaxis básica es tar modo opciones rutas. El modo es una letra: c para crear un archivo, x para extraer, t para listar el contenido. La opción -f especifica el nombre del archivo. Sin -v (verbose) tar trabaja en silencio; con -v imprime cada ruta a medida que la procesa. Tar solo NO comprime —solo agrupa. Para comprimir el archivo resultante se combina tar con gzip mediante la opción -z. El resultado es un archivo .tar.gz, a menudo abreviado .tgz. Para extraer un archivo comprimido en un solo paso usa tar xzf archivo.tgz. Tar preserva permisos, dueño y marcas de tiempo por defecto, algo crítico para copias forenses de estructuras de directorios."
+      }
+    },
+    {
+      "heading": {
+        "en": "zip: One Tool for Both Jobs",
+        "es": "zip: una herramienta para ambos trabajos"
+      },
+      "body": {
+        "en": "Unlike the tar+gzip combo, the zip program is both an archiver and a compressor in a single command. It uses the deflate algorithm and produces .zip files that can be opened natively on Windows, macOS and Linux. This makes zip the format of choice when you need to hand evidence to a colleague or prosecutor who does not use Linux. The -r flag is required to recursively add directories. Without it, zip stores the directory itself but none of its contents. During creation, zip shows each file with its method (stored = no compression, deflated = compressed) and the space saved as a percentage. To extract a .zip file, use unzip. With the -l flag, unzip lists the contents without extracting. Zip updates an existing archive instead of replacing it, unlike tar which overwrites.",
+        "es": "A diferencia de la combinación tar+gzip, el programa zip es archivador y compresor en un solo comando. Usa el algoritmo deflate y produce archivos .zip que se abren de forma nativa en Windows, macOS y Linux. Esto convierte a zip en el formato ideal cuando debes entregar evidencia a un colega o fiscal que no usa Linux. El flag -r es obligatorio para agregar directorios de forma recursiva. Sin él, zip almacena el directorio pero no su contenido. Durante la creación, zip muestra cada archivo con su método (stored = sin compresión, deflated = comprimido) y el espacio ahorrado como porcentaje. Para extraer un archivo .zip usa unzip. Con el flag -l, unzip lista el contenido sin extraer. Zip actualiza un archivo existente en lugar de reemplazarlo, a diferencia de tar que sobrescribe."
+      }
+    },
+    {
+      "heading": {
+        "en": "dd: Forensic Imaging at the Block Level",
+        "es": "dd: imagen forense a nivel de bloques"
+      },
+      "body": {
+        "en": "The dd program copies raw data at the block level, bypassing the filesystem entirely. Its syntax uses key=value parameters instead of the usual dash options: if= specifies the input (source), of= the output (destination), bs= the block size, and count= how many blocks to copy. A forensic imaging command typically looks like dd if=/dev/sdb of=image.dd bs=4096 conv=noerror,sync status=progress. The conv=noerror,sync combination is essential: noerror tells dd to keep reading when it hits a bad sector, and sync pads the failed block with zeros so the image stays aligned. The dd command is famously dangerous — reversing if and of (e.g., if=image.dd of=/dev/sdb) would destroy your source drive. Always double-check before pressing Enter. Despite its age, dd remains the most widely used tool for creating raw forensic images because it produces an exact bit-for-bit copy that any analysis tool can read.",
+        "es": "El programa dd copia datos raw a nivel de bloques, sin pasar por el sistema de archivos. Su sintaxis usa parámetros clave=valor en lugar de las opciones con guion habituales: if= especifica la entrada (origen), of= la salida (destino), bs= el tamaño de bloque y count= cuántos bloques copiar. Un comando forense típico es dd if=/dev/sdb of=imagen.dd bs=4096 conv=noerror,sync status=progress. La combinación conv=noerror,sync es esencial: noerror le indica a dd que siga leyendo cuando encuentra un sector dañado, y sync rellena el bloque fallido con ceros para que la imagen mantenga la alineación. El comando dd es famosamente peligroso —invertir if y of (por ejemplo, if=imagen.dd of=/dev/sdb) destruiría tu disco de origen. Siempre verifica dos veces antes de presionar Enter. A pesar de su antigüedad, dd sigue siendo la herramienta más usada para crear imágenes forenses raw porque produce una copia exacta bit por bit que cualquier herramienta de análisis puede leer."
+      }
+    },
+    {
+      "heading": {
+        "en": "Integrity Through the Entire Pipeline",
+        "es": "Integridad a lo largo de toda la tubería"
+      },
+      "body": {
+        "en": "Every step of the archiving and compression process must be verifiable. Before running dd, you record the SHA-256 hash of the source. After imaging, you hash the image file and confirm it matches. Similarly, after creating a tar.gz archive, you hash the archive itself and store that value alongside your case notes. The compression or archiving tool must NOT alter the underlying data — which is why you always use lossless methods. A zip file created with store-only mode (no compression) is still a valid archive; the data inside is untouched. Never use lossy compression on evidence. And remember the golden rule from chapter 1: the original device stays write-blocked; all work happens on the verified copy. Archiving and compression are just intermediate steps in moving or storing that copy, never a substitute for the original hash.",
+        "es": "Cada paso del proceso de archivado y compresión debe ser verificable. Antes de ejecutar dd, registras el hash SHA-256 del origen. Después de hacer la imagen, calculas el hash del archivo y confirmas que coincide. Del mismo modo, después de crear un archivo tar.gz, calculas el hash del archivo y lo almacenas junto a tus notas del caso. La herramienta de compresión o archivado NO debe alterar los datos subyacentes —por eso siempre se usan métodos sin pérdida. Un archivo zip creado solo en modo store (sin compresión) sigue siendo un archivo válido; los datos internos están intactos. Nunca uses compresión con pérdida sobre evidencia. Y recuerda la regla de oro del capítulo 1: el dispositivo original se mantiene con bloqueador de escritura; todo el trabajo se hace sobre la copia verificada. El archivado y la compresión son solo pasos intermedios para mover o almacenar esa copia, nunca un sustituto del hash original."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "gzip -v evidence.dd",
+      "intro": {
+        "en": "Compress a single evidence file. The -v flag shows the compression ratio as gzip replaces the original with a .gz version.",
+        "es": "Comprime un solo archivo de evidencia. El flag -v muestra el ratio de compresión mientras gzip reemplaza el original con una versión .gz."
+      },
+      "sampleOutput": "evidence.dd:  51.3% -- replaced with evidence.dd.gz",
+      "lineByLine": [
+        {
+          "token": "51.3%",
+          "explain": {
+            "en": "Compression ratio — the compressed file is roughly half the original size. A lower percentage means more compression.",
+            "es": "Ratio de compresión — el archivo comprimido ocupa aproximadamente la mitad del tamaño original. Un porcentaje menor significa más compresión."
+          }
+        }
+      ]
+    },
+    {
+      "command": "gzip -l evidence.dd.gz",
+      "intro": {
+        "en": "List compression statistics without decompressing. The output shows original size, compressed size, ratio and original filename.",
+        "es": "Lista las estadísticas de compresión sin descomprimir. La salida muestra tamaño original, tamaño comprimido, ratio y nombre original."
+      },
+      "sampleOutput": "         compressed        uncompressed  ratio uncompressed_name\n             524380             1048576  49.9% evidence.dd",
+      "lineByLine": [
+        {
+          "token": "1048576",
+          "explain": {
+            "en": "The uncompressed size in bytes (exactly 1 MiB). This size is stored inside the .gz header and matches the original file before compression.",
+            "es": "El tamaño sin comprimir en bytes (exactamente 1 MiB). Este tamaño se almacena dentro de la cabecera .gz y coincide con el archivo original antes de comprimir."
+          }
+        }
+      ]
+    },
+    {
+      "command": "tar czvf case.tgz evidence/",
+      "intro": {
+        "en": "Create a compressed tar archive of the evidence directory. The -z flag enables gzip compression, -v shows each file, and -f names the output.",
+        "es": "Crea un archivo tar comprimido del directorio de evidencia. El flag -z activa la compresión gzip, -v muestra cada archivo y -f da nombre a la salida."
+      },
+      "sampleOutput": "evidence/\nevidence/image001.png\nevidence/notes.txt",
+      "lineByLine": [
+        {
+          "token": "evidence/image001.png",
+          "explain": {
+            "en": "Each line shows a file path being added to the archive. Tar preserves the relative directory structure so extraction recreates the folder exactly.",
+            "es": "Cada línea muestra una ruta de archivo que se agrega al archivo. Tar preserva la estructura relativa de directorios para que la extracción reconstruya la carpeta exactamente."
+          }
+        }
+      ]
+    },
+    {
+      "command": "tar tzf case.tgz",
+      "intro": {
+        "en": "List the contents of a compressed archive without extracting. The -t mode shows all files inside; use this to verify what is in the archive.",
+        "es": "Lista el contenido de un archivo comprimido sin extraerlo. El modo -t muestra todos los archivos dentro; úsalo para verificar qué contiene el archivo."
+      },
+      "sampleOutput": "evidence/\nevidence/image001.png\nevidence/notes.txt",
+      "lineByLine": [
+        {
+          "token": "evidence/notes.txt",
+          "explain": {
+            "en": "Each pathname as stored inside the archive. The leading directory evidence/ shows that the original folder structure is preserved.",
+            "es": "Cada ruta tal como se almacena dentro del archivo. El directorio inicial evidence/ muestra que la estructura de carpetas original se preserva."
+          }
+        }
+      ]
+    },
+    {
+      "command": "zip -r evidence.zip evidence/",
+      "intro": {
+        "en": "Create a compressed zip archive of the evidence folder. The -r flag is required to include files inside subdirectories recursively.",
+        "es": "Crea un archivo zip comprimido de la carpeta de evidencia. El flag -r es obligatorio para incluir archivos dentro de subdirectorios de forma recursiva."
+      },
+      "sampleOutput": "  adding: evidence/ (stored 0%)\n  adding: evidence/image001.png (deflated 52%)\n  adding: evidence/notes.txt (deflated 71%)",
+      "lineByLine": [
+        {
+          "token": "deflated 52%",
+          "explain": {
+            "en": "The deflate compression algorithm was applied to this file, achieving a 52% size reduction. Files that cannot be compressed further are 'stored' instead.",
+            "es": "El algoritmo de compresión deflate se aplicó a este archivo, logrando una reducción del 52%. Los archivos que no se pueden comprimir más se 'almacenan' (stored) en su lugar."
+          }
+        }
+      ]
+    },
+    {
+      "command": "dd if=/dev/sdb of=usb_image.dd bs=4096 conv=noerror,sync status=progress",
+      "intro": {
+        "en": "Create a raw byte-for-byte disk image of a USB drive. The conv=noerror,sync pair keeps the image valid even when the source has bad sectors.",
+        "es": "Crea una imagen de disco raw byte por byte de una unidad USB. El par conv=noerror,sync mantiene la imagen válida incluso cuando el origen tiene sectores dañados."
+      },
+      "sampleOutput": "131072+0 records in\n131072+0 records out\n536870912 bytes (537 MB, 512 MiB) copied, 12.3456 s, 43.5 MB/s",
+      "lineByLine": [
+        {
+          "token": "records in",
+          "explain": {
+            "en": "dd reports how many complete blocks (records) it read from the source. 131072 records × 4096 bytes/block = 536870912 bytes total.",
+            "es": "dd reporta cuántos bloques completos (records) leyó del origen. 131072 registros × 4096 bytes/bloque = 536870912 bytes en total."
+          }
+        },
+        {
+          "token": "43.5 MB/s",
+          "explain": {
+            "en": "The transfer speed. This depends on the source and target hardware. Forensic imaging should use the fastest reliable connection available.",
+            "es": "La velocidad de transferencia. Depende del hardware de origen y destino. La imagen forense debe usar la conexión confiable más rápida disponible."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What extension does gzip append to a compressed file?",
+        "es": "¿Qué extensión agrega gzip a un archivo comprimido?"
+      },
+      "accept": [
+        ".gz",
+        "gz",
+        "punto gz",
+        "dot gz"
+      ],
+      "explanation": {
+        "en": "gzip replaces the original file with a compressed version ending in .gz. The original name, permissions and timestamp are preserved inside.",
+        "es": "gzip reemplaza el archivo original con una versión comprimida que termina en .gz. El nombre original, permisos y marca de tiempo se preservan internamente."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which tar flag tells it to compress the archive with gzip?",
+        "es": "¿Qué flag de tar le indica que comprima el archivo con gzip?"
+      },
+      "accept": [
+        "-z",
+        "z",
+        "--gzip",
+        "j"
+      ],
+      "explanation": {
+        "en": "The -z flag enables gzip compression inside tar. Use tar czf for creating or tar xzf for extracting compressed archives.",
+        "es": "El flag -z activa la compresión gzip dentro de tar. Usa tar czf para crear o tar xzf para extraer archivos comprimidos."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "You send evidence to a prosecutor who uses Windows exclusively. Which archive format guarantees they can open it without installing additional tools?",
+        "es": "Envías evidencia a un fiscal que usa exclusivamente Windows. ¿Qué formato de archivo garantiza que pueda abrirlo sin instalar herramientas adicionales?"
+      },
+      "accept": [
+        "zip",
+        ".zip",
+        "formato zip",
+        "zip file",
+        "archivo zip"
+      ],
+      "explanation": {
+        "en": "Zip files open natively in Windows Explorer, macOS Finder and every Linux desktop. No extra software is needed on any platform.",
+        "es": "Los archivos zip se abren de forma nativa en el Explorador de Windows, el Finder de macOS y cualquier escritorio Linux. No se necesita software adicional en ninguna plataforma."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run gzip on a 3 MB JPEG photo and get a 3.1 MB .gz file. Why did the file get larger instead of smaller?",
+        "es": "Ejecutas gzip sobre una foto JPEG de 3 MB y obtienes un archivo .gz de 3.1 MB. ¿Por qué el archivo se hizo más grande en lugar de más pequeño?"
+      },
+      "accept": [
+        "jpeg ya esta comprimido",
+        "jpeg ya está comprimido",
+        "already compressed",
+        "jpeg is already compressed",
+        "lossy compression already applied",
+        "ya fue comprimido con perdida",
+        "gzip agrega overhead",
+        "gzip adds overhead"
+      ],
+      "explanation": {
+        "en": "JPEG is already a compressed format. Applying gzip to an already-compressed file adds the overhead of compression headers without significant redundancy to remove, often making it slightly larger.",
+        "es": "JPEG ya es un formato comprimido. Aplicar gzip a un archivo ya comprimido agrega la sobrecarga de las cabeceras de compresión sin redundancia significativa que eliminar, a menudo haciéndolo ligeramente más grande."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Extract only the file 'notes.txt' from the archive 'case.tar' into the current directory.",
+        "es": "Extrae solo el archivo 'notes.txt' del archivo 'case.tar' en el directorio actual."
+      },
+      "accept": [
+        "tar xf case.tar notes.txt",
+        "tar -xf case.tar notes.txt",
+        "tar --extract -f case.tar notes.txt",
+        "tar xvf case.tar notes.txt"
+      ],
+      "explanation": {
+        "en": "Appending a filename to the tar extract command tells tar to restore only that specific file. The path must match exactly how it is stored inside the archive.",
+        "es": "Agregar un nombre de archivo al comando de extracción de tar le indica que restaure solo ese archivo específico. La ruta debe coincidir exactamente con cómo está almacenada dentro del archivo."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "In dd, what does conv=noerror,sync do when the source drive has a bad sector?",
+        "es": "En dd, ¿qué hace conv=noerror,sync cuando el disco de origen tiene un sector dañado?"
+      },
+      "accept": [
+        "continua leyendo y rellena con ceros",
+        "continúa leyendo y rellena con ceros",
+        "skip bad blocks and pad with zeros",
+        "keep reading and pad failed blocks with zeros",
+        "no error y sincroniza con ceros"
+      ],
+      "explanation": {
+        "en": "noerror tells dd to keep going instead of aborting on read errors. sync pads the failed block with zeros so the image does not lose alignment — crucial for forensic accuracy.",
+        "es": "noerror le indica a dd que continúe en lugar de abortar al encontrar errores de lectura. sync rellena el bloque fallido con ceros para que la imagen no pierda alineación — crucial para la precisión forense."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "Compression concepts (lossless, LZ77, deflate) — Shotts, The Linux Command Line",
+    "gzip and gunzip usage and options — Shotts; Blum & Bresnahan, Linux Command Line and Shell Scripting Bible",
+    "tar archiving, modes and combined compression — Shotts; Blum & Bresnahan",
+    "zip and unzip cross-platform archiving — Shotts; Blum & Bresnahan",
+    "dd block-level device copying and forensic imaging — Shotts, The Linux Command Line",
+    "Raw disk imaging and write-blocking concepts — Nikkel, Practical Forensic Imaging",
+    "Integrity verification of archives with hashing — Shotts; Nikkel"
+  ],
+  "mangaRevealOnComplete": 2
+}

@@ -1,0 +1,514 @@
+{
+  "id": "ch03",
+  "layer": 1,
+  "order": 3,
+  "title": {
+    "en": "Searching Inside Files and Logs for Evidence",
+    "es": "Buscar dentro de archivos y logs para encontrar evidencia"
+  },
+  "subtitle": {
+    "en": "grep and basic regular expressions: finding keywords, IP addresses, and patterns with case-insensitive, recursive, and context searches.",
+    "es": "grep y expresiones regulares básicas: encontrar palabras clave, direcciones IP y patrones con búsquedas que ignoran mayúsculas, recursivas y con contexto."
+  },
+  "glossary": [
+    {
+      "term": { "en": "grep", "es": "grep" },
+      "kind": "command",
+      "definition": {
+        "en": "A command-line tool that searches files for lines matching a pattern and prints them. The name comes from 'global regular expression print'.",
+        "es": "Una herramienta de línea de comandos que busca en archivos líneas que coinciden con un patrón y las imprime. El nombre proviene de 'global regular expression print'."
+      }
+    },
+    {
+      "term": { "en": "regular expression", "es": "expresión regular" },
+      "definition": {
+        "en": "A sequence of characters that defines a search pattern, using literal characters and metacharacters to match text flexibly.",
+        "es": "Una secuencia de caracteres que define un patrón de búsqueda, usando caracteres literales y metacaracteres para coincidir con texto de forma flexible."
+      }
+    },
+    {
+      "term": { "en": "recursive search", "es": "búsqueda recursiva" },
+      "definition": {
+        "en": "A search that traverses a directory tree, checking every file in every subdirectory instead of a single file.",
+        "es": "Una búsqueda que recorre un árbol de directorios, revisando cada archivo en cada subdirectorio en lugar de un solo archivo."
+      }
+    },
+    {
+      "term": { "en": "context lines", "es": "líneas de contexto" },
+      "definition": {
+        "en": "Lines printed before and/or after a matched line to help the analyst understand the event surrounding the match.",
+        "es": "Líneas impresas antes y/o después de una línea coincidente para ayudar al analista a entender el evento que rodea la coincidencia."
+      }
+    },
+    {
+      "term": { "en": "metacharacter", "es": "metacarácter" },
+      "definition": {
+        "en": "A character in a regular expression that has special meaning (like ^, $, ., *) instead of representing itself literally.",
+        "es": "Un carácter en una expresión regular que tiene un significado especial (como ^, $, ., *) en lugar de representarse a sí mismo literalmente."
+      }
+    },
+    {
+      "term": { "en": "anchor", "es": "ancla" },
+      "definition": {
+        "en": "A metacharacter (^ or $) that ties the match to the start (^) or end ($) of a line, not just anywhere in the text.",
+        "es": "Un metacarácter (^ o $) que ata la coincidencia al inicio (^) o al final ($) de una línea, no solo a cualquier parte del texto."
+      }
+    },
+    {
+      "term": { "en": "character class", "es": "clase de caracteres" },
+      "definition": {
+        "en": "A set of characters inside brackets [ ] that matches a single character from that set; [abc] matches 'a', 'b', or 'c'.",
+        "es": "Un conjunto de caracteres dentro de corchetes [ ] que coincide con un solo carácter de ese conjunto; [abc] coincide con 'a', 'b' o 'c'."
+      }
+    },
+    {
+      "term": { "en": "quantifier", "es": "cuantificador" },
+      "definition": {
+        "en": "A metacharacter (like *, +, ?, {n,m}) that specifies how many times the preceding element must repeat to match.",
+        "es": "Un metacarácter (como *, +, ?, {n,m}) que especifica cuántas veces debe repetirse el elemento anterior para coincidir."
+      }
+    },
+    {
+      "term": { "en": "alternation", "es": "alternancia" },
+      "definition": {
+        "en": "A regex feature using the vertical bar | to match one pattern OR another — for example cat|dog matches either 'cat' or 'dog'.",
+        "es": "Una característica de regex que usa la barra vertical | para coincidir con un patrón U otro — por ejemplo cat|dog coincide con 'cat' o 'dog'."
+      }
+    },
+    {
+      "term": { "en": "invert match", "es": "coincidencia inversa" },
+      "definition": {
+        "en": "A grep option (-v) that prints every line NOT matching the pattern, useful for excluding noise or finding lines that fail a rule.",
+        "es": "Una opción de grep (-v) que imprime toda línea que NO coincide con el patrón, útil para excluir ruido o encontrar líneas que no cumplen una regla."
+      }
+    },
+    {
+      "term": { "en": "zgrep", "es": "zgrep" },
+      "kind": "command",
+      "definition": {
+        "en": "A version of grep that reads compressed (.gz) files without needing to decompress them first.",
+        "es": "Una versión de grep que lee archivos comprimidos (.gz) sin necesidad de descomprimirlos primero."
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "id": "keyword-search",
+      "label": {
+        "en": "Search for keywords inside single files using grep",
+        "es": "Buscar palabras clave dentro de archivos individuales usando grep"
+      }
+    },
+    {
+      "id": "case-insensitive",
+      "label": {
+        "en": "Perform case-insensitive searches to catch any variation of a term",
+        "es": "Realizar búsquedas que ignoren mayúsculas para capturar cualquier variación de un término"
+      }
+    },
+    {
+      "id": "recursive-dir",
+      "label": {
+        "en": "Search recursively through directories of evidence",
+        "es": "Buscar recursivamente a través de directorios de evidencia"
+      }
+    },
+    {
+      "id": "context-clues",
+      "label": {
+        "en": "View surrounding context lines to understand each matched event",
+        "es": "Ver líneas de contexto alrededor para entender cada evento coincidente"
+      }
+    },
+    {
+      "id": "regex-patterns",
+      "label": {
+        "en": "Build basic regular expressions to find IP addresses and structured patterns",
+        "es": "Construir expresiones regulares básicas para encontrar direcciones IP y patrones estructurados"
+      }
+    },
+    {
+      "id": "count-invert",
+      "label": {
+        "en": "Count matches and invert searches to filter out known noise",
+        "es": "Contar coincidencias e invertir búsquedas para filtrar ruido conocido"
+      }
+    }
+  ],
+  "theory": [
+    {
+      "heading": {
+        "en": "Why grep is essential in forensic analysis",
+        "es": "Por qué grep es esencial en el análisis forense"
+      },
+      "body": {
+        "en": "Every Linux system records events in log files: authentication attempts in /var/log/auth.log, web requests in /var/log/nginx/access.log, system messages in /var/log/syslog. Attackers leave traces in every one of them — a suspicious IP, a failed privilege escalation, a web shell accessed at 3 AM. But a single log file can contain hundreds of thousands of lines. Reading them manually is impossible. grep is the tool that carves out exactly what matters: lines containing a keyword, an IP address, or any pattern you define. It reads the file once, filters by your pattern, and outputs only the relevant lines — and it is 100% read-only, safe for original evidence.",
+        "es": "Cada sistema Linux registra eventos en archivos de log: intentos de autenticación en /var/log/auth.log, peticiones web en /var/log/nginx/access.log, mensajes del sistema en /var/log/syslog. Los atacantes dejan rastros en todos ellos — una IP sospechosa, una escalada de privilegios fallida, un web shell accedido a las 3 AM. Pero un solo archivo de log puede contener cientos de miles de líneas. Leerlas manualmente es imposible. grep es la herramienta que extrae exactamente lo que importa: líneas que contienen una palabra clave, una dirección IP o cualquier patrón que definas. Lee el archivo una vez, filtra según el patrón y solo imprime las líneas relevantes — y es 100% de solo lectura, seguro para la evidencia original."
+      }
+    },
+    {
+      "heading": {
+        "en": "grep basics: literal string matching",
+        "es": "Fundamentos de grep: coincidencia de cadenas literales"
+      },
+      "body": {
+        "en": "The syntax is grep [options] pattern [file...]. The pattern is normally a literal string: grep 'sshd' /var/log/auth.log prints every line containing the substring sshd. The search is case-sensitive by default — 'SSHD' would NOT match 'sshd'. Patterns with spaces or metacharacters must be quoted. If you pass multiple files, grep prepends each matched line with the filename, which helps when searching across a directory of logs. grep reads the file from start to finish, outputting matches to stdout without modifying anything.",
+        "es": "La sintaxis es grep [opciones] patrón [archivo...]. El patrón normalmente es una cadena literal: grep 'sshd' /var/log/auth.log imprime toda línea que contenga la subcadena sshd. La búsqueda distingue mayúsculas por defecto — 'SSHD' NO coincidiría con 'sshd'. Los patrones con espacios o metacaracteres deben ir entre comillas. Si pasas múltiples archivos, grep antepone a cada línea coincidente el nombre del archivo, lo que ayuda al buscar en un directorio de logs. grep lee el archivo de principio a fin, enviando las coincidencias a stdout sin modificar nada."
+      }
+    },
+    {
+      "heading": {
+        "en": "Essential options every forensic analyst uses daily",
+        "es": "Opciones esenciales que todo analista forense usa a diario"
+      },
+      "body": {
+        "en": "A handful of grep options handle 90% of forensic searches. -i (--ignore-case) makes the search case-insensitive, so 'error', 'Error', and 'ERROR' all match. -r (--recursive) searches every file in every subdirectory — critical when evidence spans a directory tree. -n (--line-number) prefixes each match with its line number, making it easy to reference in reports. -c (--count) prints only the match count per file instead of the lines themselves. -v (--invert-match) prints lines that do NOT match, useful for filtering out known noise. -l (--files-with-matches) prints only the filenames that contain a match, perfect for finding which log files mention an IP without flooding the terminal.",
+        "es": "Un puñado de opciones de grep cubren el 90% de las búsquedas forenses. -i (--ignore-case) hace que la búsqueda ignore mayúsculas, así que 'error', 'Error' y 'ERROR' todas coinciden. -r (--recursive) busca en cada archivo de cada subdirectorio — crítico cuando la evidencia abarca un árbol de directorios. -n (--line-number) antepone a cada coincidencia su número de línea, facilitando la referencia en informes. -c (--count) imprime solo el conteo de coincidencias por archivo en lugar de las líneas mismas. -v (--invert-match) imprime las líneas que NO coinciden, útil para filtrar ruido conocido. -l (--files-with-matches) imprime solo los nombres de archivo que contienen una coincidencia, perfecto para encontrar qué logs mencionan una IP sin inundar la terminal."
+      }
+    },
+    {
+      "heading": {
+        "en": "Context: seeing the full picture around each match",
+        "es": "Contexto: ver la imagen completa alrededor de cada coincidencia"
+      },
+      "body": {
+        "en": "A log line alone rarely tells the whole story. A line saying 'Failed password for root' only makes sense with the lines before it (the connection attempt) and after it (the disconnection). grep's context options print the surrounding lines. -C N gives N lines before AND after each match. -A N gives only lines AFTER. -B N gives only lines BEFORE. In a forensic report, including context lines is crucial — a judge or jury needs to understand not just that a login failed, but that it was part of a burst of 50 attempts from the same IP in 30 seconds.",
+        "es": "Una línea de log por sí sola rara vez cuenta toda la historia. Una línea que dice 'Failed password for root' solo tiene sentido con las líneas anteriores (el intento de conexión) y posteriores (la desconexión). Las opciones de contexto de grep imprimen las líneas circundantes. -C N da N líneas ANTES y DESPUÉS de cada coincidencia. -A N da solo las líneas DESPUÉS. -B N da solo las líneas ANTES. En un informe forense, incluir líneas de contexto es crucial — un juez o jurado necesita entender no solo que un inicio de sesión falló, sino que fue parte de una ráfaga de 50 intentos desde la misma IP en 30 segundos."
+      }
+    },
+    {
+      "heading": {
+        "en": "Regular expressions: matching patterns, not just words",
+        "es": "Expresiones regulares: coincidir con patrones, no solo palabras"
+      },
+      "body": {
+        "en": "Literal strings cannot catch everything. An IP address like 192.168.1.50 is different from 203.0.113.45, but both follow the same pattern. Regular expressions let you match the pattern instead. Key metacharacters: ^ anchors to the start of a line, $ to the end. . (dot) matches any single character. [0-9] or [[:digit:]] matches one digit. [0-9]{1,3} matches between one and three digits. \\. escapes the literal dot (because . alone matches any character). Alternation via | matches one pattern or another: 'ssh|http' matches lines containing either substring. To use extended regex features like {1,3} and |, add the -E flag (or use egrep). With these pieces you can build a pattern like ^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3} to find IPv4 addresses at the start of lines — a quintessential forensic pattern.",
+        "es": "Las cadenas literales no pueden capturarlo todo. Una dirección IP como 192.168.1.50 es diferente de 203.0.113.45, pero ambas siguen el mismo patrón. Las expresiones regulares permiten coincidir con el patrón en lugar de la palabra exacta. Metacaracteres clave: ^ ancla al inicio de una línea, $ al final. . (punto) coincide con cualquier carácter individual. [0-9] o [[:digit:]] coincide con un dígito. [0-9]{1,3} coincide entre uno y tres dígitos. \\. escapa el punto literal (porque . solo coincide con cualquier carácter). La alternancia con | coincide con un patrón u otro: 'ssh|http' encuentra líneas que contengan cualquiera de las dos subcadenas. Para usar funciones de expresiones regulares extendidas como {1,3} y |, agrega la opción -E (o usa egrep). Con estas piezas puedes construir un patrón como ^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3} para encontrar direcciones IPv4 al inicio de líneas — un patrón forense por excelencia."
+      }
+    },
+    {
+      "heading": {
+        "en": "Rotated and compressed logs: don't miss evidence",
+        "es": "Logs rotados y comprimidos: no te pierdas evidencia"
+      },
+      "body": {
+        "en": "Logs do not grow forever. Linux 'rotates' them: today's events live in /var/log/auth.log, but yesterday's are moved to auth.log.1, and older ones are compressed into auth.log.2.gz, auth.log.3.gz, and so on. This is a classic forensic trap — a plain 'grep pattern /var/log/auth.log' searches ONLY today's file and silently misses the attack that happened last week inside a .gz archive. The fix is zgrep, a wrapper that decompresses .gz files on the fly and searches them exactly like grep, without ever writing an uncompressed copy to disk (which keeps your evidence handling clean). The rule: when you search logs, always account for the rotated and compressed siblings, e.g. zgrep over auth.log* covers the whole history.",
+        "es": "Los logs no crecen para siempre. Linux los 'rota': los eventos de hoy viven en /var/log/auth.log, pero los de ayer se mueven a auth.log.1, y los más viejos se comprimen en auth.log.2.gz, auth.log.3.gz, y así sucesivamente. Esta es una trampa forense clásica — un 'grep patrón /var/log/auth.log' a secas busca SOLO el archivo de hoy y se pierde en silencio el ataque que ocurrió la semana pasada dentro de un .gz. La solución es zgrep, un envoltorio que descomprime los archivos .gz al vuelo y los busca igual que grep, sin escribir nunca una copia descomprimida al disco (lo que mantiene limpio el manejo de evidencia). La regla: cuando busques en logs, siempre toma en cuenta los hermanos rotados y comprimidos; por ejemplo, zgrep sobre auth.log* cubre toda la historia."
+      }
+    }
+  ],
+  "commands": [
+    {
+      "command": "grep \"sshd\" /var/log/auth.log",
+      "intro": {
+        "en": "Find every line in the authentication log that mentions the SSH daemon.",
+        "es": "Encuentra toda línea en el log de autenticación que mencione el demonio SSH."
+      },
+      "sampleOutput": "Jun 27 08:00:01 host sshd[101]: Accepted password for analyst from 192.168.1.50\nJun 27 08:00:05 host sshd[101]: pam_unix(sshd:session): session opened for user analyst\nJun 27 08:00:15 host sshd[101]: pam_unix(sshd:session): session closed for user analyst\nJun 27 09:15:22 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2\nJun 27 09:15:25 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2",
+      "lineByLine": [
+        {
+          "token": "sshd[101]",
+          "explain": {
+            "en": "The SSH daemon process with PID 101. Every SSH-related log entry starts with sshd[PID].",
+            "es": "El proceso del demonio SSH con PID 101. Cada entrada de log relacionada con SSH comienza con sshd[PID]."
+          }
+        },
+        {
+          "token": "Accepted password for analyst from 192.168.1.50",
+          "explain": {
+            "en": "A successful SSH login. The user 'analyst' connected from the internal IP 192.168.1.50. Compare this with failed attempts to spot intruders.",
+            "es": "Un inicio de sesión SSH exitoso. El usuario 'analyst' se conectó desde la IP interna 192.168.1.50. Compara esto con intentos fallidos para detectar intrusos."
+          }
+        },
+        {
+          "token": "Failed password for root from 203.0.113.45",
+          "explain": {
+            "en": "A failed SSH login attempt as root from an external IP. Multiple sequential failures indicate a brute-force attack.",
+            "es": "Un intento fallido de inicio de sesión SSH como root desde una IP externa. Múltiples fallos secuenciales indican un ataque de fuerza bruta."
+          }
+        }
+      ]
+    },
+    {
+      "command": "grep -ri \"error\" /var/log/",
+      "intro": {
+        "en": "Search recursively and case-insensitively for the word 'error' across all log files.",
+        "es": "Busca recursivamente y sin distinguir mayúsculas la palabra 'error' en todos los archivos de log."
+      },
+      "sampleOutput": "/var/log/syslog:Jun 27 10:00:01 host kernel: [ 1234.567890] EXT4-fs error (device sda1): journal commit failed\n/var/log/syslog:Jun 27 10:05:23 host sshd[101]: error: Could not load host key: /etc/ssh/ssh_host_ed25519_key\n/var/log/kern.log:Jun 27 10:00:01 host kernel: [ 1234.567890] EXT4-fs error (device sda1): journal commit failed\n/var/log/nginx/error.log:2026/06/27 10:01:00 [error] 1234#1234: *1 open() \"/var/www/html/test\" failed (2: No such file or directory)\n/var/log/nginx/error.log:2026/06/27 10:01:05 [error] 1234#1234: *2 open() \"/var/www/html/secret\" failed (2: No such file or directory)",
+      "lineByLine": [
+        {
+          "token": "/var/log/syslog:Jun 27 10:00:01 host kernel: [ 1234.567890] EXT4-fs error",
+          "explain": {
+            "en": "When searching multiple files, grep prefixes each line with the filename. This is a kernel filesystem error in /var/log/syslog.",
+            "es": "Al buscar en múltiples archivos, grep antepone a cada línea el nombre del archivo. Este es un error del sistema de archivos del kernel en /var/log/syslog."
+          }
+        },
+        {
+          "token": "error: Could not load host key",
+          "explain": {
+            "en": "An SSH daemon error. The missing host key would prevent SSH from starting properly — a possible sign of a compromised or misconfigured system.",
+            "es": "Un error del demonio SSH. La falta de la clave de host impediría que SSH iniciara correctamente — posible señal de un sistema comprometido o mal configurado."
+          }
+        },
+        {
+          "token": "[error] 1234#1234: *1 open() \"/var/www/html/test\" failed",
+          "explain": {
+            "en": "An Nginx web server error. The web server tried to serve a file that does not exist — could indicate a scanner probing for paths.",
+            "es": "Un error del servidor web Nginx. El servidor web intentó servir un archivo que no existe — podría indicar un escáner probando rutas."
+          }
+        }
+      ]
+    },
+    {
+      "command": "grep -C 2 \"Connection refused\" /var/log/syslog",
+      "intro": {
+        "en": "Show 2 lines of context before and after each line containing 'Connection refused'.",
+        "es": "Muestra 2 líneas de contexto antes y después de cada línea que contenga 'Connection refused'."
+      },
+      "sampleOutput": "Jun 27 10:05:00 host sshd[101]: Connection from 192.168.1.100 port 54322\nJun 27 10:05:01 host sshd[101]: Failed password for admin from 192.168.1.100 port 54322 ssh2\nJun 27 10:05:02 host sshd[101]: Connection refused by authenticating user admin\nJun 27 10:05:03 host sshd[101]: Failed password for admin from 192.168.1.100 port 54322 ssh2\nJun 27 10:05:04 host sshd[101]: Connection closed by authenticating user admin port 54322",
+      "lineByLine": [
+        {
+          "token": "Connection from 192.168.1.100 port 54322",
+          "explain": {
+            "en": "2 lines BEFORE the match: the connection attempt. Shows the attacker's source IP and port, critical for network attribution.",
+            "es": "2 líneas ANTES de la coincidencia: el intento de conexión. Muestra la IP y puerto de origen del atacante, crítico para atribución de red."
+          }
+        },
+        {
+          "token": "Connection refused by authenticating user admin",
+          "explain": {
+            "en": "The matched line: the server actively refused the connection for user 'admin'. This happens when the user does not exist or the account is locked.",
+            "es": "La línea coincidente: el servidor rechazó activamente la conexión para el usuario 'admin'. Ocurre cuando el usuario no existe o la cuenta está bloqueada."
+          }
+        },
+        {
+          "token": "Connection closed by authenticating user admin port 54322",
+          "explain": {
+            "en": "2 lines AFTER the match: the connection closed. Together, all five lines tell the complete story of a rejected brute-force attempt.",
+            "es": "2 líneas DESPUÉS de la coincidencia: la conexión se cerró. Juntas, las cinco líneas cuentan la historia completa de un intento de fuerza bruta rechazado."
+          }
+        }
+      ]
+    },
+    {
+      "command": "grep -n \"Failed password\" /var/log/auth.log",
+      "intro": {
+        "en": "List each failed password event with its line number for easy cross-referencing.",
+        "es": "Lista cada evento de contraseña fallida con su número de línea para facilitar la referencia cruzada."
+      },
+      "sampleOutput": "3:Jun 27 09:15:22 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2\n4:Jun 27 09:15:25 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2\n5:Jun 27 09:15:28 host sshd[205]: Failed password for root from 203.0.113.45 port 54321 ssh2",
+      "lineByLine": [
+        {
+          "token": "3:Jun 27 09:15:22",
+          "explain": {
+            "en": "The line number (3) is prefixed before the timestamp. Each line number lets you reference exact positions in the log for report citations.",
+            "es": "El número de línea (3) se antepone a la marca de tiempo. Cada número de línea permite referenciar posiciones exactas en el log para citas en informes."
+          }
+        },
+        {
+          "token": "Failed password for root from 203.0.113.45 port 54321",
+          "explain": {
+            "en": "Three back-to-back failed attempts as root, all from the same IP and port, spaced 3 seconds apart — a classic brute-force pattern.",
+            "es": "Tres intentos fallidos consecutivos como root, todos desde la misma IP y puerto, espaciados por 3 segundos — un patrón clásico de fuerza bruta."
+          }
+        }
+      ]
+    },
+    {
+      "command": "grep -E \"^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\" /var/log/nginx/access.log",
+      "intro": {
+        "en": "Use an extended regular expression to find lines starting with an IPv4 address in the web server access log.",
+        "es": "Usa una expresión regular extendida para encontrar líneas que empiezan con una dirección IPv4 en el log de acceso del servidor web."
+      },
+      "sampleOutput": "192.168.1.50 - - [27/Jun/2026:10:00:00 +0000] \"GET /index.html HTTP/1.1\" 200 1234\n203.0.113.45 - - [27/Jun/2026:10:01:00 +0000] \"POST /wp-login.php HTTP/1.1\" 404 567\n10.0.0.5 - - [27/Jun/2026:10:02:00 +0000] \"GET /admin HTTP/1.1\" 403 890\n198.51.100.22 - - [27/Jun/2026:10:03:00 +0000] \"GET /images/logo.png HTTP/1.1\" 200 34567",
+      "lineByLine": [
+        {
+          "token": "192.168.1.50",
+          "explain": {
+            "en": "An internal IPv4 address at the start of the line, matched by the regex. 192.168.x.x addresses are private (RFC 1918).",
+            "es": "Una dirección IPv4 interna al inicio de la línea, coincidente con la regex. Las direcciones 192.168.x.x son privadas (RFC 1918)."
+          }
+        },
+        {
+          "token": "203.0.113.45",
+          "explain": {
+            "en": "A public IP address (from TEST-NET-3 documentation block) making a POST request to /wp-login.php — a common WordPress login brute-force target.",
+            "es": "Una dirección IP pública (del bloque TEST-NET-3 de documentación) haciendo una petición POST a /wp-login.php — un objetivo común de fuerza bruta a WordPress."
+          }
+        },
+        {
+          "token": "GET /admin HTTP/1.1",
+          "explain": {
+            "en": "A GET request to the /admin path. The 403 (Forbidden) status means access was denied. Attackers probe for admin panels.",
+            "es": "Una petición GET a la ruta /admin. El estado 403 (Prohibido) significa que se denegó el acceso. Los atacantes buscan paneles de administración."
+          }
+        },
+        {
+          "token": "POST /wp-login.php HTTP/1.1",
+          "explain": {
+            "en": "A POST request to the WordPress login page. The 404 (Not Found) means the site likely does not run WordPress — the attacker is blindly scanning.",
+            "es": "Una petición POST a la página de inicio de sesión de WordPress. El 404 (No Encontrado) significa que el sitio probablemente no usa WordPress — el atacante está escaneando a ciegas."
+          }
+        }
+      ]
+    },
+    {
+      "command": "zgrep \"Failed password\" /var/log/auth.log.1.gz",
+      "intro": {
+        "en": "Search LAST week's rotated, compressed log without decompressing it — the attack may predate today's file.",
+        "es": "Busca en el log rotado y comprimido de la semana pasada sin descomprimirlo — el ataque puede ser anterior al archivo de hoy."
+      },
+      "sampleOutput": "Jun 20 02:11:09 host sshd[8821]: Failed password for root from 203.0.113.45 port 49002 ssh2\nJun 20 02:11:12 host sshd[8821]: Failed password for root from 203.0.113.45 port 49002 ssh2\nJun 20 02:11:15 host sshd[8821]: Failed password for admin from 203.0.113.45 port 49002 ssh2",
+      "lineByLine": [
+        {
+          "token": "Jun 20",
+          "explain": {
+            "en": "The date is a week before today's log — proof the activity began earlier. A plain grep on auth.log would have missed this entirely.",
+            "es": "La fecha es una semana antes del log de hoy — prueba de que la actividad empezó antes. Un grep a secas sobre auth.log se habría perdido esto por completo."
+          }
+        },
+        {
+          "token": "Failed password for root from 203.0.113.45",
+          "explain": {
+            "en": "The SAME external IP seen in today's log. zgrep across rotated files connects the dots into one sustained campaign.",
+            "es": "La MISMA IP externa que se ve en el log de hoy. zgrep sobre los archivos rotados conecta los puntos en una sola campaña sostenida."
+          }
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "Which grep option makes the search ignore letter case so that it matches both 'Error' and 'error'?",
+        "es": "¿Qué opción de grep hace que la búsqueda ignore mayúsculas y minúsculas, de modo que coincida tanto con 'Error' como con 'error'?"
+      },
+      "accept": ["-i", "--ignore-case", "grep -i", "grep --ignore-case"],
+      "explanation": {
+        "en": "-i (or --ignore-case) makes grep match any case variant. Without it, 'Error' and 'error' are treated as different strings.",
+        "es": "-i (o --ignore-case) hace que grep coincida con cualquier variante de mayúsculas. Sin ella, 'Error' y 'error' se tratan como cadenas distintas."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What flag tells grep to search through all files in all subdirectories instead of just one file?",
+        "es": "¿Qué flag le indica a grep que busque en todos los archivos de todos los subdirectorios en lugar de un solo archivo?"
+      },
+      "accept": ["-r", "--recursive", "grep -r", "grep --recursive", "grep -R"],
+      "explanation": {
+        "en": "-r (or --recursive) traverses the entire directory tree. Without it, grep only searches the files you explicitly name.",
+        "es": "-r (o --recursive) recorre todo el árbol de directorios. Sin ella, grep solo busca en los archivos que nombras explícitamente."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You run 'grep -i \"root\" /var/log/auth.log'. You see no output but know there are lines mentioning root. What is the most likely reason?",
+        "es": "Ejecutas 'grep -i \"root\" /var/log/auth.log'. No ves salida pero sabes que hay líneas mencionando root. ¿Cuál es la razón más probable?"
+      },
+      "accept": [
+        "el archivo no existe",
+        "no such file",
+        "file not found",
+        "error de ruta",
+        "wrong path",
+        "grep: /var/log/auth.log: Permission denied",
+        "permisos",
+        "permission denied",
+        "no tiene permisos",
+        "not root user",
+        "must be root"
+      ],
+      "explanation": {
+        "en": "If grep produces no output and a file definitely has matches, the problem is usually a nonexistent path or insufficient permissions. grep prints an error (like 'Permission denied') to stderr, but if you ran it inside a script or pipeline, stderr might be hidden — always check stderr.",
+        "es": "Si grep no produce salida y un archivo definitivamente tiene coincidencias, el problema suele ser una ruta inexistente o permisos insuficientes. grep imprime un error (como 'Permission denied') a stderr, pero si lo ejecutaste dentro de un script o tubería, stderr podría estar oculto — verifica siempre stderr."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Search recursively for lines containing '192.168.' across all files in /var/log/ and show the filename for each match.",
+        "es": "Busca recursivamente líneas que contengan '192.168.' en todos los archivos de /var/log/ y muestra el nombre del archivo para cada coincidencia."
+      },
+      "accept": [
+        "grep -r \"192.168.\" /var/log/",
+        "grep -r 192.168. /var/log",
+        "grep -r \"192.168.\" /var/log/*",
+        "grep --recursive \"192.168.\" /var/log/"
+      ],
+      "explanation": {
+        "en": "grep -r searches recursively; when it finds matches in multiple files, it prepends the filename to each line automatically. The pattern '192.168.' should be quoted to prevent shell expansion of the dot.",
+        "es": "grep -r busca recursivamente; cuando encuentra coincidencias en múltiples archivos, antepone automáticamente el nombre del archivo a cada línea. El patrón '192.168.' debe ir entre comillas para evitar la expansión del punto por el shell."
+      }
+    },
+    {
+      "type": "variation",
+      "prompt": {
+        "en": "Show 3 lines of context BEFORE each line that contains 'error' in /var/log/syslog.",
+        "es": "Muestra 3 líneas de contexto ANTES de cada línea que contenga 'error' en /var/log/syslog."
+      },
+      "accept": [
+        "grep -B 3 \"error\" /var/log/syslog",
+        "grep --before-context=3 \"error\" /var/log/syslog",
+        "grep -B3 error /var/log/syslog"
+      ],
+      "explanation": {
+        "en": "-B 3 (--before-context=3) prints 3 lines before each match. Use -A for after and -C for both sides. Context is essential for understanding the events that led to an error.",
+        "es": "-B 3 (--before-context=3) imprime 3 líneas antes de cada coincidencia. Usa -A para después y -C para ambos lados. El contexto es esencial para entender los eventos que llevaron a un error."
+      }
+    },
+    {
+      "type": "analyze",
+      "prompt": {
+        "en": "You need to count how many lines in access.log contain 'HTTP/1.1\" 404'. Which command gives you just the number, not the lines?",
+        "es": "Necesitas contar cuántas líneas en access.log contienen 'HTTP/1.1\" 404'. ¿Qué comando te da solo el número, no las líneas?"
+      },
+      "accept": [
+        "grep -c \"HTTP/1.1\\\" 404\" access.log",
+        "grep -c \"404\" access.log",
+        "grep --count \"HTTP/1.1\\\" 404\" access.log",
+        "grep -c 'HTTP/1.1\" 404' access.log",
+        "grep --count 'HTTP/1.1\" 404' access.log"
+      ],
+      "explanation": {
+        "en": "-c (--count) prints the number of matching lines instead of the lines themselves. This is the fastest way to measure the frequency of an event — for example, counting 404 errors as a proxy for scanning activity.",
+        "es": "-c (--count) imprime el número de líneas que coinciden en lugar de las líneas mismas. Esta es la forma más rápida de medir la frecuencia de un evento — por ejemplo, contar errores 404 como indicador de actividad de escaneo."
+      }
+    },
+    {
+      "type": "recall",
+      "prompt": {
+        "en": "What metacharacter anchors a regular expression to the start of a line, and which one anchors it to the end?",
+        "es": "¿Qué metacarácter ancla una expresión regular al inicio de una línea, y cuál la ancla al final?"
+      },
+      "accept": [
+        "^ para inicio, $ para fin",
+        "^ and $",
+        "caret for start, dollar for end",
+        "caret y dollar",
+        "inicio con ^, fin con $",
+        "^ y $",
+        "^ es inicio, $ es fin",
+        "caret ^, dollar $"
+      ],
+      "explanation": {
+        "en": "^ anchors to the start of the line; $ anchors to the end. For example, '^root' matches lines starting with 'root', and 'root$' matches lines ending with 'root'.",
+        "es": "^ ancla al inicio de la línea; $ ancla al final. Por ejemplo, '^root' coincide con líneas que empiezan con 'root', y 'root$' coincide con líneas que terminan con 'root'."
+      }
+    }
+  ],
+  "coverageChecklist": [
+    "grep basic syntax and literal string matching — Shotts, The Linux Command Line (Ch. 6, 19)",
+    "grep options: -i, -r, -n, -c, -v, -l — Shotts, The Linux Command Line (Ch. 19); Blum & Bresnahan, Linux Command Line and Shell Scripting Bible (Ch. 19)",
+    "Context searches: -C, -A, -B — Shotts, The Linux Command Line (Ch. 19)",
+    "Regular expression metacharacters: anchors (^, $), dot (.), character classes ([ ]), negation ([^ ]) — Shotts, The Linux Command Line (Ch. 19)",
+    "Quantifiers (*, +, ?, {m,n}) and alternation (|) with grep -E — Shotts, The Linux Command Line (Ch. 19); Blum & Bresnahan, Linux Command Line and Shell Scripting Bible (Ch. 20)",
+    "POSIX character classes ([:digit:], [:alpha:], [:space:]) and locale considerations — Shotts, The Linux Command Line (Ch. 19)",
+    "Invert match (-v) for filtering known noise — Blum & Bresnahan, Linux Command Line and Shell Scripting Bible (Ch. 19)",
+    "Log file analysis for forensic timelines — Casey, Handbook of Digital Forensics and Investigation (Ch. 2)"
+  ],
+  "mangaRevealOnComplete": 2
+}
