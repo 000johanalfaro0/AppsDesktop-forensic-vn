@@ -4,7 +4,7 @@
 set -uo pipefail
 
 ROOT="/home/jojan/AppsDesktop/forensic-vn"
-MODEL="${1:-opencode/deepseek-v4-flash-free}"
+MODEL="${1:-${CONTENT_MODEL:?Set CONTENT_MODEL or pass provider/model as the first argument}}"
 
 declare -a CH=(
   "ch04|1|4|Copying, moving and safely handling files: cp, mv, rm, mkdir, ln — and the forensic dangers of each (timestamps, overwriting, secure deletion)|the-linux-command-line|55|69"

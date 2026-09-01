@@ -11,7 +11,7 @@ TOPIC="${4:?topic title in quotes}"
 BOOK_SLUG="${5:?book slug, e.g. the-linux-command-line}"
 START_PAGE="${6:?start page, e.g. 113}"
 END_PAGE="${7:?end page, e.g. 130}"
-MODEL="${8:-opencode/deepseek-v4-flash-free}"
+MODEL="${8:-${CONTENT_MODEL:?Set CONTENT_MODEL or pass provider/model as argument 8}}"
 
 LNN=$(printf "%02d" "$LAYER")
 
@@ -22,7 +22,7 @@ if [ ! -f "$PDF_PATH" ]; then
   exit 1
 fi
 
-# 2a. Extract PDF pages to raw text (local, no AI)
+# 2a. Extract PDF pages to raw text locally
 echo "Extracting pages $START_PAGE to $END_PAGE from $BOOK_SLUG..."
 "$ROOT/.tools/venv/bin/python" "$ROOT/.tools/extract_pages.py" "$PDF_PATH" "$START_PAGE" "$END_PAGE" "$ROOT/.sources/temp_context.md"
 

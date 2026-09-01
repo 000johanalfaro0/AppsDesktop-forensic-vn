@@ -5,13 +5,15 @@ Reads .sources/temp_context.md (raw PDF text from extract_pages.py),
 runs it through the local ollama model, and writes structured extraction
 notes to .sources/temp_extracted.md for opencode to consume in Phase 2.
 """
-import sys, json, urllib.request, pathlib, subprocess, time
+import sys, json, urllib.request, pathlib, subprocess, time, os
 
 ROOT   = pathlib.Path(__file__).parent.parent
 INPUT  = ROOT / ".sources" / "temp_context.md"
 OUTPUT = ROOT / ".sources" / "temp_extracted.md"
 
-MODEL      = "huihui_ai/qwen3-abliterated:8b"
+MODEL      = os.environ.get("LOCAL_EXTRACTION_MODEL")
+if not MODEL:
+    raise RuntimeError("Set LOCAL_EXTRACTION_MODEL before running this tool")
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 
 SYSTEM = (

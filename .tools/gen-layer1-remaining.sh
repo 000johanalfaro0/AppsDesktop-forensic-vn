@@ -4,7 +4,7 @@
 set -uo pipefail
 
 ROOT="/home/jojan/AppsDesktop/forensic-vn"
-MODEL="${1:-opencode/deepseek-v4-flash-free}"
+MODEL="${1:-${CONTENT_MODEL:?Set CONTENT_MODEL or pass provider/model as the first argument}}"
 
 declare -a CH=(
   "ch07|1|7|Advanced text processing with sed and awk: filtering, substituting and reshaping evidence data"
