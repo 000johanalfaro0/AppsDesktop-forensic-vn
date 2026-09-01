@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "dist:win": "npm run build && electron-builder --win nsis",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "rebuild": "electron-rebuild -f -w node-pty"
@@ -16,9 +17,19 @@
     "@electron/rebuild": "^4.0.4",
     "@types/node": "^26.0.1",
     "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "typescript": "^6.0.3",
     "vite": "^7.3.6"
+  },
+  "build": {
+    "appId": "dev.johanalfaro.forensicvn",
+    "productName": "ForensicVN",
+    "directories": { "output": "release" },
+    "files": ["out/**/*", "content/**/*", "evidence/**/*", "package.json"],
+    "asarUnpack": ["node_modules/node-pty/**/*"],
+    "win": { "target": ["nsis"], "artifactName": "ForensicVN-${version}-Setup.${ext}" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

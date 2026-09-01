@@ -17,6 +17,17 @@ npm run dev      # launch the app
 
 If the terminal pane stays blank, run `npm run rebuild` and start again.
 
+## Windows installer
+
+```bash
+npm run dist:win
+```
+
+The installer is written to `release/ForensicVN-<version>-Setup.exe`. Tagged
+releases and manually triggered GitHub Actions builds also publish the installer
+as a workflow artifact. The current build is unsigned, so Windows may display a
+SmartScreen warning until a code-signing certificate is configured.
+
 ## What works today (vertical slice)
 
 - Startup screen to **choose a manga series**.
