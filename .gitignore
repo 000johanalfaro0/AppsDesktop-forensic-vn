@@ -7,3 +7,4 @@ dist/
 # Internal working artifacts — NEVER distributed (copyright: book-derived markdown)
 .sources/
 .tools/venv/
+.vercel
