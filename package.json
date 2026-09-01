@@ -2,13 +2,14 @@
   "name": "forensic-vn",
   "version": "0.0.1",
   "description": "Terminal-style desktop app to learn digital forensics",
+  "author": "Johan Alfaro",
   "main": "./out/main/index.js",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "dist:win": "npm run build && electron-builder --win nsis",
+    "dist:win": "npm run build && electron-builder --win nsis --publish never",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "rebuild": "electron-rebuild -f -w node-pty"
